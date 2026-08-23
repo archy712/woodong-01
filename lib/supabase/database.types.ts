@@ -14,42 +14,2569 @@ export type Database = {
   };
   public: {
     Tables: {
-      profiles: {
+      brand_color_types: {
         Row: {
-          avatar_url: string | null;
+          brand_id: string;
+          code: string;
           created_at: string;
-          email: string | null;
-          full_name: string | null;
+          created_by: string | null;
           id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          sort_order: number;
           updated_at: string;
-          username: string | null;
+          updated_by: string | null;
         };
         Insert: {
-          avatar_url?: string | null;
+          brand_id: string;
+          code: string;
           created_at?: string;
-          email?: string | null;
-          full_name?: string | null;
-          id: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          sort_order?: number;
           updated_at?: string;
-          username?: string | null;
+          updated_by?: string | null;
         };
         Update: {
-          avatar_url?: string | null;
+          brand_id?: string;
+          code?: string;
           created_at?: string;
-          email?: string | null;
-          full_name?: string | null;
+          created_by?: string | null;
           id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          sort_order?: number;
           updated_at?: string;
-          username?: string | null;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "brand_color_types_brand_id_fkey";
+            columns: ["brand_id"];
+            isOneToOne: false;
+            referencedRelation: "brands";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brand_color_types_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brand_color_types_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      brand_colors: {
+        Row: {
+          brand_color_type_id: string;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          rgb_hex: string;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          brand_color_type_id: string;
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          rgb_hex: string;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          brand_color_type_id?: string;
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          rgb_hex?: string;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "brand_colors_brand_color_type_id_fkey";
+            columns: ["brand_color_type_id"];
+            isOneToOne: false;
+            referencedRelation: "brand_color_types";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brand_colors_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brand_colors_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      brand_gender_size_types: {
+        Row: {
+          brand_id: string;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          gender: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          brand_id: string;
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          gender: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          brand_id?: string;
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          gender?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "brand_gender_size_types_brand_id_fkey";
+            columns: ["brand_id"];
+            isOneToOne: false;
+            referencedRelation: "brands";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brand_gender_size_types_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brand_gender_size_types_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      brand_gender_sizes: {
+        Row: {
+          brand_gender_size_type_id: string;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          brand_gender_size_type_id: string;
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          brand_gender_size_type_id?: string;
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "brand_gender_sizes_brand_gender_size_type_id_fkey";
+            columns: ["brand_gender_size_type_id"];
+            isOneToOne: false;
+            referencedRelation: "brand_gender_size_types";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brand_gender_sizes_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brand_gender_sizes_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      brand_lines: {
+        Row: {
+          brand_id: string;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          brand_id: string;
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          brand_id?: string;
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "brand_lines_brand_id_fkey";
+            columns: ["brand_id"];
+            isOneToOne: false;
+            referencedRelation: "brands";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brand_lines_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brand_lines_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      brands: {
+        Row: {
+          code: string;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          code: string;
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          code?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "brands_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brands_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "brands_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      companies: {
+        Row: {
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "companies_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "companies_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      departments: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          division_id: string | null;
+          head_profile_id: string | null;
+          id: string;
+          is_direct_report: boolean;
+          name: string;
+          organization_id: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          division_id?: string | null;
+          head_profile_id?: string | null;
+          id?: string;
+          is_direct_report?: boolean;
+          name: string;
+          organization_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          division_id?: string | null;
+          head_profile_id?: string | null;
+          id?: string;
+          is_direct_report?: boolean;
+          name?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "departments_division_id_fkey";
+            columns: ["division_id"];
+            isOneToOne: false;
+            referencedRelation: "divisions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "departments_head_profile_id_fkey";
+            columns: ["head_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "departments_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      divisions: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          head_profile_id: string | null;
+          id: string;
+          name: string;
+          organization_id: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          head_profile_id?: string | null;
+          id?: string;
+          name: string;
+          organization_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          head_profile_id?: string | null;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "divisions_head_profile_id_fkey";
+            columns: ["head_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "divisions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      item_types: {
+        Row: {
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          small_brand_id: string;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          small_brand_id: string;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          small_brand_id?: string;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "item_types_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "item_types_small_brand_id_fkey";
+            columns: ["small_brand_id"];
+            isOneToOne: false;
+            referencedRelation: "small_brands";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "item_types_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      items: {
+        Row: {
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          item_type_id: string;
+          name: string;
+          note: string | null;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          item_type_id: string;
+          name: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          item_type_id?: string;
+          name?: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "items_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "items_item_type_id_fkey";
+            columns: ["item_type_id"];
+            isOneToOne: false;
+            referencedRelation: "item_types";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "items_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      menus: {
+        Row: {
+          created_at: string;
+          icon: string | null;
+          id: string;
+          is_active: boolean;
+          level: number;
+          name: string;
+          parent_id: string | null;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          icon?: string | null;
+          id?: string;
+          is_active?: boolean;
+          level: number;
+          name: string;
+          parent_id?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          icon?: string | null;
+          id?: string;
+          is_active?: boolean;
+          level?: number;
+          name?: string;
+          parent_id?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "menus_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "menus";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notifications: {
+        Row: {
+          actor_id: string | null;
+          comment_id: string | null;
+          created_at: string;
+          id: string;
+          period_start: string | null;
+          read_at: string | null;
+          recipient_id: string;
+          type: string;
+          weekly_log_id: string | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          comment_id?: string | null;
+          created_at?: string;
+          id?: string;
+          period_start?: string | null;
+          read_at?: string | null;
+          recipient_id: string;
+          type: string;
+          weekly_log_id?: string | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          comment_id?: string | null;
+          created_at?: string;
+          id?: string;
+          period_start?: string | null;
+          read_at?: string | null;
+          recipient_id?: string;
+          type?: string;
+          weekly_log_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_comment_id_fkey";
+            columns: ["comment_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_log_comments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey";
+            columns: ["recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_weekly_log_id_fkey";
+            columns: ["weekly_log_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_logs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      org_company_divisions: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          organization_id: string;
+          sort_order: number;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          organization_id: string;
+          sort_order?: number;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          organization_id?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "org_company_divisions_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_company_divisions_org_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_company_divisions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      org_group_companies: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          org_group_id: string;
+          sort_order: number;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          org_group_id: string;
+          sort_order?: number;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          org_group_id?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "org_group_companies_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: true;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_group_companies_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_group_companies_org_group_id_fkey";
+            columns: ["org_group_id"];
+            isOneToOne: false;
+            referencedRelation: "org_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      org_groups: {
+        Row: {
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          singleton: boolean;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          singleton?: boolean;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          singleton?: boolean;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "org_groups_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_groups_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      org_section_teams: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          department_id: string;
+          id: string;
+          section_id: string;
+          sort_order: number;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          department_id: string;
+          id?: string;
+          section_id: string;
+          sort_order?: number;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          department_id?: string;
+          id?: string;
+          section_id?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "org_section_teams_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_section_teams_department_id_fkey";
+            columns: ["department_id"];
+            isOneToOne: true;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_section_teams_section_id_fkey";
+            columns: ["section_id"];
+            isOneToOne: false;
+            referencedRelation: "org_sections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      org_sections: {
+        Row: {
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          organization_id: string;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          organization_id: string;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          organization_id?: string;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "org_sections_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_sections_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_sections_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      org_unit_leaders: {
+        Row: {
+          company_id: string | null;
+          created_at: string;
+          department_id: string | null;
+          id: string;
+          org_group_id: string | null;
+          org_section_id: string | null;
+          organization_id: string | null;
+          profile_id: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          company_id?: string | null;
+          created_at?: string;
+          department_id?: string | null;
+          id?: string;
+          org_group_id?: string | null;
+          org_section_id?: string | null;
+          organization_id?: string | null;
+          profile_id: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          company_id?: string | null;
+          created_at?: string;
+          department_id?: string | null;
+          id?: string;
+          org_group_id?: string | null;
+          org_section_id?: string | null;
+          organization_id?: string | null;
+          profile_id?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "org_unit_leaders_department_id_fkey";
+            columns: ["department_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_unit_leaders_org_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_unit_leaders_org_group_id_fkey";
+            columns: ["org_group_id"];
+            isOneToOne: false;
+            referencedRelation: "org_groups";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_unit_leaders_org_section_id_fkey";
+            columns: ["org_section_id"];
+            isOneToOne: false;
+            referencedRelation: "org_sections";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_unit_leaders_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_unit_leaders_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_unit_leaders_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organizations: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          head_profile_id: string | null;
+          id: string;
+          name: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          head_profile_id?: string | null;
+          id?: string;
+          name: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          head_profile_id?: string | null;
+          id?: string;
+          name?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organizations_head_profile_id_fkey";
+            columns: ["head_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      products: {
+        Row: {
+          brand_color_id: string;
+          brand_gender_size_id: string;
+          brand_line_id: string;
+          code: string;
+          cost_price: number | null;
+          created_at: string;
+          created_by: string | null;
+          gender: string;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          material: string | null;
+          name: string;
+          note: string | null;
+          release_year: number | null;
+          sale_price: number | null;
+          sales_status: string | null;
+          season: string | null;
+          sort_order: number;
+          sub_item_id: string;
+          thumbnail_url: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          brand_color_id: string;
+          brand_gender_size_id: string;
+          brand_line_id: string;
+          code: string;
+          cost_price?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          gender: string;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          material?: string | null;
+          name: string;
+          note?: string | null;
+          release_year?: number | null;
+          sale_price?: number | null;
+          sales_status?: string | null;
+          season?: string | null;
+          sort_order?: number;
+          sub_item_id: string;
+          thumbnail_url?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          brand_color_id?: string;
+          brand_gender_size_id?: string;
+          brand_line_id?: string;
+          code?: string;
+          cost_price?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          gender?: string;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          material?: string | null;
+          name?: string;
+          note?: string | null;
+          release_year?: number | null;
+          sale_price?: number | null;
+          sales_status?: string | null;
+          season?: string | null;
+          sort_order?: number;
+          sub_item_id?: string;
+          thumbnail_url?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "products_brand_color_id_fkey";
+            columns: ["brand_color_id"];
+            isOneToOne: false;
+            referencedRelation: "brand_colors";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_brand_gender_size_id_fkey";
+            columns: ["brand_gender_size_id"];
+            isOneToOne: false;
+            referencedRelation: "brand_gender_sizes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_brand_line_id_fkey";
+            columns: ["brand_line_id"];
+            isOneToOne: false;
+            referencedRelation: "brand_lines";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_sub_item_id_fkey";
+            columns: ["sub_item_id"];
+            isOneToOne: false;
+            referencedRelation: "sub_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          avatar_key: string;
+          bio: string | null;
+          created_at: string;
+          department_id: string | null;
+          email: string | null;
+          id: string;
+          is_active: boolean;
+          name: string | null;
+          notify_on_comment: boolean;
+          notify_on_mention: boolean;
+          notify_on_reminder: boolean;
+          phone_number: string | null;
+          role: string;
+          updated_at: string;
+        };
+        Insert: {
+          avatar_key?: string;
+          bio?: string | null;
+          created_at?: string;
+          department_id?: string | null;
+          email?: string | null;
+          id: string;
+          is_active?: boolean;
+          name?: string | null;
+          notify_on_comment?: boolean;
+          notify_on_mention?: boolean;
+          notify_on_reminder?: boolean;
+          phone_number?: string | null;
+          role?: string;
+          updated_at?: string;
+        };
+        Update: {
+          avatar_key?: string;
+          bio?: string | null;
+          created_at?: string;
+          department_id?: string | null;
+          email?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string | null;
+          notify_on_comment?: boolean;
+          notify_on_mention?: boolean;
+          notify_on_reminder?: boolean;
+          phone_number?: string | null;
+          role?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey";
+            columns: ["department_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      small_brands: {
+        Row: {
+          brand_id: string;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          note: string | null;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          brand_id: string;
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          brand_id?: string;
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "small_brands_brand_id_fkey";
+            columns: ["brand_id"];
+            isOneToOne: false;
+            referencedRelation: "brands";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "small_brands_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "small_brands_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      sub_items: {
+        Row: {
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          is_active: boolean;
+          item_id: string;
+          name: string;
+          note: string | null;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          item_id: string;
+          name: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          is_active?: boolean;
+          item_id?: string;
+          name?: string;
+          note?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sub_items_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "sub_items_item_id_fkey";
+            columns: ["item_id"];
+            isOneToOne: false;
+            referencedRelation: "items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "sub_items_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      udong_announcements: {
+        Row: {
+          body: string;
+          created_at: string;
+          created_by: string | null;
+          group_id: string;
+          id: string;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          created_by?: string | null;
+          group_id: string;
+          id?: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          created_by?: string | null;
+          group_id?: string;
+          id?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "udong_announcements_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      udong_due_cycles: {
+        Row: {
+          amount: number;
+          created_at: string;
+          created_by: string | null;
+          due_date: string;
+          due_type: string;
+          group_id: string;
+          id: string;
+          period: string;
+          reminder_interval_days: number | null;
+          title: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          created_by?: string | null;
+          due_date: string;
+          due_type: string;
+          group_id: string;
+          id?: string;
+          period: string;
+          reminder_interval_days?: number | null;
+          title: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          created_by?: string | null;
+          due_date?: string;
+          due_type?: string;
+          group_id?: string;
+          id?: string;
+          period?: string;
+          reminder_interval_days?: number | null;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "udong_due_cycles_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      udong_dues: {
+        Row: {
+          amount: number;
+          due_cycle_id: string;
+          group_id: string;
+          id: string;
+          last_reminded_at: string | null;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          amount: number;
+          due_cycle_id: string;
+          group_id: string;
+          id?: string;
+          last_reminded_at?: string | null;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          amount?: number;
+          due_cycle_id?: string;
+          group_id?: string;
+          id?: string;
+          last_reminded_at?: string | null;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "udong_dues_due_cycle_id_fkey";
+            columns: ["due_cycle_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_due_cycles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "udong_dues_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      udong_group_invites: {
+        Row: {
+          code: string;
+          created_by: string | null;
+          expires_at: string | null;
+          group_id: string;
+          id: string;
+          is_active: boolean;
+          max_uses: number | null;
+          revoked_at: string | null;
+          used_count: number;
+        };
+        Insert: {
+          code: string;
+          created_by?: string | null;
+          expires_at?: string | null;
+          group_id: string;
+          id?: string;
+          is_active?: boolean;
+          max_uses?: number | null;
+          revoked_at?: string | null;
+          used_count?: number;
+        };
+        Update: {
+          code?: string;
+          created_by?: string | null;
+          expires_at?: string | null;
+          group_id?: string;
+          id?: string;
+          is_active?: boolean;
+          max_uses?: number | null;
+          revoked_at?: string | null;
+          used_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "udong_group_invites_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      udong_group_members: {
+        Row: {
+          group_id: string;
+          id: string;
+          joined_at: string | null;
+          role: string;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          group_id: string;
+          id?: string;
+          joined_at?: string | null;
+          role: string;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          group_id?: string;
+          id?: string;
+          joined_at?: string | null;
+          role?: string;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "udong_group_members_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      udong_groups: {
+        Row: {
+          cover_image_object_path: string | null;
+          created_at: string;
+          created_by: string | null;
+          default_due_amount: number | null;
+          description: string | null;
+          id: string;
+          name: string;
+          type: string | null;
+        };
+        Insert: {
+          cover_image_object_path?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          default_due_amount?: number | null;
+          description?: string | null;
+          id?: string;
+          name: string;
+          type?: string | null;
+        };
+        Update: {
+          cover_image_object_path?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          default_due_amount?: number | null;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          type?: string | null;
         };
         Relationships: [];
+      };
+      udong_notification_preferences: {
+        Row: {
+          channel: string;
+          destination: string | null;
+          enabled: boolean;
+          id: string;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          channel: string;
+          destination?: string | null;
+          enabled?: boolean;
+          id?: string;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          channel?: string;
+          destination?: string | null;
+          enabled?: boolean;
+          id?: string;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      udong_notifications: {
+        Row: {
+          body: string;
+          channel: string;
+          clicked_at: string | null;
+          created_at: string;
+          group_id: string | null;
+          id: string;
+          read_at: string | null;
+          related_id: string | null;
+          related_type: string | null;
+          status: string;
+          title: string;
+          type: string;
+          user_id: string;
+        };
+        Insert: {
+          body: string;
+          channel: string;
+          clicked_at?: string | null;
+          created_at?: string;
+          group_id?: string | null;
+          id?: string;
+          read_at?: string | null;
+          related_id?: string | null;
+          related_type?: string | null;
+          status?: string;
+          title: string;
+          type: string;
+          user_id: string;
+        };
+        Update: {
+          body?: string;
+          channel?: string;
+          clicked_at?: string | null;
+          created_at?: string;
+          group_id?: string | null;
+          id?: string;
+          read_at?: string | null;
+          related_id?: string | null;
+          related_type?: string | null;
+          status?: string;
+          title?: string;
+          type?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "udong_notifications_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      udong_payments: {
+        Row: {
+          amount: number;
+          due_id: string;
+          group_id: string;
+          id: string;
+          memo: string | null;
+          paid_at: string;
+          recorded_by: string | null;
+        };
+        Insert: {
+          amount: number;
+          due_id: string;
+          group_id: string;
+          id?: string;
+          memo?: string | null;
+          paid_at?: string;
+          recorded_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          due_id?: string;
+          group_id?: string;
+          id?: string;
+          memo?: string | null;
+          paid_at?: string;
+          recorded_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "udong_payments_due_id_fkey";
+            columns: ["due_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_dues";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "udong_payments_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      udong_vote_options: {
+        Row: {
+          id: string;
+          label: string;
+          sort_order: number;
+          vote_id: string;
+        };
+        Insert: {
+          id?: string;
+          label: string;
+          sort_order?: number;
+          vote_id: string;
+        };
+        Update: {
+          id?: string;
+          label?: string;
+          sort_order?: number;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "udong_vote_options_vote_id_fkey";
+            columns: ["vote_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_votes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      udong_vote_responses: {
+        Row: {
+          id: string;
+          option_id: string;
+          responded_at: string | null;
+          user_id: string;
+          vote_id: string;
+        };
+        Insert: {
+          id?: string;
+          option_id: string;
+          responded_at?: string | null;
+          user_id: string;
+          vote_id: string;
+        };
+        Update: {
+          id?: string;
+          option_id?: string;
+          responded_at?: string | null;
+          user_id?: string;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "udong_vote_responses_option_id_fkey";
+            columns: ["option_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_vote_options";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "udong_vote_responses_vote_id_fkey";
+            columns: ["vote_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_votes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      udong_votes: {
+        Row: {
+          allow_multiple: boolean;
+          closes_at: string;
+          created_at: string;
+          created_by: string | null;
+          group_id: string;
+          id: string;
+          is_anonymous: boolean;
+          status: string;
+          title: string;
+          vote_type: string;
+        };
+        Insert: {
+          allow_multiple?: boolean;
+          closes_at: string;
+          created_at?: string;
+          created_by?: string | null;
+          group_id: string;
+          id?: string;
+          is_anonymous?: boolean;
+          status?: string;
+          title: string;
+          vote_type: string;
+        };
+        Update: {
+          allow_multiple?: boolean;
+          closes_at?: string;
+          created_at?: string;
+          created_by?: string | null;
+          group_id?: string;
+          id?: string;
+          is_anonymous?: boolean;
+          status?: string;
+          title?: string;
+          vote_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "udong_votes_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "udong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_menu_permissions: {
+        Row: {
+          granted_at: string;
+          granted_by: string | null;
+          id: string;
+          menu_id: string;
+          user_id: string;
+        };
+        Insert: {
+          granted_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          menu_id: string;
+          user_id: string;
+        };
+        Update: {
+          granted_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          menu_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_menu_permissions_granted_by_fkey";
+            columns: ["granted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_menu_permissions_menu_id_fkey";
+            columns: ["menu_id"];
+            isOneToOne: false;
+            referencedRelation: "menus";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_menu_permissions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      weekly_log_attachments: {
+        Row: {
+          content_type: string | null;
+          created_at: string;
+          department_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          id: string;
+          uploaded_by: string;
+          weekly_log_id: string;
+        };
+        Insert: {
+          content_type?: string | null;
+          created_at?: string;
+          department_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          id?: string;
+          uploaded_by: string;
+          weekly_log_id: string;
+        };
+        Update: {
+          content_type?: string | null;
+          created_at?: string;
+          department_id?: string;
+          file_name?: string;
+          file_path?: string;
+          file_size?: number;
+          id?: string;
+          uploaded_by?: string;
+          weekly_log_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_log_attachments_department_id_fkey";
+            columns: ["department_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_log_attachments_uploaded_by_fkey";
+            columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_log_attachments_weekly_log_id_fkey";
+            columns: ["weekly_log_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_logs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      weekly_log_change_history: {
+        Row: {
+          changed_by: string | null;
+          created_at: string;
+          field: string;
+          id: string;
+          new_value: string;
+          old_value: string | null;
+          weekly_log_id: string;
+        };
+        Insert: {
+          changed_by?: string | null;
+          created_at?: string;
+          field: string;
+          id?: string;
+          new_value: string;
+          old_value?: string | null;
+          weekly_log_id: string;
+        };
+        Update: {
+          changed_by?: string | null;
+          created_at?: string;
+          field?: string;
+          id?: string;
+          new_value?: string;
+          old_value?: string | null;
+          weekly_log_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_log_change_history_changed_by_fkey";
+            columns: ["changed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_log_change_history_weekly_log_id_fkey";
+            columns: ["weekly_log_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_logs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      weekly_log_comment_mentions: {
+        Row: {
+          comment_id: string;
+          created_at: string;
+          mentioned_user_id: string;
+        };
+        Insert: {
+          comment_id: string;
+          created_at?: string;
+          mentioned_user_id: string;
+        };
+        Update: {
+          comment_id?: string;
+          created_at?: string;
+          mentioned_user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_log_comment_mentions_comment_id_fkey";
+            columns: ["comment_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_log_comments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_log_comment_mentions_mentioned_user_id_fkey";
+            columns: ["mentioned_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      weekly_log_comments: {
+        Row: {
+          author_id: string;
+          content: string;
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          parent_comment_id: string | null;
+          updated_at: string;
+          weekly_log_id: string;
+        };
+        Insert: {
+          author_id: string;
+          content: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          parent_comment_id?: string | null;
+          updated_at?: string;
+          weekly_log_id: string;
+        };
+        Update: {
+          author_id?: string;
+          content?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          parent_comment_id?: string | null;
+          updated_at?: string;
+          weekly_log_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_log_comments_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_log_comments_parent_comment_id_fkey";
+            columns: ["parent_comment_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_log_comments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_log_comments_weekly_log_id_fkey";
+            columns: ["weekly_log_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_logs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      weekly_log_reactions: {
+        Row: {
+          created_at: string;
+          id: string;
+          reaction: string;
+          updated_at: string;
+          user_id: string;
+          weekly_log_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          reaction: string;
+          updated_at?: string;
+          user_id: string;
+          weekly_log_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          reaction?: string;
+          updated_at?: string;
+          user_id?: string;
+          weekly_log_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_log_reactions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_log_reactions_weekly_log_id_fkey";
+            columns: ["weekly_log_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_logs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      weekly_logs: {
+        Row: {
+          author_id: string;
+          content: string;
+          created_at: string;
+          department_id: string;
+          estimated_cost: number | null;
+          estimated_mm: number | null;
+          id: string;
+          importance: number;
+          partner_company: string | null;
+          progress: number;
+          start_date: string;
+          status: string;
+          target_end_date: string;
+          title: string;
+          updated_at: string;
+          work_type: string[];
+        };
+        Insert: {
+          author_id: string;
+          content: string;
+          created_at?: string;
+          department_id: string;
+          estimated_cost?: number | null;
+          estimated_mm?: number | null;
+          id?: string;
+          importance?: number;
+          partner_company?: string | null;
+          progress?: number;
+          start_date: string;
+          status?: string;
+          target_end_date: string;
+          title: string;
+          updated_at?: string;
+          work_type: string[];
+        };
+        Update: {
+          author_id?: string;
+          content?: string;
+          created_at?: string;
+          department_id?: string;
+          estimated_cost?: number | null;
+          estimated_mm?: number | null;
+          id?: string;
+          importance?: number;
+          partner_company?: string | null;
+          progress?: number;
+          start_date?: string;
+          status?: string;
+          target_end_date?: string;
+          title?: string;
+          updated_at?: string;
+          work_type?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_logs_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_logs_department_id_fkey";
+            columns: ["department_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      work_types: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          id: string;
+          name: string;
+          organization_id: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          id?: string;
+          name: string;
+          organization_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "work_types_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      create_weekly_log_reminders: {
+        Args: { target_week_start?: string };
+        Returns: number;
+      };
+      current_department_id: { Args: never; Returns: string };
+      current_organization_id: { Args: never; Returns: string };
+      get_org_chart_members: {
+        Args: never;
+        Returns: {
+          avatar_key: string;
+          department_id: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          role: string;
+        }[];
+      };
+      get_profile_identities: {
+        Args: { profile_ids: string[] };
+        Returns: {
+          avatar_key: string;
+          email: string;
+          id: string;
+          name: string;
+        }[];
+      };
+      is_admin: { Args: never; Returns: boolean };
+      is_superadmin: { Args: never; Returns: boolean };
+      next_master_code: { Args: { p_entity: string }; Returns: string };
+      search_mentionable_profiles: {
+        Args: { max_results?: number; search_query: string };
+        Returns: {
+          avatar_key: string;
+          email: string;
+          id: string;
+          name: string;
+        }[];
+      };
+      set_user_menu_permissions: {
+        Args: { p_menu_ids: string[]; p_user_id: string };
+        Returns: undefined;
+      };
+      stats_logs_by_department: {
+        Args: {
+          div_id?: string;
+          from_date?: string;
+          org_id?: string;
+          to_date?: string;
+        };
+        Returns: {
+          completed_count: number;
+          department_id: string;
+          department_name: string;
+          in_progress_count: number;
+          planned_count: number;
+          total_count: number;
+        }[];
+      };
+      stats_logs_by_importance: {
+        Args: {
+          dept_id?: string;
+          div_id?: string;
+          from_date?: string;
+          org_id?: string;
+          to_date?: string;
+        };
+        Returns: {
+          importance: number;
+          log_count: number;
+        }[];
+      };
+      stats_logs_by_status: {
+        Args: {
+          dept_id?: string;
+          div_id?: string;
+          from_date?: string;
+          org_id?: string;
+          to_date?: string;
+        };
+        Returns: {
+          log_count: number;
+          status: string;
+        }[];
+      };
+      stats_logs_by_work_type: {
+        Args: {
+          dept_id?: string;
+          div_id?: string;
+          from_date?: string;
+          org_id?: string;
+          to_date?: string;
+        };
+        Returns: {
+          log_count: number;
+          work_type: string;
+        }[];
+      };
+      stats_logs_monthly_trend: {
+        Args: {
+          dept_id?: string;
+          div_id?: string;
+          months?: number;
+          org_id?: string;
+        };
+        Returns: {
+          completed_count: number;
+          created_count: number;
+          month: string;
+        }[];
+      };
+      stats_my_work_summary: {
+        Args: { author_id_param: string; today_param: string };
+        Returns: {
+          due_this_week_count: number;
+          in_progress_count: number;
+          overdue_count: number;
+        }[];
+      };
+      stats_progress_by_department: {
+        Args: {
+          div_id?: string;
+          from_date?: string;
+          org_id?: string;
+          to_date?: string;
+          today_param: string;
+        };
+        Returns: {
+          delayed_count: number;
+          department_id: string;
+          department_name: string;
+          good_count: number;
+          total_count: number;
+          unregistered_count: number;
+        }[];
+      };
+      stats_progress_by_division: {
+        Args: {
+          dept_id?: string;
+          div_id?: string;
+          from_date?: string;
+          org_id?: string;
+          to_date?: string;
+          today_param: string;
+        };
+        Returns: {
+          delayed_count: number;
+          division_id: string;
+          division_name: string;
+          good_count: number;
+          total_count: number;
+          unregistered_count: number;
+        }[];
+      };
+      stats_reactions_summary: {
+        Args: {
+          dept_id?: string;
+          div_id?: string;
+          from_date?: string;
+          org_id?: string;
+          to_date?: string;
+        };
+        Returns: {
+          reaction: string;
+          reaction_count: number;
+        }[];
+      };
+      stats_workload_summary: {
+        Args: {
+          dept_id?: string;
+          div_id?: string;
+          from_date?: string;
+          org_id?: string;
+          to_date?: string;
+        };
+        Returns: {
+          avg_duration_days: number;
+          cost_count: number;
+          cost_sum: number;
+          mm_count: number;
+          mm_sum: number;
+          total_count: number;
+        }[];
+      };
+      udong_get_vote_results: {
+        Args: { p_vote_id: string };
+        Returns: {
+          label: string;
+          option_id: string;
+          response_count: number;
+          sort_order: number;
+          voter_names: string[];
+        }[];
+      };
+      udong_increment_invite_used_count: {
+        Args: { p_invite_id: string };
+        Returns: {
+          code: string;
+          created_by: string | null;
+          expires_at: string | null;
+          group_id: string;
+          id: string;
+          is_active: boolean;
+          max_uses: number | null;
+          revoked_at: string | null;
+          used_count: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "udong_group_invites";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      udong_is_group_admin: { Args: { p_group_id: string }; Returns: boolean };
+      udong_is_group_member: { Args: { p_group_id: string }; Returns: boolean };
     };
     Enums: {
       [_ in never]: never;

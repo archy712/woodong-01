@@ -109,12 +109,25 @@ components/
 ```
 lib/
 ├── utils.ts                  # 🛠️ cn() 등 공통 유틸리티
+├── i18n/                      # 다국어 지원(쿠키+Accept-Language 기반)
+├── storage/
+│   └── image.ts                # 업로드 전 5MB 검증 + Canvas 리사이즈 클라이언트 유틸
 └── supabase/
     ├── client.ts              # 브라우저(클라이언트 컴포넌트)용 Supabase 클라이언트
     ├── server.ts               # 서버 컴포넌트/서버 액션용 Supabase 클라이언트
     ├── proxy.ts                 # proxy.ts(구 middleware)에서 사용하는 세션 갱신 헬퍼
+    ├── storage.ts                # 서명 URL 발급(getSignedStorageUrl) + 오브젝트 경로 생성 유틸
     └── database.types.ts        # Supabase generate-types로 생성된 DB 타입
 ```
+
+**🔄 `database.types.ts` 재생성 절차**
+
+스키마를 변경(마이그레이션 적용)했다면 아래 순서로 타입을 다시 맞춘다:
+
+1. `mcp__supabase__generate_typescript_types`로 최신 타입을 받아 `lib/supabase/database.types.ts`를 통째로 교체한다(이 프로젝트는 Supabase를 다른 앱과 공유하므로, 그 앱의 테이블 타입도 함께 포함되는 것이 정상이다 — 걸러내지 않는다).
+2. `npm run typecheck`를 돌려 깨지는 곳을 확인한다. 컴포넌트에서는 `Tables<"테이블명">` 헬퍼로 필요한 컬럼만 `Pick`해서 쓰는 것이 컨벤션이다(`components/profile-form.tsx` 참고 — `Pick<Tables<"profiles">, "id" | "email" | "name" | "phone_number" | "bio">` 형태).
+3. **재생성 직후 타입 에러가 나면 대부분 실제 스키마와 코드가 어긋나 있었다는 신호**이므로(예: 컬럼명이 바뀌었거나, 이미 없는 컬럼을 쓰고 있었거나), 타입만 억지로 맞추지 말고 실제로 그 코드가 무엇을 해야 하는지부터 확인한다.
+4. `npm run format`으로 재생성된 `database.types.ts`의 포맷을 맞춘다(`prettier --write`가 자동 적용되지 않으므로 커밋 전 필수).
 
 **📚 lib/ 폴더 확장 가이드 (새 기능 추가 시):**
 
