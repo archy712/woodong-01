@@ -15,6 +15,18 @@ export interface Dictionary {
     retry: string;
     required: string;
   };
+  nav: {
+    groupsLabel: string;
+    notificationsLabel: string;
+    devDocsLabel: string;
+    groupTabs: {
+      home: string;
+      announcements: string;
+      dues: string;
+      votes: string;
+      settings: string;
+    };
+  };
   home: {
     heading: string;
     footer: {

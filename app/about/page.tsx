@@ -1,8 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -71,95 +69,65 @@ async function AboutContent() {
   }));
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex h-16 w-full items-center justify-center border-b border-b-foreground/10">
-        <div className="flex w-full max-w-5xl items-center justify-between gap-4 px-5">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="text-sm underline-offset-4 hover:underline"
-            >
-              {dict.common.backToHome}
-            </Link>
-            <span className="text-lg font-semibold tracking-tight">
-              {dict.about.headerTitle}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher locale={locale} />
-            <ThemeSwitcher />
-          </div>
+    <div className="flex w-full max-w-5xl flex-col gap-20 px-5 py-16">
+      <section className="flex flex-col gap-8">
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
+          <Badge variant="outline" className="w-fit">
+            {dict.about.badge}
+          </Badge>
+          <h1 className="text-3xl !leading-tight font-bold lg:text-4xl">
+            {dict.about.heroTitle}
+          </h1>
+          <p className="text-muted-foreground">{dict.about.heroDescription}</p>
         </div>
-      </header>
-
-      <main className="flex flex-1 flex-col items-center">
-        <div className="flex w-full max-w-5xl flex-col gap-20 px-5 py-16">
-          <section className="flex flex-col gap-8">
-            <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
-              <Badge variant="outline" className="w-fit">
-                {dict.about.badge}
-              </Badge>
-              <h1 className="text-3xl !leading-tight font-bold lg:text-4xl">
-                {dict.about.heroTitle}
-              </h1>
-              <p className="text-muted-foreground">
-                {dict.about.heroDescription}
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {features.map((feature) => (
-                <Card key={feature.title}>
-                  <CardHeader className="flex flex-row items-start gap-4">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <feature.icon className="size-5 text-muted-foreground" />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <CardTitle className="text-base">
-                        {feature.title}
-                      </CardTitle>
-                      <CardDescription>{feature.description}</CardDescription>
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
-          </section>
-
-          <section className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-bold">
-                {dict.about.galleriesHeading}
-              </h2>
-              <p className="text-muted-foreground">
-                {dict.about.galleriesDescription}
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {galleries.map((gallery) => (
-                <Card key={gallery.href} className="flex flex-col">
-                  <CardHeader className="flex flex-1 flex-row items-start gap-4">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <gallery.icon className="size-5 text-muted-foreground" />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <CardTitle className="text-lg">{gallery.title}</CardTitle>
-                      <CardDescription>{gallery.description}</CardDescription>
-                    </div>
-                  </CardHeader>
-                  <CardFooter>
-                    <Button asChild variant="outline">
-                      <Link href={gallery.href}>
-                        {gallery.cta}
-                        <ArrowRight className="size-4" />
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </section>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {features.map((feature) => (
+            <Card key={feature.title}>
+              <CardHeader className="flex flex-row items-start gap-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                  <feature.icon className="size-5 text-muted-foreground" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <CardTitle className="text-base">{feature.title}</CardTitle>
+                  <CardDescription>{feature.description}</CardDescription>
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
         </div>
-      </main>
+      </section>
+
+      <section className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-bold">{dict.about.galleriesHeading}</h2>
+          <p className="text-muted-foreground">
+            {dict.about.galleriesDescription}
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {galleries.map((gallery) => (
+            <Card key={gallery.href} className="flex flex-col">
+              <CardHeader className="flex flex-1 flex-row items-start gap-4">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                  <gallery.icon className="size-5 text-muted-foreground" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <CardTitle className="text-lg">{gallery.title}</CardTitle>
+                  <CardDescription>{gallery.description}</CardDescription>
+                </div>
+              </CardHeader>
+              <CardFooter>
+                <Button asChild variant="outline">
+                  <Link href={gallery.href}>
+                    {gallery.cta}
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

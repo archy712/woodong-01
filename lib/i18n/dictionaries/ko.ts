@@ -17,6 +17,18 @@ export const ko: Dictionary = {
     retry: "다시 시도",
     required: "필수",
   },
+  nav: {
+    groupsLabel: "내 모임",
+    notificationsLabel: "알림",
+    devDocsLabel: "개발자 문서",
+    groupTabs: {
+      home: "홈",
+      announcements: "공지",
+      dues: "회비",
+      votes: "투표",
+      settings: "설정",
+    },
+  },
   home: {
     heading: "Next.js 스타터킷 3",
     footer: {

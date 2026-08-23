@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Suspense } from "react";
+
+import { AppFooter } from "@/components/app-footer";
+import { AppHeader } from "@/components/app-header";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -36,7 +40,19 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            <div className="flex min-h-screen flex-col">
+              <Suspense fallback={<div className="h-16 w-full border-b" />}>
+                <AppHeader />
+              </Suspense>
+              <main className="flex flex-1 flex-col items-center">
+                {children}
+              </main>
+              <Suspense fallback={null}>
+                <AppFooter />
+              </Suspense>
+            </div>
+          </TooltipProvider>
           <Toaster />
         </ThemeProvider>
       </body>

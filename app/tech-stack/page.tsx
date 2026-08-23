@@ -1,8 +1,5 @@
 import { Suspense } from "react";
-import Link from "next/link";
 
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -117,80 +114,54 @@ async function TechStackContent() {
   const dict = getDictionary(locale);
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex h-16 w-full items-center justify-center border-b border-b-foreground/10">
-        <div className="flex w-full max-w-5xl items-center justify-between gap-4 px-5">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="text-sm underline-offset-4 hover:underline"
+    <div className="flex w-full max-w-5xl flex-col gap-12 px-5 py-16">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold">{dict.techStack.heading}</h1>
+        <p className="text-muted-foreground">{dict.techStack.description}</p>
+      </div>
+
+      {TECH_STACK.map((group) => (
+        <section key={group.category} className="flex flex-col gap-4">
+          <h2 className="text-xl font-semibold">{group.category}</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {group.items.map((item) => (
+              <Card key={item.name}>
+                <CardHeader>
+                  <CardTitle className="text-base">{item.name}</CardTitle>
+                  <CardDescription>{item.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold">
+            {PLANNED_TECH_STACK.category}
+          </h2>
+          <Badge variant="outline">예정</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {PLANNED_TECH_STACK.description}
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {PLANNED_TECH_STACK.items.map((item) => (
+            <Card
+              key={item.name}
+              className="border-dashed text-muted-foreground"
             >
-              {dict.common.backToHome}
-            </Link>
-            <span className="text-lg font-semibold tracking-tight">
-              {dict.techStack.headerTitle}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher locale={locale} />
-            <ThemeSwitcher />
-          </div>
-        </div>
-      </header>
-
-      <main className="flex flex-1 flex-col items-center">
-        <div className="flex w-full max-w-5xl flex-col gap-12 px-5 py-16">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold">{dict.techStack.heading}</h1>
-            <p className="text-muted-foreground">
-              {dict.techStack.description}
-            </p>
-          </div>
-
-          {TECH_STACK.map((group) => (
-            <section key={group.category} className="flex flex-col gap-4">
-              <h2 className="text-xl font-semibold">{group.category}</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {group.items.map((item) => (
-                  <Card key={item.name}>
-                    <CardHeader>
-                      <CardTitle className="text-base">{item.name}</CardTitle>
-                      <CardDescription>{item.description}</CardDescription>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            </section>
+              <CardHeader>
+                <CardTitle className="text-base font-medium">
+                  {item.name}
+                </CardTitle>
+                <CardDescription>{item.description}</CardDescription>
+              </CardHeader>
+            </Card>
           ))}
-
-          <section className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold">
-                {PLANNED_TECH_STACK.category}
-              </h2>
-              <Badge variant="outline">예정</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {PLANNED_TECH_STACK.description}
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {PLANNED_TECH_STACK.items.map((item) => (
-                <Card
-                  key={item.name}
-                  className="border-dashed text-muted-foreground"
-                >
-                  <CardHeader>
-                    <CardTitle className="text-base font-medium">
-                      {item.name}
-                    </CardTitle>
-                    <CardDescription>{item.description}</CardDescription>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
-          </section>
         </div>
-      </main>
+      </section>
     </div>
   );
 }

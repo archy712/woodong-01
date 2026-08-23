@@ -18,6 +18,19 @@ export const en: Dictionary = {
     retry: "다시 시도",
     required: "필수",
   },
+  // TODO(i18n): 2차 확장에서 번역 예정 — 현재는 ko.ts 문구를 스텁으로 복사
+  nav: {
+    groupsLabel: "내 모임",
+    notificationsLabel: "알림",
+    devDocsLabel: "개발자 문서",
+    groupTabs: {
+      home: "홈",
+      announcements: "공지",
+      dues: "회비",
+      votes: "투표",
+      settings: "설정",
+    },
+  },
   home: {
     heading: "Next.js Starter Kit 3",
     footer: {
