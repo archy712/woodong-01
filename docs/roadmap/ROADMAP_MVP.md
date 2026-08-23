@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-23
-**📊 진행 상황**: Phase 0 대기 중 (0/44 Tasks 완료)
+**📊 진행 상황**: Phase 0 완료, Phase 1 대기 중 (5/44 Tasks 완료)
 
 ---
 
@@ -92,56 +92,59 @@
 
 ## 개발 단계
 
-### Phase 0: Supabase 프로젝트 정비 (PRD 우선순위 0 — 선행 작업)
+### Phase 0: Supabase 프로젝트 정비 (PRD 우선순위 0 — 선행 작업) ✅
 
 > **전제**: Supabase 무료 플랜 프로젝트를 **다른 앱과 공유**한다(신규 프로젝트 생성 없음). 우동 전용 객체는 전부 `public` 스키마에 **`udong_` 접두어**로 생성하고, 기존 테이블(`profiles`, `notifications`, `weekly_logs`, `organizations` 등)에는 **어떠한 `ALTER`/`DROP`/`TRUNCATE`도 수행하지 않는다**(PRD 5.0).
 > **의존성**: Phase 0 전체가 Phase 3~6의 선행 작업이다. Phase 1·2는 Phase 0과 병렬 진행 가능하다.
 
-- **Task 001: Supabase 공유 프로젝트 사전 점검 및 운영 정책 확정** - 우선순위
-  - `list_tables` / `list_extensions` / `list_migrations`로 공유 프로젝트 현황 스냅샷 확보 및 기존 테이블 목록 문서화
-  - `profiles` 재사용 범위 확정: `id`/`email`/`name`/`phone_number`/`bio`는 **읽기 전용 재사용**, `role`·`avatar_key`·`notify_on_*`는 **재사용 금지**로 코드 규약화
-  - `notifications`(기존 공유 테이블) 재사용 불가 사실 확인 및 `udong_notifications` 신규 생성 방침 확정
-  - Supabase Auth 설정 결정: **"Allow users without an email" 활성화 여부**(Kakao Biz App 미등록 대비), Manual Linking 베타 옵션 활성화 여부
-  - Free 플랜 제약 확인 및 운영 방침 수립: DB 500MB 용량·커넥션 풀 공유 모니터링, "7일 미사용 시 프로젝트 일시정지" 대비 QA 기간 정기 접근 루틴
-  - `service_role` 키를 `NEXT_PUBLIC_` 접두사 없는 서버 전용 환경 변수로 등록(`.env.local` 및 Vercel 환경 변수)
+- **Task 001: Supabase 공유 프로젝트 사전 점검 및 운영 정책 확정** ✅ - 완료
+  - ✅ `list_tables` / `list_extensions` / `list_migrations`로 공유 프로젝트 현황 스냅샷 확보 및 기존 테이블 목록 문서화 (`docs/ops/SUPABASE_SHARED_PROJECT.md`)
+  - ✅ `profiles` 재사용 범위 확정: `id`/`email`/`name`/`phone_number`/`bio`는 **읽기 전용 재사용**, `role`·`avatar_key`·`notify_on_*`는 **재사용 금지**로 코드 규약화
+  - ✅ `notifications`(기존 공유 테이블) 재사용 불가 사실 확인 및 `udong_notifications` 신규 생성 방침 확정
+  - ✅ Supabase Auth 설정 결정 및 적용: Manual Linking 베타 옵션 활성화 완료, Kakao "이메일 없이 가입 허용"(EmailOptional)은 Biz App 미등록 전제로 기본 경로 확정(Task 016에서 provider별로 적용)
+  - ✅ Free 플랜 제약 확인 및 운영 방침 수립: DB 500MB 용량·커넥션 풀 공유 모니터링, "7일 미사용 시 프로젝트 일시정지" 대비 QA 기간 정기 접근 루틴
+  - ✅ `service_role` 키를 `NEXT_PUBLIC_` 접두사 없는 서버 전용 환경 변수로 등록(`.env.local` 완료, Vercel 환경 변수는 Task 033 배포 시 등록)
   - **완료 조건**: 공유 프로젝트 현황 스냅샷 문서화 완료, Auth 옵션 3종(이메일 없는 사용자 허용 / Manual Linking / OAuth provider) 결정 기록, 서버 전용 환경 변수 등록 확인
 
-- **Task 002: `udong_*` 테이블 마이그레이션 작성 및 적용**
-  - PRD 5.2~5.7 마이그레이션: `udong_groups`, `udong_group_members`, `udong_group_invites`, `udong_due_cycles`, `udong_dues`, `udong_payments`
-  - PRD 5.10~5.13 마이그레이션: `udong_votes`, `udong_vote_options`, `udong_vote_responses`, `udong_announcements`, `udong_notifications`, `udong_notification_preferences`
-  - PRD 5.8~5.9(`udong_expenses`, `udong_settlements`, `udong_settlement_items`)는 **2차 확장 대상**이나, 스키마만 미리 생성할지 Phase 8로 미룰지 착수 시 결정(기본 방침: Phase 8로 미룸)
-  - 제약 조건 반영: `UNIQUE(group_id, user_id)`(멤버십), `UNIQUE(code)`(초대), `UNIQUE(due_cycle_id, user_id)`(청구), `UNIQUE(user_id, channel)`(알림 설정)
-  - 사용자 참조는 **`auth.users(id)`를 FK 대상**으로 하고, 화면 표시용 이름/연락처만 `public.profiles`를 조인해 읽도록 설계
-  - 확장성 컬럼 반영: `udong_groups.type`, `udong_due_cycles.due_type`(`regular`/`extra`), `udong_notification_preferences.channel`의 `CHECK(channel in ('kakao','slack','email','in_app'))`
-  - 금액 컬럼은 전부 `numeric(14,0)`(원 단위, 소수점 없음)로 통일
-  - **완료 조건**: 12개 `udong_*` 테이블 생성 완료, 기존 테이블에 대한 변경 이력 0건, `list_tables`로 접두어 규칙 위반 객체 없음 확인
+- **Task 002: `udong_*` 테이블 마이그레이션 작성 및 적용** ✅ - 완료
+  - ✅ PRD 5.2~5.7 마이그레이션: `udong_groups`, `udong_group_members`, `udong_group_invites`, `udong_due_cycles`, `udong_dues`, `udong_payments`
+  - ✅ PRD 5.10~5.13 마이그레이션: `udong_votes`, `udong_vote_options`, `udong_vote_responses`, `udong_announcements`, `udong_notifications`, `udong_notification_preferences`
+  - ✅ PRD 5.8~5.9(`udong_expenses`, `udong_settlements`, `udong_settlement_items`)는 **2차 확장 대상**으로 확정, 기본 방침대로 Phase 8로 미룸(이번 Task에서 미생성)
+  - ✅ 제약 조건 반영: `UNIQUE(group_id, user_id)`(멤버십), `UNIQUE(code)`(초대), `UNIQUE(due_cycle_id, user_id)`(청구), `UNIQUE(user_id, channel)`(알림 설정)
+  - ✅ 사용자 참조는 **`auth.users(id)`를 FK 대상**으로 설계(생성/기록자 컬럼은 `ON DELETE SET NULL`, 소유 주체 컬럼은 `ON DELETE CASCADE`로 분기)
+  - ✅ 확장성 컬럼 반영: `udong_groups.type`(자유 값), `udong_due_cycles.due_type`(`regular`/`extra`), `udong_notification_preferences.channel`의 `CHECK(channel in ('kakao','slack','email','in_app'))` — 그 외 열거형 컬럼에도 CHECK 제약 동일 적용
+  - ✅ 금액 컬럼은 전부 `numeric(14,0)`(원 단위, 소수점 없음)로 통일
+  - ✅ 모든 FK 컬럼에 covering 인덱스 추가(24개), `udong_announcements.updated_at` 자동 갱신 트리거(`udong_set_updated_at()`) 구현
+  - **완료 조건**: 12개 `udong_*` 테이블 생성 완료(`create_udong_groups_domain`/`create_udong_dues_domain`/`create_udong_votes_domain`/`create_udong_announcements`/`create_udong_notifications_domain` 5개 마이그레이션), 기존 32개 테이블 변경 이력 0건, `list_tables`로 접두어 규칙 위반 객체 없음 확인, `get_advisors`는 RLS 비활성 경고(Task 003에서 해소 예정) 외 이상 없음
 
-- **Task 003: RLS 헬퍼 함수 및 정책 구현**
-  - `udong_is_group_member(p_group_id uuid)` / `udong_is_group_admin(p_group_id uuid)`를 `SECURITY DEFINER` + `set search_path = ''`로 정의(PRD 4.2)
-  - 모든 `udong_*` 테이블 `ENABLE ROW LEVEL SECURITY` 적용
-  - SELECT 정책에 `udong_is_group_member(group_id)`, 쓰기 정책에 `udong_is_group_admin(group_id)` 적용 — **`udong_group_members` 자신의 정책도 동일 함수를 사용해 `infinite recursion detected in policy(42P17)` 회피**
-  - `udong_vote_responses`: (a) 본인 레코드만 SELECT/INSERT 가능한 행 단위 정책, (b) 익명 투표 집계용 `SECURITY DEFINER` 함수/뷰를 별도 정의(응답자 식별 없이 카운트만 반환)
-  - `udong_notification_preferences`: 본인 레코드만 SELECT/UPDATE
-  - `udong_notifications`: 본인 수신 레코드만 SELECT, `read_at`/`clicked_at`만 UPDATE 허용하는 **컬럼 보호 트리거**를 `udong_notifications` 전용으로 신규 구현(기존 `notifications_protect_columns`는 재사용하지 않음)
-  - **마지막 총무 보호 트리거**: `udong_group_members`에서 마지막 `admin`의 `role` 변경 및 `status='left'` 전환을 차단(PRD 3.2 AC, 5.3, 9장 "총무 단일 실패점")
-  - `udong_dues.status` 자동 갱신 트리거: 연결된 `udong_payments.amount` 합계와 `udong_dues.amount`를 비교해 `unpaid`/`partial`/`paid` 갱신
-  - `udong_vote_responses` 중복 방지 `BEFORE INSERT` 트리거: `udong_votes.allow_multiple`을 조회해 `false`면 `UNIQUE(vote_id, user_id)` 상당, `true`면 `UNIQUE(vote_id, user_id, option_id)` 상당으로 분기 검증
-  - `udong_group_invites.used_count` 원자적 증가 RPC 정의(동시성 이슈 방지)
-  - **완료 조건**: `get_advisors`(security) 경고 0건, 재귀 오류(42P17) 미발생, 총무 강등/탈퇴 차단 및 납부 상태 자동 갱신을 SQL 레벨에서 검증 완료
+- **Task 003: RLS 헬퍼 함수 및 정책 구현** ✅ - 완료
+  - ✅ `udong_is_group_member(p_group_id uuid)` / `udong_is_group_admin(p_group_id uuid)`를 `SECURITY DEFINER` + `set search_path = ''`로 정의(PRD 4.2)
+  - ✅ 모든 `udong_*` 테이블 `ENABLE ROW LEVEL SECURITY` 적용
+  - ✅ SELECT 정책에 `udong_is_group_member(group_id)`, 쓰기 정책에 `udong_is_group_admin(group_id)` 적용 — **`udong_group_members` 자신의 정책도 동일 함수를 사용해 `infinite recursion detected in policy(42P17)` 회피** 확인
+  - ✅ `udong_vote_responses`: (a) 본인 레코드만 SELECT/INSERT 가능한 행 단위 정책, (b) `udong_get_vote_results()` — 익명/실명 투표 결과를 함께 처리하는 `SECURITY DEFINER` 함수로 통합 구현(익명은 카운트만, 실명은 투표자 이름 배열까지 반환 — Task 030 요구사항 선반영)
+  - ✅ `udong_notification_preferences`: 본인 레코드만 SELECT/INSERT/UPDATE
+  - ✅ `udong_notifications`: 본인 수신 레코드만 SELECT, `read_at`/`clicked_at`만 UPDATE 허용하는 **컬럼 보호 트리거**를 `udong_notifications` 전용으로 신규 구현(기존 `notifications_protect_columns`는 재사용하지 않음)
+  - ✅ **마지막 총무 보호 트리거**: `udong_group_members`에서 마지막 `admin`의 `role` 변경 및 `status='left'` 전환을 차단(PRD 3.2 AC, 5.3, 9장 "총무 단일 실패점") — SQL 레벨 시나리오 테스트로 정확한 에러 문구까지 검증 완료
+  - ✅ `udong_dues.status` 자동 갱신 트리거: 연결된 `udong_payments.amount` 합계와 `udong_dues.amount`를 비교해 `unpaid`/`partial`/`paid` 갱신(INSERT/UPDATE/DELETE 전부 대응) — 부분납부→완납→재부분납부 3단계 SQL 시나리오로 검증 완료
+  - ✅ `udong_vote_responses` 중복 방지 `BEFORE INSERT` 트리거: `udong_votes.allow_multiple`을 조회해 `false`면 `UNIQUE(vote_id, user_id)` 상당, `true`면 `UNIQUE(vote_id, user_id, option_id)` 상당으로 분기 검증
+  - ✅ `udong_group_invites.used_count` 원자적 증가 RPC 정의(동시성 이슈 방지)
+  - ✅ (계획에 없던 추가 보정) 신규 `SECURITY DEFINER` 함수 8개에 대해 이 공유 프로젝트의 `ALTER DEFAULT PRIVILEGES`가 `anon`에 EXECUTE를 직접 부여하던 문제를 발견해 명시적 REVOKE로 차단, 트리거 전용 함수 5개(4개 신규 + Task 002의 `udong_set_updated_at`)에 남아있던 `authenticated`/`anon` 직접 실행 권한도 기존 프로젝트 컨벤션(트리거 함수는 EXECUTE 완전 회수)에 맞춰 회수
+  - **완료 조건**: `get_advisors`(security) **ERROR 0건** 달성(RLS 비활성 12건 전부 해소). 남은 WARN은 전부 기존 프로젝트 소유 항목이거나, `udong_is_group_member`/`udong_is_group_admin`/`udong_get_vote_results`/`udong_increment_invite_used_count`처럼 `authenticated`에게 의도적으로 열어둔 RPC뿐(기존 `is_admin()` 등과 동일 패턴, 문자 그대로의 "경고 0건"은 아니지만 실질적 위험 없음). 재귀 오류(42P17) 미발생, 총무 강등/탈퇴 차단 및 납부 상태 자동 갱신을 SQL 레벨에서 검증 완료
 
-- **Task 004: Storage 비공개 버킷 및 서명 URL 유틸 구성**
-  - `udong-receipts`(영수증), `udong-covers`(모임 대표 이미지) 버킷을 **모두 비공개(private)**로 생성
-  - `storage.objects`에 `udong_is_group_member(group_id)` 기반 정책 적용
-  - 조회 시 `createSignedUrl()`로 임시 URL을 발급하는 공통 유틸 작성(public URL 저장 금지)
-  - **클라이언트 사이드 리사이즈 유틸**(Canvas API로 업로드 전 축소) 구현 — Supabase Storage 서버 사이드 이미지 변환은 **Pro 플랜 전용**이므로 1차는 이 방식으로 대체(PRD 4.1, 9장)
-  - 원본 업로드 5MB 제한 검증 로직 및 `next/image` 연동
-  - **완료 조건**: 버킷 2개 비공개 생성, 비멤버의 직접 오브젝트 접근 차단 확인, 5MB 초과/리사이즈 동작 검증 완료
+- **Task 004: Storage 비공개 버킷 및 서명 URL 유틸 구성** ✅ - 완료
+  - ✅ `udong-receipts`(영수증), `udong-covers`(모임 대표 이미지) 버킷을 **모두 비공개(private)**로 생성(`file_size_limit=5242880`, `allowed_mime_types`: jpeg/png/webp)
+  - ✅ `storage.objects`에 `udong_is_group_member`/`udong_is_group_admin` 기반 정책 적용 — 오브젝트 경로를 `{group_id}/파일명` 컨벤션으로 고정하고 `(storage.foldername(name))[1]`로 그룹 판별(기존 `weekly-log-attachments` 정책 패턴과 동일 스타일), 버킷 2개 × SELECT/INSERT/UPDATE/DELETE 총 8개 정책
+  - ✅ 조회 시 `createSignedUrl()`로 임시 URL을 발급하는 공통 유틸 작성(`lib/supabase/storage.ts`의 `getSignedStorageUrl()`, `buildGroupObjectPath()`) — public URL 미사용
+  - ✅ **클라이언트 사이드 리사이즈 유틸**(`lib/storage/image.ts`의 `resizeImageFile()`, Canvas API로 업로드 전 축소 후 JPEG 재인코딩) 구현 — Supabase Storage 서버 사이드 이미지 변환은 **Pro 플랜 전용**이므로 1차는 이 방식으로 대체(PRD 4.1, 9장)
+  - ✅ 원본 업로드 5MB 제한 검증 로직(`validateImageFile()`) 및 `next/image` 연동(`next.config.ts`의 `images.remotePatterns`가 서명 URL 경로 `/storage/v1/object/sign/**`만 허용)
+  - **완료 조건**: 버킷 2개 비공개 생성 확인, RLS 정책 8건으로 비멤버 접근 차단 설계 완료(실제 업로드 E2E 검증은 로그인 플로우가 준비되는 Task 019/033에서 수행 예정), 리사이즈/검증 유틸 구현 및 `npm run check-all`(typecheck/lint) 통과 확인
 
-- **Task 005: `database.types.ts` 재생성 및 타입 레이어 정비**
-  - `mcp__supabase__generate_typescript_types`로 `lib/supabase/database.types.ts` 재생성(다른 앱 테이블 타입이 함께 포함되는 것은 정상)
-  - `Tables<"udong_groups">` 등 헬퍼 기반으로 도메인별 `Pick` 타입 컨벤션 정리(`components/profile-form.tsx` 패턴 준용)
-  - `npm run typecheck` 통과 확인 및 재생성 절차를 개발 가이드에 문서화
-  - **완료 조건**: `npm run check-all` 통과, `udong_*` 테이블 타입이 전부 반영됨
+- **Task 005: `database.types.ts` 재생성 및 타입 레이어 정비** ✅ - 완료
+  - ✅ `mcp__supabase__generate_typescript_types`로 `lib/supabase/database.types.ts` 재생성(다른 앱 테이블 타입이 함께 포함되는 것은 정상) — `udong_*` 테이블 12개 + 함수 4개(`udong_is_group_member`/`udong_is_group_admin`/`udong_get_vote_results`/`udong_increment_invite_used_count`) 전부 반영 확인
+  - ✅ `Tables<"udong_groups">` 등 헬퍼 기반으로 도메인별 `Pick` 타입 컨벤션 정리(`components/profile-form.tsx` 패턴 준용) — 절차를 `docs/guides/product-structure.md`에 문서화
+  - ✅ **(재생성 과정에서 발견한 선행 버그 수정)** 기존 `database.types.ts`가 실제 스키마가 아니라 스타터킷 최초 템플릿의 가짜 `profiles` 컬럼(`username`/`full_name`/`avatar_url` — 실제로는 존재하지 않음)을 담고 있었고, 이를 쓰던 `components/profile-form.tsx`/`app/protected/profile/page.tsx`가 이미 런타임에서 깨져 있었음(타입 재생성 전엔 가짜 타입 덕에 컴파일만 통과). 실제 컬럼(`id`/`email`/`name`/`phone_number`/`bio`)으로 맞추되, PRD 5.0/5.1의 "읽기 전용 재사용" 원칙에 따라 **쓰기(UPDATE) 기능은 제거하고 읽기 전용 표시로 전환**(사용자 확인 후 결정)
+  - ✅ `npm run typecheck` 통과 확인 및 재생성 절차를 개발 가이드에 문서화(`docs/guides/product-structure.md`)
+  - **완료 조건**: `npm run check-all` 통과(typecheck/lint/format:check 전부 0 에러 확인 — 과정에서 무관한 기존 포맷 오류 1건도 함께 정리), `udong_*` 테이블 타입이 전부 반영됨
 
 ---
 
@@ -286,9 +289,10 @@
   - **완료 조건**: 생성 → 상세 이동 → 수정 → 삭제 전 구간 동작, 비멤버의 조회/수정이 RLS로 차단됨
 
 - **Task 020: 초대 코드 발급·참여·무효화 구현**
+  - > **Task 003에서 확인된 선행 제약**: `udong_group_members` INSERT 정책은 "자신이 만든 그룹의 admin 자기등록"만 허용하도록 잠겨 있어, 초대로 합류하는 `member` 행 INSERT는 클라이언트에서 직접 불가능하다. `udong_increment_invite_used_count()`를 호출하고 멤버십을 INSERT하는 통합 `SECURITY DEFINER` RPC(예: `udong_redeem_group_invite(p_code text)`)를 신규로 만들어야 한다. 또한 `udong_group_invites` SELECT가 관리자 전용이라 `/invite/[code]` 공개 미리보기 페이지가 모임 이름 등을 직접 조회할 수 없으므로, 최소 정보만 반환하는 별도 `SECURITY DEFINER` 함수도 필요하다.
   - 초대 코드/링크 생성: `expires_at`, `max_uses` 설정 필수화(코드 유출 대비, PRD 9장), 복사 UI 제공
   - 참여 처리: `is_active = true AND revoked_at IS NULL AND expires_at > now() AND (max_uses IS NULL OR used_count < max_uses)` 조건 검증 후 `일반회원`으로 등록
-  - `used_count` 원자적 증가 RPC 호출(동시성 이슈 방지)
+  - `used_count` 원자적 증가 RPC 호출(동시성 이슈 방지, Task 003에서 `udong_increment_invite_used_count()`로 구현 완료)
   - **이미 멤버인 사용자 재접속 시** `UNIQUE(group_id, user_id)` 제약으로 중복 멤버십 생성 없이 모임 상세로 바로 이동
   - **재발급 시 이전 초대는 `is_active = false` + `revoked_at` 기록**으로 무효화
   - 만료/무효 코드 입력 시 "유효하지 않은 초대 코드입니다" 에러 표시
@@ -380,6 +384,7 @@
   - **완료 조건**: 설정 저장/복원 정상 동작, `in_app` 비활성 사용자에게 앱 내 알림이 생성되지 않음
 
 - **Task 028: 회비 리마인드 lazy 처리 구현**
+  - > **Task 003에서 확인된 선행 제약**: `udong_dues`에는 클라이언트용 UPDATE 정책이 전혀 없다(상태는 트리거 전용). `last_reminded_at` 갱신도 `SECURITY DEFINER` RPC를 통해서만 가능하므로, 리마인드 생성 로직 자체를 이 RPC 안에 구현해야 한다.
   - 멤버가 **회비 대시보드 또는 알림센터에 진입하는 시점**에, `udong_due_cycles.reminder_interval_days`와 `udong_dues.last_reminded_at`을 비교해 주기가 지난 **미납 멤버에 한해** 리마인드 알림(`type='due_reminder'`)을 `udong_notifications`에 기록
   - 리마인드 생성 후 `last_reminded_at` 갱신, 동시 조회 시 중복 생성 방지(원자적 갱신 또는 조건부 insert)
   - **실시간 배치 발송(pg_cron)은 2차 확장**임을 코드 주석과 문서에 명시
@@ -393,10 +398,10 @@
   - **완료 조건**: 단일/복수 선택 투표가 각각 명세대로 동작, 중복 투표 차단 확인
 
 - **Task 030: 투표 lazy 마감·집계·결과 알림 구현**
+  - > **Task 003에서 확인된 선행 제약**: `udong_votes` UPDATE는 관리자 전용 정책뿐이라 lazy 마감(아무 멤버나 조회 시 `status`를 `closed`로 전환)이 RLS를 통과하지 못한다. lazy/수동 조기마감 공용 `SECURITY DEFINER` 함수를 새로 만들어야 한다.
   - **lazy 마감**: 마감일시가 지난 투표의 목록/상세 조회 시 서버에서 상태를 `closed`로 전환하고 결과를 집계해 조회 멤버에게 즉시 표시
   - **수동 조기마감**: 총무의 "지금 마감" 클릭 → 확인 다이얼로그 → lazy 마감과 동일한 로직 수행
-  - **익명 투표 결과**: `udong_vote_responses`를 직접 SELECT하지 않고 **`SECURITY DEFINER` 집계 함수/뷰**를 통해 선택지별 카운트만 반환(응답자 이름 미노출)
-  - **실명 투표 결과**: 각 선택지에 투표한 멤버 이름 목록 표시(`profiles` 조인)
+  - **익명/실명 투표 결과**: Task 003에서 이미 `udong_get_vote_results(p_vote_id)` `SECURITY DEFINER` 함수로 구현 완료(`udong_vote_responses` 직접 SELECT 불필요) — 익명 투표는 `voter_names`가 `null`(카운트만), 실명 투표는 투표자 이름 배열을 반환하므로 이 Task에서는 이 함수를 호출해 결과 화면만 구성하면 된다
   - 마감 전환 완료 시 **참여 여부와 무관하게 모임 멤버 전원에게 결과 알림(`type='vote_close'`)** 기록(1차: 조회 트리거 기반, 2차: pg_cron 실시간 전환)
   - 결과 시각화는 Task 013 차트 컴포넌트 재사용
   - **완료 조건**: 마감 전환이 1회만 수행되고(중복 알림 없음), 익명 투표에서 응답자 식별 정보가 어떤 경로로도 노출되지 않음
@@ -547,4 +552,4 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 ---
 
 **📅 최종 업데이트**: 2026-08-23
-**📊 진행 상황**: Phase 0 대기 중 (0/44 Tasks 완료)
+**📊 진행 상황**: Phase 0 완료, Phase 1 대기 중 (5/44 Tasks 완료)
