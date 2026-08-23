@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-24
-**📊 진행 상황**: Phase 0·1 완료, Phase 2 대기 중 (9/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1 완료, Phase 2 진행 중 (10/44 Tasks 완료)
 
 ---
 
@@ -192,11 +192,14 @@
 > **PRD 우선순위 7(디자인 시스템), 8(푸터 요구사항), 6(모임 메인 페이지)에 해당.**
 > **의존성**: Task 006(라우트 골격) 필요. Phase 0과 병렬 진행 가능(모든 화면은 하드코딩 더미 데이터 사용).
 
-- **Task 010: 우동 브랜드 디자인 토큰 적용**
-  - 코럴/앰버 계열 컬러 팔레트를 `app/globals.css`의 `:root`/`.dark` HSL CSS 변수(`--primary` 등)와 `tailwind.config.ts`의 `theme.extend.colors`에 **함께** 반영(v3 방식 하이브리드 구성 유지)
-  - 다크모드(next-themes) 대비비 검증 및 토큰 문서화
-  - 로고/파비콘(우동 그릇 모티프 + 사람 아이콘) 자산 적용, 브랜드 톤앤매너 가이드를 오류 메시지·빈 상태 문구까지 확장
-  - **완료 조건**: 라이트/다크 양쪽에서 주요 화면 대비비 WCAG AA 충족, `--primary` 계열 하드코딩 색상 0건
+- **Task 010: 우동 브랜드 디자인 토큰 적용** ✅ - 완료
+  - ✅ 코럴/앰버 계열 컬러 팔레트를 `app/globals.css`의 `:root`/`.dark` HSL CSS 변수(`--primary` 등)와 `tailwind.config.ts`의 `theme.extend.colors`에 함께 반영(v3 방식 하이브리드 구성 유지) — 라이트 `--primary: 14 85% 44%`(진한 코럴), 다크 `--primary: 14 85% 58%`(밝은 코럴), `--accent`는 앰버(`38 92% 50%`)로 통일, `--chart-1~5`도 코럴/앰버 계열로 재배치
+  - ✅ 다크모드(next-themes) 대비비 검증: `--primary`(대비 4.83:1)·`--accent`(대비 7.99:1) 등 주요 시맨틱 토큰을 WCAG 공식으로 직접 계산해 4.5:1 이상 확보, `/gallery` 라이트·다크 스크린샷으로 버튼 variant 6종 육안 검증 완료
+  - ✅ `tailwind.config.ts`에 테마 전환과 무관한 장식용 고정 팔레트 `brand.coral`(`DEFAULT`/`dark`/`tint`)·`brand.amber`(`DEFAULT`/`tint`) 추가 — CSS 변수 값과 동일한 HEX로 로고/마케팅 그래픽 전용, 화면 UI는 시맨틱 토큰 우선 사용 원칙을 주석으로 명시
+  - ✅ 로고/파비콘(우동 그릇 모티프 + 사람 아이콘) 자산 적용: `components/logo.tsx`(헤더용 `Logo`/`LogoMark`), `app/icon.tsx`(32×32 `next/og` `ImageResponse`), `app/apple-icon.tsx`(180×180) 신규 구현, 기본 Next.js `app/favicon.ico` 제거
+  - ✅ (과정에서 발견한 선행 버그 수정) `app/icon.tsx`/`app/apple-icon.tsx`가 확장자 없는 동적 라우트라 `proxy.ts`의 기존 matcher(`favicon.ico`, `.svg/.png/...` 확장자만 제외)에 걸러지지 않아 비로그인 상태에서 파비콘 요청이 `/auth/login`으로 307 리다이렉트되던 문제 발견·수정(matcher에 `icon$`/`apple-icon$` 추가)
+  - ✅ `app/layout.tsx`의 기본 메타데이터(`title`/`description`)를 스타터킷 문구에서 우동 브랜드 문구로 교체 — 오류 메시지·빈 상태 문구의 브랜드 톤앤매너 확장은 Task 009에서 `lib/i18n/dictionaries/ko.ts`에 선반영 완료(`emptyStates`/`errors` 네임스페이스)
+  - **완료 조건**: 라이트/다크 양쪽에서 주요 화면 대비비 WCAG AA 충족(계산 및 스크린샷 검증 완료), `--primary` 계열 하드코딩 색상 0건(`grep` 확인), `npm run check-all` 통과
 
 - **Task 011: 공통 레이아웃·네비게이션·푸터 구현 (PRD 우선순위 8 포함)**
   - 모바일 우선 앱 셸: 헤더(로고, 알림 종 아이콘, 언어 스위처, 테마 토글, `AuthButton`), 모임 컨텍스트 네비게이션
@@ -553,4 +556,4 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 ---
 
 **📅 최종 업데이트**: 2026-08-24
-**📊 진행 상황**: Phase 0·1 완료, Phase 2 대기 중 (9/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1 완료, Phase 2 진행 중 (10/44 Tasks 완료)
