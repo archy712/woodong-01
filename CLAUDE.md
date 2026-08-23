@@ -33,7 +33,7 @@ npm run check-all     # typecheck + lint + format:check 순차 실행
 
 ### 디렉토리 구조 — `src/` 없음
 
-`app/`, `components/`, `lib/`는 모두 프로젝트 **루트**에 위치합니다 (`src/` 디렉토리 사용 안 함). 경로 별칭 `@/*`는 `tsconfig.json`에서 `./*`(루트)로 매핑됩니다. `docs/guides/`에 아키텍처/스타일/폼 처리에 대한 상세 가이드 5종이 있으니 관련 작업 전에 참고하세요.
+`app/`, `components/`, `lib/`는 모두 프로젝트 **루트**에 위치합니다 (`src/` 디렉토리 사용 안 함). 경로 별칭 `@/*`는 `tsconfig.json`에서 `./*`(루트)로 매핑됩니다. `docs/guides/`에 아키텍처/스타일/폼 처리에 대한 상세 가이드 5종이 있으니 관련 작업 전에 참고하세요. `docs/prd/`, `docs/roadmap/`에는 신규 기능 착수 전 작성하는 PRD/로드맵 문서가 위치합니다(아래 Claude Code 커스텀 설정 참고).
 
 ### Supabase 클라이언트 3종 — 컨텍스트별로 반드시 구분해서 사용
 
@@ -87,8 +87,8 @@ npm run check-all     # typecheck + lint + format:check 순차 실행
 
 ## Claude Code 커스텀 설정
 
-- `.claude/agents/`에 이 저장소 전용 서브에이전트가 정의되어 있습니다: `dev/nextjs-supabase-developer`(Next.js+Supabase 기능 구현), `dev/ui-markup-specialist`(정적 마크업/스타일링), `dev/nextjs-app-developer`(라우팅/레이아웃 구조), `dev/code-reviewer`, `dev/development-planner`(ROADMAP.md), `docs/prd-generator`, `docs/prd-validator` 등.
-- `.claude/commands/git/`에 `commit`, `pr`, `merge`, `branch`, `update-roadmap` 슬래시 커맨드가 정의되어 있습니다.
+- `.claude/agents/`에 이 저장소 전용 서브에이전트가 정의되어 있습니다: `dev/nextjs-supabase-developer`(Next.js+Supabase 기능 구현), `dev/ui-markup-specialist`(정적 마크업/스타일링), `dev/nextjs-app-developer`(라우팅/레이아웃 구조), `dev/code-reviewer`, `dev/development-planner`(로드맵 문서 작성/갱신), `docs/prd-generator`(PRD 작성), `docs/prd-validator`(PRD 기술 검증), `dev/starter-cleaner`(스타터킷 보일러플레이트 정리), `dev/notion-api-database-expert`(Notion API 연동).
+- `.claude/commands/git/`에 `commit`, `pr`, `merge`, `branch`, `update-roadmap` 슬래시 커맨드가 정의되어 있습니다. `update-roadmap`의 `allowed-tools`는 로드맵 파일 경로(현재 `docs/roadmap/ROADMAP_MVP.md`)가 하드코딩되어 있으므로, 로드맵 파일을 옮기거나 새로 만들면 이 커맨드 파일도 함께 수정해야 합니다.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
