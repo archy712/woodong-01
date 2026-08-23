@@ -61,6 +61,20 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // 우동 브랜드 원색 (PRD 1.1). 다크모드에 따라 바뀌지 않는 고정 값으로,
+        // 로고·마케팅 그래픽 등 테마 전환과 무관해야 하는 장식 요소 전용이다.
+        // 화면 UI는 위 시맨틱 토큰(primary/accent 등)을 우선 사용할 것.
+        brand: {
+          coral: {
+            DEFAULT: "#EF6339",
+            dark: "#D03D11",
+            tint: "#FBE3DA",
+          },
+          amber: {
+            DEFAULT: "#F59F0A",
+            tint: "#FDECC8",
+          },
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
