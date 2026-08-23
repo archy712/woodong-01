@@ -13,10 +13,10 @@ npm install react-hook-form @hookform/resolvers zod
 # 고급 기능을 위한 추가 패키지 (선택적)
 npm install use-debounce react-error-boundary
 
-# 이 가이드 작성 시점 기준 최신 버전
+# 이 프로젝트에 실제 설치된 버전(package.json 기준)
 # - react-hook-form: ^7.84.0
 # - @hookform/resolvers: ^5.7.1
-# - zod: ^4.4.3
+# - zod: ^3.25.76 (v3 — 최상위 z.email()/z.url()/z.uuid() 등 v4 전용 API 미지원)
 ```
 
 ### TypeScript 설정 최적화
@@ -59,8 +59,9 @@ export interface FormHookProps<T extends z.ZodSchema> {
 import { z } from "zod";
 
 // 🚀 재사용 가능한 기본 스키마 컴포넌트
-// Zod v4부터 .string().email()은 deprecated, 최상위 z.email()을 사용 (빈 문자열도 자동으로 걸러짐)
-export const emailSchema = z.email("올바른 이메일 형식이 아닙니다");
+// 이 프로젝트는 zod v3(3.25.76)를 사용하므로 최상위 z.email()이 아니라 .string().email()을 쓴다
+// (z.email()/z.url()/z.uuid() 같은 최상위 shorthand는 zod v4 전용 API)
+export const emailSchema = z.string().email("올바른 이메일 형식이 아닙니다");
 
 export const passwordSchema = z
   .string()
@@ -463,7 +464,7 @@ import {
 const step1Schema = z.object({
   firstName: z.string().min(1, '이름을 입력해주세요'),
   lastName: z.string().min(1, '성을 입력해주세요'),
-  email: z.email('올바른 이메일을 입력해주세요'),
+  email: z.string().email('올바른 이메일을 입력해주세요'),
 })
 
 const step2Schema = z.object({
@@ -474,7 +475,7 @@ const step2Schema = z.object({
 
 const step3Schema = z.object({
   skills: z.array(z.string()).min(1, '최소 1개의 스킬을 선택해주세요'),
-  portfolio: z.url('올바른 URL을 입력해주세요').optional(),
+  portfolio: z.string().url('올바른 URL을 입력해주세요').optional(),
   bio: z.string().max(500, '최대 500자까지 입력 가능합니다'),
 })
 
@@ -1404,7 +1405,7 @@ function GoodForm() {
 // ❌ 금지: 클라이언트에서만 검증
 function InsecureForm() {
   const schema = z.object({
-    email: z.email(),
+    email: z.string().email(),
   })
 
   // 서버 검증 없이 클라이언트 검증만 수행
