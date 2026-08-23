@@ -1,0 +1,74 @@
+# Supabase 공유 프로젝트 운영 정책 (Task 001)
+
+- **문서 버전**: v1.0
+- **작성일**: 2026-08-23
+- **대상 로드맵 Task**: `docs/roadmap/ROADMAP_MVP.md` Task 001
+
+## 1. 공유 프로젝트 현황 스냅샷 (2026-08-23 확인)
+
+`mcp__supabase__list_tables` / `list_extensions` / `list_migrations`로 확인. 프로젝트는 우동 전용이 아니며, 이미 운영 중인 다른 앱(주간업무보고/조직관리 성격)의 테이블 32개가 `public` 스키마에 존재한다.
+
+**기존 `public` 스키마 테이블 (32개, `udong_` 접두어 없음 — 전부 다른 앱 소유, 변경 금지)**
+
+```
+brand_color_types, brand_colors, brand_gender_size_types, brand_gender_sizes, brand_lines,
+brands, companies, departments, divisions, item_types, items, menus, notifications,
+org_company_divisions, org_group_companies, org_groups, org_section_teams, org_sections,
+org_unit_leaders, organizations, products, profiles, small_brands, sub_items,
+user_menu_permissions, weekly_log_attachments, weekly_log_change_history,
+weekly_log_comment_mentions, weekly_log_comments, weekly_log_reactions, weekly_logs, work_types
+```
+
+- `udong_*` 테이블은 현재 **0개** — 아직 Phase 0 마이그레이션이 적용되지 않은 클린 상태 확인.
+- 마이그레이션 이력(`list_migrations`) 106건 전부 다른 앱 소유(예: `create_weekly_logs_table`, `add_organizations_table` 등). 우동 관련 마이그레이션 없음.
+- 확장(`list_extensions`) 중 이번 MVP와 관련된 것: `pgcrypto`, `uuid-ossp`(ID 생성), `pg_cron`(이미 `installed_version` 존재 — 2차 확장 Task 037 실시간 스케줄러 전환 시 재사용 가능, 1차에서는 미사용).
+
+## 2. `profiles` / `notifications` 재사용 범위 (코드 규약)
+
+`list_tables(verbose=true)`로 컬럼 직접 확인.
+
+### `public.profiles` (현재 66 rows)
+
+| 컬럼                                                       | 우동에서의 취급                                                                                                                                                                                           |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `email`, `name`, `phone_number`, `bio`               | **읽기 전용 재사용 허용** — 화면 표시용으로만 조인해서 읽는다                                                                                                                                             |
+| `role`, `avatar_key`, `notify_on_comment/mention/reminder` | **재사용 금지** — 다른 앱의 권한/알림 로직과 강결합(마지막 관리자 강등 방지 트리거 등). 우동의 모임 역할·알림 채널 설정은 반드시 `udong_group_members.role`, `udong_notification_preferences`로 별도 관리 |
+| `department_id`, `is_active`                               | 우동과 무관, 참조하지 않음                                                                                                                                                                                |
+
+- `auth.users`에 대한 `AFTER INSERT` 트리거(`handle_new_user()`)가 모든 신규 가입자에 대해 `profiles` 행을 자동 생성하므로, 우동 가입자도 자동으로 `profiles` 행을 갖게 된다. 별도 프로필 생성 로직 불필요.
+
+### `public.notifications` (현재 62 rows)
+
+**재사용 불가.** `recipient_id`/`weekly_log_id`/`comment_id`/`period_start` 등 다른 앱 도메인에 완전히 결합되어 있고, 컬럼 보호 트리거(`read_at` 외 UPDATE 차단)와 클라이언트 INSERT 정책 부재로 우동 알림에 맞지 않는다. → **Task 002에서 `udong_notifications`를 신규 생성**하며, 동일한 "본인 수신 레코드만 SELECT, `read_at`/`clicked_at`만 UPDATE" 패턴을 `udong_notifications` 전용으로 별도 구현한다(기존 트리거 재사용/수정 금지).
+
+## 3. Supabase Auth 설정 결정 (3종)
+
+> **주의**: 아래 3개 옵션은 Supabase MCP 툴셋에 프로그래매틱 설정 API가 없다(Dashboard 전용 설정). **Supabase Dashboard → Authentication → Sign In / Providers에서 사용자가 직접 활성화해야 한다.**
+
+| 옵션                                         | 결정                         | 근거                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Kakao provider의 "이메일 없이 가입 허용"** | **활성화 (Task 016에서)**    | 전역 설정이 아니라 **provider별 설정**(Supabase Auth 내부적으로 `EmailOptional`, 각 OAuth provider 설정 화면에 개별 존재). Kakao Biz App 미등록 시 `account_email`을 못 받으므로(PRD 3.6.1), Task 016에서 Kakao provider를 활성화할 때 해당 provider의 상세 설정에서 함께 켜야 함. `Sign In / Providers` 메인 화면(User Signups 섹션)에는 없음.                                                                                                         |
+| **Manual Linking (베타)**                    | **활성화 완료 (2026-08-23)** | `Sign In / Providers` → `User Signups` 섹션의 **"Allow manual linking"** 토글. Supabase Auth는 계정 탈취 방지를 위해 `linkIdentity()`/`unlinkIdentity()` API를 기본 비활성화(`GOTRUE_SECURITY_MANUAL_LINKING_ENABLED=false`)해 두는데, 이 옵션 없이는 마이페이지 "연동된 계정" 관리(Task 018)에서 사용자가 임의로 다른 provider를 추가 연동할 수 없다. 특히 Kakao 이메일 미제공 계정(아래 참고)이 나중에 이메일 계정과 수동으로 연동하려면 반드시 필요. |
+| **OAuth Provider**                           | **Google, Kakao만 설정**     | PRD 우선순위: Google/Kakao는 1차 필수, Naver는 1차 완전 제외(2차 스파이크 후 결정, Task 039), Facebook 보류. Provider별 Client ID/Secret 및 리다이렉트 URL, "이메일 없이 가입 허용"은 Task 016에서 함께 등록.                                                                                                                                                                                                                                           |
+
+- **Kakao Biz App 미등록 전제 확정 (2026-08-23)**: Biz App(사업자 정보) 등록 여부/일정을 별도로 확인하지 않고, **"이메일 없는 Kakao 계정" 플로우(PRD 3.6.2)를 1차 MVP의 기본 경로로 확정**한다. Task 016에서 Kakao provider의 "이메일 없이 가입 허용"(`EmailOptional`)을 기본으로 켜고 구현하며, 추후 Biz App이 등록되어 이메일을 받을 수 있게 되더라도 기존에 이메일 없이 가입한 계정은 마이페이지 수동 연동 안내로 계속 지원한다.
+
+## 4. Free 플랜 제약 및 운영 방침
+
+| 제약                            | 대응 방침                                                                                                                                                        |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DB 용량 500MB 공유              | 우동 테이블은 전부 `numeric(14,0)`/짧은 text 위주로 설계되어 있어 용량 압박 낮음. Task 033·034에서 `get_advisors`(performance)로 정기 점검                       |
+| 커넥션 풀 공유                  | `lib/supabase/server.ts` 컨벤션(요청마다 신규 클라이언트, 전역 저장 금지)을 지켜 커넥션 누수 방지. 대량 팬아웃(Task 025 공지 발송)은 Edge Function에서 배치 처리 |
+| 7일 미사용 시 프로젝트 일시정지 | 개발/QA 기간 중 **최소 주 1회** 프로젝트에 쿼리 요청(대시보드 접속 또는 `list_tables` 호출)을 보내는 루틴 수립. Task 034에서 최종 운영 체크리스트로 재확인       |
+
+## 5. `service_role` 키 서버 전용 환경 변수 등록
+
+- `.env.local`에 `SUPABASE_SERVICE_ROLE_KEY` 등록 완료 (2026-08-23, `NEXT_PUBLIC_` 접두사 없음, `.gitignore`의 `.env*.local`로 커밋 대상 제외 확인됨).
+- **잔여 조치**: Vercel 배포 시 동일 키를 Vercel 프로젝트 환경 변수(Server-only, Production/Preview)에도 등록 필요 — Task 033(배포)에서 재확인.
+- 용도: Task 025 공지 팬아웃 등 클라이언트 RLS로 불가능한 전체 멤버 INSERT를 수행하는 Edge Function 전용(PRD 4.2). 클라이언트 번들에 노출되지 않도록 `NEXT_PUBLIC_` 접두사를 절대 붙이지 않는다.
+
+## 완료 조건 체크
+
+- [x] 공유 프로젝트 현황 스냅샷 문서화 완료 (§1)
+- [x] Auth 옵션 3종 결정 기록 및 적용 완료 (§3) — Manual Linking 활성화 완료, Kakao "이메일 없이 가입 허용"은 Task 016에서 적용 예정
+- [x] 서버 전용 환경 변수(`SUPABASE_SERVICE_ROLE_KEY`) 등록 완료 (§5, `.env.local`) — Vercel 등록은 Task 033에서 재확인
