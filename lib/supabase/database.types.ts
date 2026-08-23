@@ -2545,6 +2545,7 @@ export type Database = {
           total_count: number;
         }[];
       };
+      udong_created_group: { Args: { p_group_id: string }; Returns: boolean };
       udong_get_vote_results: {
         Args: { p_vote_id: string };
         Returns: {
