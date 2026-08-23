@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
+import { CreateGroupForm } from "@/components/create-group-form";
 
 async function NewGroupContent() {
   const supabase = await createClient();
@@ -13,7 +14,9 @@ async function NewGroupContent() {
 
   return (
     <div className="flex w-full flex-1 flex-col gap-4 p-8">
-      <h1 className="text-2xl font-bold">모임 만들기</h1>
+      <div className="mx-auto w-full max-w-md">
+        <CreateGroupForm />
+      </div>
     </div>
   );
 }

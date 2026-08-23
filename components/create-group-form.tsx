@@ -1,0 +1,166 @@
+"use client";
+
+import { Loader2Icon } from "lucide-react";
+
+import { useServerActionForm } from "@/hooks/use-server-action-form";
+import { createGroupAction } from "@/lib/udong/actions/groups";
+import {
+  createGroupSchema,
+  GROUP_TYPE_SUGGESTIONS,
+  type CreateGroupInput,
+} from "@/lib/udong/groups";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
+const GROUP_TYPE_DATALIST_ID = "group-type-suggestions";
+
+const defaultValues: CreateGroupInput = {
+  name: "",
+  description: "",
+  type: "",
+  defaultDueAmount: undefined,
+};
+
+/**
+ * 모임 생성 폼 — Task 008(폼 아키텍처) 검증용 샘플 폼.
+ *
+ * `useServerActionForm`(react-hook-form + zod + Server Action 공통 훅)과
+ * `createGroupAction`(`lib/udong/actions/groups.ts`)을 연결하기만 하면 되고,
+ * 성공 시 `createGroupAction`이 직접 `redirect()`로 상세 페이지로 이동시키므로
+ * 이 컴포넌트에는 성공 후 처리 로직이 따로 없다.
+ */
+export function CreateGroupForm({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<"div">) {
+  const { form, onSubmit, isPending } = useServerActionForm({
+    schema: createGroupSchema,
+    defaultValues,
+    action: createGroupAction,
+  });
+
+  return (
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">모임 만들기</CardTitle>
+          <CardDescription>
+            모임 이름만 입력하면 바로 만들 수 있어요. 나머지 정보는 언제든
+            수정할 수 있습니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={onSubmit} className="flex flex-col gap-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>모임 이름</FormLabel>
+                    <FormControl>
+                      <Input placeholder="예: 주말 등산 모임" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>모임 소개 (선택)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="모임을 간단히 소개해주세요"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>모임 유형 (선택)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="예: 동호회"
+                        list={GROUP_TYPE_DATALIST_ID}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="defaultDueAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>기본 회비 금액 (선택, 원)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        step={1000}
+                        placeholder="예: 30000"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                    만드는 중...
+                  </>
+                ) : (
+                  "모임 만들기"
+                )}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      {/* GROUP_TYPE_SUGGESTIONS는 힌트일 뿐, udong_groups.type은 자유 값이라 직접 타이핑도 허용한다. */}
+      <datalist id={GROUP_TYPE_DATALIST_ID}>
+        {GROUP_TYPE_SUGGESTIONS.map((suggestion) => (
+          <option key={suggestion} value={suggestion} />
+        ))}
+      </datalist>
+    </div>
+  );
+}

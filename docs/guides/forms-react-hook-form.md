@@ -2,6 +2,46 @@
 
 이 문서는 Next.js 16.2.12에서 React Hook Form + Zod + Server Actions를 활용한 최적의 폼 처리 패턴을 제공합니다.
 
+## ⚠️ 예외: 인증 폼은 이 패턴을 쓰지 않는다
+
+`components/login-form.tsx`, `sign-up-form.tsx`, `forgot-password-form.tsx`,
+`update-password-form.tsx`(그리고 `google-auth-button.tsx`)는 **의도적으로** 이 문서의
+Server Action 패턴을 따르지 않는다. 이 폼들은 Client Component에서 `lib/supabase/client.ts`의
+`createClient()`로 얻은 브라우저 Supabase 클라이언트의 `supabase.auth.*`를 직접 호출한다
+(`CLAUDE.md`의 "인증 라우팅 흐름" 4번 항목에 이미 명문화된 이 저장소의 기존 컨벤션).
+
+이유:
+
+- Supabase Auth JS SDK(`signInWithPassword`, `signUp`, `resetPasswordForEmail`,
+  `updateUser` 등)는 브라우저에서 실행되어야 로컬 스토리지/쿠키에 세션을 즉시 반영하고,
+  OAuth 리다이렉트·매직 링크·CAPTCHA 같은 브라우저 전용 흐름과 자연스럽게 맞물린다.
+  이 호출을 Server Action으로 감싸면 세션 동기화 타이밍 문제와 이중 쿠키 처리 문제가 생긴다.
+- 인증은 Supabase가 이미 클라이언트 SDK 레벨에서 검증(이메일 형식, 비밀번호 정책 등)과
+  에러 메시지를 제공하므로, 이 문서의 "서버-클라이언트 이중 zod 검증" 이점이 크지 않다.
+- 이 예외는 인증 폼에 한정된다. **새 기능(모임/회비/투표/공지 등)의 폼은 전부 아래
+  `useServerActionForm` 패턴을 따른다** — 새 인증 폼을 굳이 추가할 필요는 없고,
+  기존 인증 폼도 이 Task에서 건드리지 않는다.
+
+## 이 저장소의 실제 구현체(Task 008)
+
+아래 본문은 일반적인 React Hook Form + Zod + Server Actions 패턴을 폭넓게 설명하는
+참고 자료다. **이 저장소에서 실제로 재사용해야 하는 것은 다음 3개뿐이다:**
+
+- `lib/udong/common.ts`의 `ActionResult<T>` — 이 문서 본문에 나오는 `FormState`/자체
+  `ActionResult` 타입이 아니라 **이 타입을 그대로 쓴다**(discriminated union:
+  `{ success: true; data: T }` 또는
+  `{ success: false; fieldErrors?: Record<string, string[]>; formError?: string }`).
+- `hooks/use-server-action-form.ts`의 `useServerActionForm()` — `useForm` +
+  `zodResolver` + Server Action 호출 + `ActionResult` 분기(필드 에러 → `form.setError`,
+  일반 에러 → `sonner` 토스트, 성공 → `onSuccess`/`successMessage`)를 감싼 공통 훅.
+  아래 "기본 폼 컴포넌트 패턴"처럼 `useActionState` + `FormData`를 직접 다루지 않는다 —
+  Server Action을 검증된 객체를 받는 일반 async 함수로 정의하고 클라이언트에서 그대로 호출한다.
+- `lib/udong/errors.ts`의 `mapSupabaseError()` — Supabase 쿼리 에러(특히 RLS 위반,
+  Postgres 코드 `42501`)를 한국어 사용자 메시지로 변환해 `ActionResult.formError`에 담는다.
+
+샘플 구현: `lib/udong/actions/groups.ts`의 `createGroupAction` +
+`components/create-group-form.tsx`(모임 생성 폼, `app/protected/groups/new/page.tsx`에서 렌더링).
+
 ## 🚀 기본 설정 및 셋업
 
 ### 패키지 설치
