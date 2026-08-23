@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-24
-**📊 진행 상황**: Phase 0·1 완료, Phase 2 진행 중 (10/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1 완료, Phase 2 진행 중 (11/44 Tasks 완료)
 
 ---
 
@@ -201,12 +201,14 @@
   - ✅ `app/layout.tsx`의 기본 메타데이터(`title`/`description`)를 스타터킷 문구에서 우동 브랜드 문구로 교체 — 오류 메시지·빈 상태 문구의 브랜드 톤앤매너 확장은 Task 009에서 `lib/i18n/dictionaries/ko.ts`에 선반영 완료(`emptyStates`/`errors` 네임스페이스)
   - **완료 조건**: 라이트/다크 양쪽에서 주요 화면 대비비 WCAG AA 충족(계산 및 스크린샷 검증 완료), `--primary` 계열 하드코딩 색상 0건(`grep` 확인), `npm run check-all` 통과
 
-- **Task 011: 공통 레이아웃·네비게이션·푸터 구현 (PRD 우선순위 8 포함)**
-  - 모바일 우선 앱 셸: 헤더(로고, 알림 종 아이콘, 언어 스위처, 테마 토글, `AuthButton`), 모임 컨텍스트 네비게이션
-  - `app/protected/groups/[groupId]/layout.tsx`에 모임 하위 탭(홈/공지/회비/투표/설정) 구성
-  - **푸터에 "개발자 문서" 그룹을 시각적으로 구분해(작은 글씨 + 별도 라벨) `/icons`(아이콘 검색), `/gallery`(컴포넌트 갤러리) 링크 추가 — 두 페이지는 기존 구현을 그대로 재사용하며 신규 개발 없음**
-  - `AuthButton`·`getLocale()` 등 request-time API 사용 컴포넌트를 `<Suspense>`로 감쌈
-  - **완료 조건**: 모든 라우트에서 헤더/푸터가 일관 렌더링, `/icons`·`/gallery` 링크가 로그인 없이 접근 가능(기존 allow-list 확인), 개발자 문서임이 UI에서 명확히 구분됨
+- **Task 011: 공통 레이아웃·네비게이션·푸터 구현 (PRD 우선순위 8 포함)** ✅ - 완료
+  - ✅ 모바일 우선 앱 셸: `components/app-header.tsx`(로고, 로그인 시 "내 모임"·알림 종 아이콘, 언어 스위처, 테마 토글, `AuthButton`)를 `app/layout.tsx`(루트 레이아웃)에 배치해 **모든 라우트에서 공유** — 이전에는 `app/page.tsx`·`app/protected/layout.tsx`·갤러리 6개 페이지가 각자 헤더를 중복 구현하고 있었음(스타터킷 잔재 "next.js starter-kit v3"/"Powered by Supabase" 등 서로 다른 브랜딩 포함)을 발견해 전부 이 공용 헤더로 통합
+  - ✅ 알림 종 아이콘·"내 모임" 링크는 `components/header-auth-nav.tsx`가 자체 `getClaims()` 조회로 로그인 사용자에게만 렌더링(비로그인 시 `null`) — 안 읽은 알림 뱃지는 Task 026에서 이 컴포넌트에 추가 예정
+  - ✅ `app/protected/groups/[groupId]/layout.tsx` + `components/groups/group-nav-tabs.tsx`(Client, `usePathname()` 기반)로 모임 하위 탭(홈/공지/회비/투표/설정) 구성, 헤더 바로 아래 `sticky` 고정
+  - ✅ `components/app-footer.tsx`에 "개발자 문서" 그룹을 별도 라벨(`text-xs uppercase`)로 시각 구분해 `/icons`·`/gallery` 링크 배치(PRD 3.8 그대로), 일반 링크(소개/기술 스택)는 상단에 분리 — `/avatars`·`/charts`는 `/about` 페이지의 갤러리 카드로 계속 접근 가능해 폭넓게 유지
+  - ✅ `AppHeader`/`AppFooter`/그룹 탭 모두 `getLocale()`/`getClaims()` 등 request-time API를 쓰는 부분만 `<Suspense>`로 감싸 `cacheComponents: true`의 `blocking-route` 에러 없이 스트리밍되도록 구성(Page + Suspense + Content 패턴을 레이아웃 단위로 확장 적용)
+  - ✅ (과정에서 발견한 정리) 헤더 통합으로 완전히 미사용이 된 `components/deploy-button.tsx`(스타터킷 "Deploy to Vercel" 버튼) 삭제, i18n `Dictionary`에 `nav`(groupsLabel/notificationsLabel/devDocsLabel/groupTabs) 네임스페이스 신규 추가(ko 확정 문구, en/ja/zh는 Task 009 관례대로 스텁+TODO)
+  - **완료 조건**: 모든 라우트에서 헤더/푸터가 일관 렌더링(Playwright로 `/`, `/about`, `/icons`, `/protected/groups`, `/protected/groups/[groupId]` 및 하위 탭 4종을 라이트/다크·로그인/비로그인 조합으로 스크린샷 검증), `/icons`·`/gallery` 링크가 로그인 없이 접근 가능(기존 allow-list 그대로 유지, 신규 공개 라우트 없음), 개발자 문서임이 UI에서 명확히 구분됨, `npm run check-all` 통과
 
 - **Task 012: 전체 화면 UI 구현 (하드코딩 더미 데이터)**
   - 더미 데이터 생성/관리 유틸 작성(모임, 멤버, 초대, 회비 사이클/청구, 공지, 투표, 알림)
@@ -556,4 +558,4 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 ---
 
 **📅 최종 업데이트**: 2026-08-24
-**📊 진행 상황**: Phase 0·1 완료, Phase 2 진행 중 (10/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1 완료, Phase 2 진행 중 (11/44 Tasks 완료)
