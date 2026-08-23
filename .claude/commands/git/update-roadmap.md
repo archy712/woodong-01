@@ -1,11 +1,12 @@
 ---
-description: "ROADMAP.md에서 완료된 작업을 체크하고 진행 상황을 업데이트합니다"
-allowed-tools: ["Read(docs/ROADMAP.md:*)", "Edit(docs/ROADMAP.md:*)"]
+description: "ROADMAP_MVP.md에서 완료된 작업을 체크하고 진행 상황을 업데이트합니다"
+allowed-tools:
+  ["Read(docs/roadmap/ROADMAP_MVP.md:*)", "Edit(docs/roadmap/ROADMAP_MVP.md:*)"]
 ---
 
 # Claude 명령어: Update Roadmap
 
-완료된 작업을 ROADMAP.md에 체크하고 진행 상황을 업데이트합니다.
+완료된 작업을 `docs/roadmap/ROADMAP_MVP.md`에 체크하고 진행 상황을 업데이트합니다.
 
 ## 사용법
 
@@ -15,7 +16,7 @@ allowed-tools: ["Read(docs/ROADMAP.md:*)", "Edit(docs/ROADMAP.md:*)"]
 
 ## 프로세스
 
-1. ROADMAP.md 파일 읽기
+1. `docs/roadmap/ROADMAP_MVP.md` 파일 읽기
 2. 사용자에게 완료한 Task 번호 확인
 3. 해당 Task와 하위 체크리스트에 체크 표시 추가
 4. Phase 진행 상황 업데이트
@@ -51,7 +52,7 @@ allowed-tools: ["Read(docs/ROADMAP.md:*)", "Edit(docs/ROADMAP.md:*)"]
 
 ## 대화형 프로세스
 
-1. 현재 ROADMAP.md 읽기
+1. 현재 `docs/roadmap/ROADMAP_MVP.md` 읽기
 2. 미완료 Task 목록 표시
 3. "어떤 Task를 완료했나요? (예: 004 또는 004,005)" 질문
 4. 사용자 입력 받기
