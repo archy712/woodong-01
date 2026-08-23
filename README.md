@@ -1,10 +1,12 @@
-<h1 align="center">Next.js Starter Kit 3</h1>
+<h1 align="center">우동 (Woodong)</h1>
 
 <p align="center">
-  Next.js 16 + Supabase Auth로 인증까지 준비된 상태에서 바로 개발을 시작할 수 있는 스타터킷입니다.
+  동호회/계모임의 운영·회비 정산·투표를 한 곳에서 관리하는 모바일 우선 웹 서비스입니다.<br/>
+  Next.js 16 + Supabase Auth로 인증까지 준비된 스타터킷 위에서 개발합니다.
 </p>
 
 <p align="center">
+  <a href="#project-status"><strong>Project Status</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#demo-pages"><strong>Demo Pages</strong></a> ·
   <a href="#getting-started"><strong>Getting Started</strong></a> ·
@@ -12,6 +14,14 @@
   <a href="#documentation"><strong>Documentation</strong></a>
 </p>
 <br/>
+
+## Project Status
+
+- **현재 단계**: 기획 완료, 구현 착수 전 (ROADMAP 기준 Phase 0 대기 중, 0/44 Tasks 완료)
+- **레포지토리 코드네임**: `moim-ops` · **사용자 노출 서비스명**: 우동(Woodong)
+- [`docs/prd/PRD_MVP.md`](./docs/prd/PRD_MVP.md) — 제품 요구사항 문서(PRD, v1.2)
+- [`docs/roadmap/ROADMAP_MVP.md`](./docs/roadmap/ROADMAP_MVP.md) — 1차 MVP 개발 로드맵(v1.1, Phase 0~8 / Task 44개)
+- 아래 Features/Demo Pages는 **현재 코드베이스(스타터킷) 기준**이며, 우동 고유 기능(모임/회비/투표/알림)은 로드맵에 따라 순차 구현됩니다.
 
 ## Features
 
@@ -35,6 +45,8 @@
 | `/charts`       | recharts 기반 Chart 컴포넌트 활용 예시         |
 | `/protected/**` | 로그인이 필요한 프로필 등 인증 영역            |
 
+`/icons`, `/gallery`는 우동 서비스에서도 개발자/QA 문서 페이지로 그대로 재사용됩니다(PRD 3.8절). `/avatars`, `/charts`, `/about`, `/tech-stack`은 스타터킷 데모 페이지로, 존치 여부를 로드맵 Task 032에서 결정합니다.
+
 ## Getting Started
 
 1. [Supabase 대시보드](https://database.new)에서 프로젝트를 생성합니다.
@@ -42,8 +54,8 @@
 2. 저장소를 클론하고 의존성을 설치합니다.
 
    ```bash
-   git clone https://github.com/archy712/nextjs-starterkit-03.git
-   cd nextjs-starterkit-03
+   git clone https://github.com/archy712/udong-ops-01.git
+   cd udong-ops-01
    npm install
    ```
 
@@ -70,6 +82,8 @@
 5. 다른 shadcn/ui 스타일을 쓰고 싶다면 `components.json`을 삭제한 뒤 [shadcn/ui를 다시 설치](https://ui.shadcn.com/docs/installation/next)하세요.
 
 > Supabase를 로컬에서도 실행하려면 [Local Development 문서](https://supabase.com/docs/guides/getting-started/local-development)를 참고하세요.
+>
+> 우동 프로젝트는 Supabase 무료 플랜 프로젝트를 다른 앱과 **공유**합니다. 신규 테이블은 전부 `udong_` 접두어로 격리하고 기존 테이블은 변경하지 않는다는 원칙을 따릅니다(PRD 5.0절 참고).
 
 ## Scripts
 
@@ -89,3 +103,5 @@ npm run check-all     # typecheck + lint + format:check 순차 실행
 
 - [`CLAUDE.md`](./CLAUDE.md) — 이 저장소의 아키텍처, 관례, Claude Code 커스텀 설정 가이드
 - [`docs/guides/`](./docs/guides) — 컴포넌트 패턴, React Hook Form, Next.js 16, 프로젝트 구조, 스타일링 가이드
+- [`docs/prd/`](./docs/prd) — 우동 제품 요구사항 문서(PRD)
+- [`docs/roadmap/`](./docs/roadmap) — 우동 1차 MVP 개발 로드맵
