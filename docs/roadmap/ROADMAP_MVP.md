@@ -2,14 +2,14 @@
 
 동호회/모임의 운영·회비 정산·투표를 한 곳에서 관리해 "총무 1인 부담"을 줄이는 모바일 우선 웹 서비스.
 
-- **문서 버전**: v1.1 (PRD v1.2 대조 검토 반영 — Task 034 KPI 계측 항목 정정)
+- **문서 버전**: v1.2 (Phase 1 완료 반영)
 - **기준 PRD**: `docs/prd/PRD_MVP.md` (v1.2, 2026-08-23)
 - **레포지토리(코드네임)**: `moim-ops` / 작업 디렉토리 `udong-ops-01`
 - **사용자 노출명**: 우동 (Woodong)
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
-**📅 최종 업데이트**: 2026-08-23
-**📊 진행 상황**: Phase 0 완료, Phase 1 대기 중 (5/44 Tasks 완료)
+**📅 최종 업데이트**: 2026-08-24
+**📊 진행 상황**: Phase 0·1 완료, Phase 2 대기 중 (9/44 Tasks 완료)
 
 ---
 
@@ -148,41 +148,42 @@
 
 ---
 
-### Phase 1: 애플리케이션 골격 구축 (구조 우선)
+### Phase 1: 애플리케이션 골격 구축 (구조 우선) ✅
 
 > **목적**: 실제 기능 구현 전에 전체 라우트·타입·폼 아키텍처를 먼저 확정해 중복 작업을 최소화하고 UI/백엔드 병렬 개발을 가능하게 한다.
 > **의존성**: Phase 0과 병렬 진행 가능(Task 007의 DB 파생 타입만 Task 005 이후 정합성 확인).
 
-- **Task 006: 라우트 구조 및 페이지 스캐폴딩**
-  - PRD 6장 IA 기준 App Router 라우트 골격 생성:
-    - 공개: `app/page.tsx`(랜딩), `app/invite/[code]/page.tsx`(초대 참여), 기존 `/icons`·`/gallery` 유지
-    - 보호: `app/protected/groups/page.tsx`(목록), `groups/new`, `groups/[groupId]`(상세/홈), `groups/[groupId]/settings`, `groups/[groupId]/announcements`(+`/new`), `groups/[groupId]/dues`, `groups/[groupId]/votes`(+`/new`, `/[voteId]`), `app/protected/notifications`(알림센터), `app/protected/me`(마이페이지)
-    - 2차 확장 라우트(`dues/expenses`, `settlements`)는 이번 Phase에서 생성하지 않음
-  - 모든 페이지를 얇은 `Page` + `<Suspense>` + `XxxContent` 패턴의 빈 껍데기로 생성
-  - `lib/supabase/proxy.ts`의 `updateSession()` allow-list에 `/`, `/invite/*` 등 신규 공개 경로 등록
-  - `app/protected/**` 개별 서버 컴포넌트에 `getClaims()` 이중 방어 스텁 배치
-  - **완료 조건**: 모든 라우트가 404 없이 렌더링되고 비로그인 시 보호 라우트가 `/auth/login`으로 리다이렉트됨, dev 오버레이 `blocking-route` 에러 0건
+- **Task 006: 라우트 구조 및 페이지 스캐폴딩** ✅ - 완료
+  - ✅ PRD 6장 IA 기준 App Router 라우트 골격 생성:
+    - ✅ 공개: `app/page.tsx`(랜딩), `app/invite/[code]/page.tsx`(초대 참여), 기존 `/icons`·`/gallery` 유지
+    - ✅ 보호: `app/protected/groups/page.tsx`(목록), `groups/new`, `groups/[groupId]`(상세/홈), `groups/[groupId]/settings`, `groups/[groupId]/announcements`(+`/new`), `groups/[groupId]/dues`, `groups/[groupId]/votes`(+`/new`, `/[voteId]`), `app/protected/notifications`(알림센터), `app/protected/me`(마이페이지)
+    - ✅ 2차 확장 라우트(`dues/expenses`, `settlements`)는 이번 Phase에서 생성하지 않음
+  - ✅ 모든 페이지를 얇은 `Page` + `<Suspense>` + `XxxContent` 패턴의 빈 껍데기로 생성
+  - ✅ `lib/supabase/proxy.ts`의 `updateSession()` allow-list에 `/invite` 신규 공개 경로 등록
+  - ✅ `app/protected/**` 개별 서버 컴포넌트에 `getClaims()` 이중 방어 스텁 배치
+  - **완료 조건**: 모든 라우트가 404 없이 렌더링되고 비로그인 시 보호 라우트가 `/auth/login`으로 리다이렉트됨, dev 오버레이 `blocking-route` 에러 0건 — curl 검증 완료(공개 200 / 보호 307→로그인)
 
-- **Task 007: 도메인 타입 및 zod 스키마 정의**
-  - `lib/udong/types.ts`(또는 도메인별 파일)에 모임/멤버/초대/회비/투표/공지/알림 도메인 타입 정의
-  - 역할·상태 리터럴 유니온 정의: `role: "admin" | "member"`, `member status: "active" | "left"`, `dues status: "unpaid" | "partial" | "paid"`, `vote status: "open" | "closed"`, `notification status: "pending" | "sent" | "failed" | "fallback_sent"`, `channel: "kakao" | "slack" | "email" | "in_app"`
-  - 폼 입력 검증용 zod 스키마 정의(모임 생성, 초대 발급, 회비 항목 생성, 납부 기록, 공지 작성, 투표 생성/응답)
-  - Server Action 응답 타입(성공/필드 에러/일반 에러) 공통 규격 정의
+- **Task 007: 도메인 타입 및 zod 스키마 정의** ✅ - 완료
+  - ✅ `lib/udong/`(도메인별 파일: `groups`/`dues`/`votes`/`announcements`/`notifications`/`common`)에 모임/멤버/초대/회비/투표/공지/알림 도메인 타입 정의(`Tables<"udong_...">` 파생 `Pick`/`Omit` 컨벤션)
+  - ✅ 역할·상태 리터럴 유니온 정의: `role`, `member status`, `dues status`, `vote status`, `notification status`, `channel` 전부 database.types.ts/CHECK 제약과 대조해 정의(`udong_groups.type`은 CHECK 제약이 없는 자유 값으로 확인되어 상수 힌트만 제공)
+  - ✅ 폼 입력 검증용 zod 스키마 6종 정의(모임 생성, 초대 발급, 회비 항목 생성, 납부 기록, 공지 작성, 투표 생성/응답) — 실제 설치 버전 `zod@3.25.76`(v3) API 기준
+  - ✅ Server Action 응답 타입 `ActionResult<T>`(성공/필드 에러/일반 에러) 공통 규격 정의(`lib/udong/common.ts`)
   - **완료 조건**: DB 타입(Task 005)과 도메인 타입 간 불일치 0건, `npm run typecheck` 통과
 
-- **Task 008: 폼 아키텍처 및 Server Action 기반 구축**
-  - `docs/guides/forms-react-hook-form.md` 기준 react-hook-form + zod + Server Actions 공통 래퍼/훅 구현
-  - `revalidatePath`/`revalidateTag` 기반 뮤테이션 후 갱신 규약 확립(`cacheComponents: true` 환경)
-  - 공통 에러 처리·토스트·낙관적 UI 패턴 정의, RLS 거부(권한 없음) 응답의 사용자 메시지 매핑 규칙 수립
-  - 인증 폼은 기존 Client Component 직접 호출 패턴 유지한다는 예외 규칙 명문화
-  - **완료 조건**: 샘플 폼 1종이 유효성 검사 → Server Action → revalidate → 화면 갱신까지 end-to-end로 동작
+- **Task 008: 폼 아키텍처 및 Server Action 기반 구축** ✅ - 완료
+  - ✅ `docs/guides/forms-react-hook-form.md` 기준 react-hook-form + zod + Server Actions 공통 래퍼/훅 구현(`hooks/use-server-action-form.ts`의 `useServerActionForm()`)
+  - ✅ `revalidatePath`/`revalidateTag` 기반 뮤테이션 후 갱신 규약 확립(`cacheComponents: true` 환경, `"use cache"` 도입 시 `revalidateTag` 추가 방식으로 확장 예정 문서화)
+  - ✅ 공통 에러 처리(`lib/udong/errors.ts`의 `mapSupabaseError()`)·토스트(`sonner`)·낙관적 UI 패턴(`useOptimistic` 활용 지점 문서화) 정의, RLS 거부(`42501`) 응답의 사용자 메시지 매핑 규칙 수립
+  - ✅ 인증 폼은 기존 Client Component 직접 호출 패턴 유지한다는 예외 규칙을 `docs/guides/forms-react-hook-form.md`에 명문화
+  - ✅ **(과정에서 발견한 선행 버그 수정)** Task 003의 `udong_group_members_insert_bootstrap_admin` RLS 정책이 `udong_groups`를 직접 서브쿼리해 순환 참조를 일으켜, 어떤 사용자도 자신이 만든 모임의 admin으로 자기등록할 수 없던 버그를 발견·수정(`udong_created_group()` SECURITY DEFINER 함수 신설, 기존 `udong_is_group_member` 패턴과 동일하게 EXECUTE 권한 구성)
+  - **완료 조건**: 샘플 폼(모임 생성 폼, `components/create-group-form.tsx`)이 유효성 검사 → Server Action(`createGroupAction`) → `revalidatePath` → 화면 갱신까지 end-to-end로 동작(Playwright 실계정 검증 완료, `udong_group_members`에 admin 자동 등록 SQL로 확인)
 
-- **Task 009: i18n Dictionary 확장 및 4개 언어 스텁 구성**
-  - 우동 도메인 문자열 키 설계(공통/모임/회비/투표/알림/인증/에러/빈 상태)
-  - `lib/i18n/dictionaries/types.ts`의 `Dictionary` strict 인터페이스에 신규 키 추가
-  - `ko.ts`에 브랜드 톤앤매너("우동, 모임을 부탁해", "오늘도 우동이 정산해드릴게요") 반영한 확정 문구 작성
-  - **`en.ts`/`ja.ts`/`zh.ts`에는 동일 한국어 문자열을 스텁으로 복사**해 타입을 충족(실제 번역은 2차 확장) — 누락 시 pre-commit `tsc --noEmit`으로 커밋 실패
-  - **완료 조건**: 4개 언어 파일 키 개수 일치, `npm run typecheck` 및 pre-commit 훅 통과
+- **Task 009: i18n Dictionary 확장 및 4개 언어 스텁 구성** ✅ - 완료
+  - ✅ 우동 도메인 문자열 키 설계: `common` 신규 키 13개 + `groups`/`dues`/`votes`/`notifications`/`auth`/`errors`/`emptyStates` 7개 네임스페이스 신규 추가
+  - ✅ `lib/i18n/dictionaries/types.ts`의 `Dictionary` strict 인터페이스에 신규 키 추가
+  - ✅ `ko.ts`에 브랜드 톤앤매너 반영한 확정 문구 작성(예: `emptyStates.noGroups` "아직 속한 모임이 없어요. 우동, 모임을 부탁해!", `dues.reminderToastMessage` "아직 회비 납부 전이시네요. 우동이 살짝 알려드릴게요!")
+  - ✅ `en.ts`/`ja.ts`/`zh.ts`에는 신규 키에 한해 동일 한국어 문자열을 스텁으로 복사(기존 랜딩/갤러리 번역은 유지) + `TODO(i18n)` 주석으로 2차 확장 표시
+  - **완료 조건**: 4개 언어 파일 키 개수 일치(각 198개 확인), `npm run typecheck` 및 pre-commit 훅 통과
 
 ---
 
@@ -551,5 +552,5 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 
 ---
 
-**📅 최종 업데이트**: 2026-08-23
-**📊 진행 상황**: Phase 0 완료, Phase 1 대기 중 (5/44 Tasks 완료)
+**📅 최종 업데이트**: 2026-08-24
+**📊 진행 상황**: Phase 0·1 완료, Phase 2 대기 중 (9/44 Tasks 완료)
