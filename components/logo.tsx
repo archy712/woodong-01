@@ -19,7 +19,7 @@ export function LogoMark({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 48 48"
-      className={cn("size-7", className)}
+      className={cn("size-9", className)}
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -66,7 +66,7 @@ export function Logo({
     <span className={cn("inline-flex items-center gap-2", className)}>
       <LogoMark className={markClassName} />
       <span className="flex items-center gap-2">
-        <span className="text-xl font-bold tracking-tight text-foreground">
+        <span className="text-2xl font-bold tracking-tight text-foreground">
           우동
         </span>
         {taglineText ? (

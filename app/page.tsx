@@ -42,14 +42,16 @@ async function HomeContent() {
   return (
     <div className="flex w-full max-w-5xl flex-col gap-20 px-5 py-16">
       <section className="mx-auto flex max-w-2xl flex-col items-center gap-6 text-center">
-        <span className="text-xs font-semibold text-brand-coral">
+        <span className="inline-flex flex-wrap items-baseline justify-center gap-x-1 font-semibold text-brand-coral">
           {locale === "ko" ? (
             <>
-              <span className="text-base">우</span>리{" "}
-              <span className="text-base">동</span>호회 운영 플랫폼
+              <span className="text-3xl lg:text-4xl">우</span>
+              <span className="text-base">리</span>
+              <span className="text-3xl lg:text-4xl">동</span>
+              <span className="text-base">호회 운영 플랫폼</span>
             </>
           ) : (
-            dict.home.hero.kicker
+            <span className="text-xs">{dict.home.hero.kicker}</span>
           )}
         </span>
         <h1 className="text-3xl !leading-tight font-bold whitespace-pre-line lg:text-4xl">
