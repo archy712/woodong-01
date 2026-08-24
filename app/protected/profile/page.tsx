@@ -58,7 +58,7 @@ async function ProfileContent() {
 
 export default function ProfilePage() {
   return (
-    <div className="flex w-full flex-1 flex-col gap-12">
+    <div className="flex w-full flex-1 flex-col gap-4 p-8">
       <Suspense>
         <ProfileContent />
       </Suspense>
