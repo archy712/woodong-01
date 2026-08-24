@@ -170,7 +170,7 @@ export function CreateDueCycleDialog({
                     <FormLabel>{labels.create.dueTypeLabel}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="min-h-11 w-full">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>

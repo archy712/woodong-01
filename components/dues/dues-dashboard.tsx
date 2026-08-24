@@ -9,6 +9,10 @@ import type { DummyGroupMember } from "@/lib/woodong/dummy/groups";
 import type { Due, DueCycle, DuesStatus } from "@/lib/woodong/dues";
 import { CreateDueCycleDialog } from "@/components/dues/create-due-cycle-dialog";
 import {
+  DuesMemberRateChart,
+  DuesOverallRateGauge,
+} from "@/components/dues/dues-paid-rate-chart";
+import {
   RecordPaymentDialog,
   deriveStatus,
 } from "@/components/dues/record-payment-dialog";
@@ -23,7 +27,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
@@ -110,6 +113,18 @@ export function DuesDashboard({
       : 0;
   const unpaidEntries = withStatus.filter((d) => d.status !== "paid");
 
+  const memberRateChartData = withStatus.map(({ due, paidAmount, status }) => {
+    const member = memberByUserId.get(due.user_id);
+    const percent =
+      due.amount > 0 ? Math.round((paidAmount / due.amount) * 100) : 0;
+    return {
+      id: due.id,
+      name: member?.profile.name ?? due.user_id,
+      percent,
+      status,
+    };
+  });
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-2">
@@ -133,9 +148,9 @@ export function DuesDashboard({
         </Empty>
       ) : (
         <Tabs value={selectedCycleId} onValueChange={setSelectedCycleId}>
-          <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsList className="min-h-11 w-full justify-start overflow-x-auto">
             {cycles.map((cycle) => (
-              <TabsTrigger key={cycle.id} value={cycle.id}>
+              <TabsTrigger key={cycle.id} value={cycle.id} className="min-h-11">
                 {cycle.title}
               </TabsTrigger>
             ))}
@@ -162,15 +177,20 @@ export function DuesDashboard({
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between text-sm">
+                    <CardContent className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+                      <div className="flex w-full flex-col gap-1 text-sm">
                         <span>
                           {selectedCycle.amount.toLocaleString("ko-KR")}원 ·{" "}
                           {selectedCycle.due_date}
                         </span>
-                        <span className="font-semibold">{overallRate}%</span>
+                        <span className="font-semibold text-foreground">
+                          {overallRate}%{" "}
+                          <span className="font-normal text-muted-foreground">
+                            ({paidCount}/{withStatus.length})
+                          </span>
+                        </span>
                       </div>
-                      <Progress value={overallRate} />
+                      <DuesOverallRateGauge rate={overallRate} />
                     </CardContent>
                   </Card>
 
@@ -199,12 +219,13 @@ export function DuesDashboard({
                         {labels.memberProgressTitle}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="flex flex-col gap-4">
+                    <CardContent className="flex flex-col gap-6">
+                      <DuesMemberRateChart
+                        members={memberRateChartData}
+                        labels={labels.status}
+                      />
                       {withStatus.map(({ due, paidAmount, status }) => {
                         const member = memberByUserId.get(due.user_id);
-                        const percent = Math.round(
-                          (paidAmount / due.amount) * 100,
-                        );
                         return (
                           <div key={due.id} className="flex items-center gap-3">
                             <Avatar size="sm">
@@ -223,7 +244,6 @@ export function DuesDashboard({
                                   {labels.status[status]}
                                 </Badge>
                               </div>
-                              <Progress value={percent} className="h-1.5" />
                             </div>
                             <div className="flex shrink-0 items-center gap-1">
                               {status !== "paid" && (

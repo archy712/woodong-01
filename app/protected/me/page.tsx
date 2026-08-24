@@ -60,7 +60,7 @@ async function MeContent() {
             {dict.me.profileSectionTitle}
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-between gap-4">
+        <CardContent className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <Avatar size="lg">
               <AvatarFallback className="text-xl">

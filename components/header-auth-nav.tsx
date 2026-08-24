@@ -26,7 +26,7 @@ export async function HeaderAuthNav({
     <>
       <Link
         href="/protected/groups"
-        className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-block"
+        className="hidden min-h-11 min-w-11 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
       >
         {groupsLabel}
       </Link>

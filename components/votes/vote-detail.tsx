@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import type { Vote, VoteOption, VoteResult } from "@/lib/woodong/votes";
 import { VoteParticipation } from "@/components/votes/vote-participation";
-import { Progress } from "@/components/ui/progress";
+import { VoteResultsChart } from "@/components/votes/vote-results-chart";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 export function VoteDetail({
@@ -32,6 +32,10 @@ export function VoteDetail({
             ? labels.anonymousResultsNotice
             : labels.realNameResultsNotice}
         </p>
+        <VoteResultsChart
+          results={results}
+          responseCountSuffix={labels.responseCountSuffix}
+        />
         <div className="flex flex-col gap-3">
           {results.map((r) => {
             const percent =
@@ -47,7 +51,6 @@ export function VoteDetail({
                     {labels.responseCountSuffix} ({percent}%)
                   </span>
                 </div>
-                <Progress value={percent} />
                 {!vote.is_anonymous && r.voter_names.length > 0 && (
                   <p className="text-xs text-muted-foreground">
                     {labels.voterNamesLabel}: {r.voter_names.join(", ")}

@@ -55,7 +55,7 @@ export function GroupNavTabs({
             key={tab.href}
             href={tab.href}
             className={cn(
-              "flex h-12 items-center border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors",
+              "flex h-12 min-w-11 items-center justify-center border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors",
               tab.isActive
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",

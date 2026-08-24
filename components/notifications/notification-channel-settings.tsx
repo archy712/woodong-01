@@ -58,19 +58,18 @@ export function NotificationChannelSettings({
       {CHANNEL_ORDER.map((channel) => {
         const pref = preferences.find((p) => p.channel === channel);
         return (
-          <div
+          <Label
             key={channel}
-            className="flex items-center justify-between gap-2 rounded-lg border p-3"
+            htmlFor={`channel-${channel}`}
+            className="flex min-h-11 items-center justify-between gap-2 rounded-lg border p-3 font-normal"
           >
-            <Label htmlFor={`channel-${channel}`} className="font-normal">
-              {channelLabel[channel]}
-            </Label>
+            {channelLabel[channel]}
             <Switch
               id={`channel-${channel}`}
               checked={pref?.enabled ?? false}
               onCheckedChange={(checked) => handleToggle(channel, checked)}
             />
-          </div>
+          </Label>
         );
       })}
       <p className="text-xs text-muted-foreground">{labels.comingSoonNotice}</p>

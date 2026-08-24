@@ -24,7 +24,7 @@ export async function AppFooter() {
           <Link
             key={link.href}
             href={link.href}
-            className="px-4 underline-offset-4 first:pl-0 last:pr-0 hover:text-foreground hover:underline"
+            className="inline-flex min-h-11 items-center px-4 underline-offset-4 first:pl-0 last:pr-0 hover:text-foreground hover:underline"
           >
             {link.label}
           </Link>
@@ -35,7 +35,7 @@ export async function AppFooter() {
         Developed by{" "}
         <a
           href="mailto:archy712@gmail.com"
-          className="font-medium underline-offset-4 hover:underline"
+          className="inline-flex min-h-11 items-center font-medium underline-offset-4 hover:underline"
         >
           archy712@gmail.com
         </a>

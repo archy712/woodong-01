@@ -88,7 +88,7 @@ async function GroupDetailContent({
             </CardTitle>
             <Link
               href={`/protected/groups/${groupId}/announcements`}
-              className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+              className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground hover:underline"
             >
               {dict.common.viewAllLink}
             </Link>
@@ -122,7 +122,7 @@ async function GroupDetailContent({
             </CardTitle>
             <Link
               href={`/protected/groups/${groupId}/dues`}
-              className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+              className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground hover:underline"
             >
               {dict.common.viewAllLink}
             </Link>
@@ -166,7 +166,7 @@ async function GroupDetailContent({
             </CardTitle>
             <Link
               href={`/protected/groups/${groupId}/votes`}
-              className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+              className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground hover:underline"
             >
               {dict.common.viewAllLink}
             </Link>
@@ -179,7 +179,7 @@ async function GroupDetailContent({
                 <li key={vote.id}>
                   <Link
                     href={`/protected/groups/${groupId}/votes/${vote.id}`}
-                    className="flex items-center justify-between gap-2 text-sm hover:underline"
+                    className="flex min-h-11 items-center justify-between gap-2 text-sm hover:underline"
                   >
                     <span className="font-medium">{vote.title}</span>
                     <Badge variant="outline">{dict.votes.statusOpen}</Badge>

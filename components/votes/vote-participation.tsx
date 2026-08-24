@@ -113,7 +113,7 @@ export function VoteParticipation({
           {options.map((option) => (
             <Label
               key={option.id}
-              className="flex items-center gap-2 rounded-md border p-3 font-normal"
+              className="flex min-h-11 items-center gap-2 rounded-md border p-3 font-normal"
             >
               <Checkbox
                 checked={selected.includes(option.id)}
@@ -132,7 +132,7 @@ export function VoteParticipation({
           {options.map((option) => (
             <Label
               key={option.id}
-              className="flex items-center gap-2 rounded-md border p-3 font-normal"
+              className="flex min-h-11 items-center gap-2 rounded-md border p-3 font-normal"
             >
               <RadioGroupItem value={option.id} />
               {option.label}
