@@ -8,7 +8,7 @@
 
 `mcp__supabase__list_tables` / `list_extensions` / `list_migrations`로 확인. 프로젝트는 우동 전용이 아니며, 이미 운영 중인 다른 앱(주간업무보고/조직관리 성격)의 테이블 32개가 `public` 스키마에 존재한다.
 
-**기존 `public` 스키마 테이블 (32개, `udong_` 접두어 없음 — 전부 다른 앱 소유, 변경 금지)**
+**기존 `public` 스키마 테이블 (32개, `woodong_` 접두어 없음 — 전부 다른 앱 소유, 변경 금지)**
 
 ```
 brand_color_types, brand_colors, brand_gender_size_types, brand_gender_sizes, brand_lines,
@@ -19,7 +19,7 @@ user_menu_permissions, weekly_log_attachments, weekly_log_change_history,
 weekly_log_comment_mentions, weekly_log_comments, weekly_log_reactions, weekly_logs, work_types
 ```
 
-- `udong_*` 테이블은 현재 **0개** — 아직 Phase 0 마이그레이션이 적용되지 않은 클린 상태 확인.
+- `woodong_*` 테이블은 현재 **0개** — 아직 Phase 0 마이그레이션이 적용되지 않은 클린 상태 확인.
 - 마이그레이션 이력(`list_migrations`) 106건 전부 다른 앱 소유(예: `create_weekly_logs_table`, `add_organizations_table` 등). 우동 관련 마이그레이션 없음.
 - 확장(`list_extensions`) 중 이번 MVP와 관련된 것: `pgcrypto`, `uuid-ossp`(ID 생성), `pg_cron`(이미 `installed_version` 존재 — 2차 확장 Task 037 실시간 스케줄러 전환 시 재사용 가능, 1차에서는 미사용).
 
@@ -29,17 +29,17 @@ weekly_log_comment_mentions, weekly_log_comments, weekly_log_reactions, weekly_l
 
 ### `public.profiles` (현재 66 rows)
 
-| 컬럼                                                       | 우동에서의 취급                                                                                                                                                                                           |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`, `email`, `name`, `phone_number`, `bio`               | **읽기 전용 재사용 허용** — 화면 표시용으로만 조인해서 읽는다                                                                                                                                             |
-| `role`, `avatar_key`, `notify_on_comment/mention/reminder` | **재사용 금지** — 다른 앱의 권한/알림 로직과 강결합(마지막 관리자 강등 방지 트리거 등). 우동의 모임 역할·알림 채널 설정은 반드시 `udong_group_members.role`, `udong_notification_preferences`로 별도 관리 |
-| `department_id`, `is_active`                               | 우동과 무관, 참조하지 않음                                                                                                                                                                                |
+| 컬럼                                                       | 우동에서의 취급                                                                                                                                                                                               |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `email`, `name`, `phone_number`, `bio`               | **읽기 전용 재사용 허용** — 화면 표시용으로만 조인해서 읽는다                                                                                                                                                 |
+| `role`, `avatar_key`, `notify_on_comment/mention/reminder` | **재사용 금지** — 다른 앱의 권한/알림 로직과 강결합(마지막 관리자 강등 방지 트리거 등). 우동의 모임 역할·알림 채널 설정은 반드시 `woodong_group_members.role`, `woodong_notification_preferences`로 별도 관리 |
+| `department_id`, `is_active`                               | 우동과 무관, 참조하지 않음                                                                                                                                                                                    |
 
 - `auth.users`에 대한 `AFTER INSERT` 트리거(`handle_new_user()`)가 모든 신규 가입자에 대해 `profiles` 행을 자동 생성하므로, 우동 가입자도 자동으로 `profiles` 행을 갖게 된다. 별도 프로필 생성 로직 불필요.
 
 ### `public.notifications` (현재 62 rows)
 
-**재사용 불가.** `recipient_id`/`weekly_log_id`/`comment_id`/`period_start` 등 다른 앱 도메인에 완전히 결합되어 있고, 컬럼 보호 트리거(`read_at` 외 UPDATE 차단)와 클라이언트 INSERT 정책 부재로 우동 알림에 맞지 않는다. → **Task 002에서 `udong_notifications`를 신규 생성**하며, 동일한 "본인 수신 레코드만 SELECT, `read_at`/`clicked_at`만 UPDATE" 패턴을 `udong_notifications` 전용으로 별도 구현한다(기존 트리거 재사용/수정 금지).
+**재사용 불가.** `recipient_id`/`weekly_log_id`/`comment_id`/`period_start` 등 다른 앱 도메인에 완전히 결합되어 있고, 컬럼 보호 트리거(`read_at` 외 UPDATE 차단)와 클라이언트 INSERT 정책 부재로 우동 알림에 맞지 않는다. → **Task 002에서 `woodong_notifications`를 신규 생성**하며, 동일한 "본인 수신 레코드만 SELECT, `read_at`/`clicked_at`만 UPDATE" 패턴을 `woodong_notifications` 전용으로 별도 구현한다(기존 트리거 재사용/수정 금지).
 
 ## 3. Supabase Auth 설정 결정 (3종)
 

@@ -54,8 +54,8 @@
 2. 저장소를 클론하고 의존성을 설치합니다.
 
    ```bash
-   git clone https://github.com/archy712/udong-ops-01.git
-   cd udong-ops-01
+   git clone https://github.com/archy712/woodong-ops-01.git
+   cd woodong-ops-01
    npm install
    ```
 
@@ -83,7 +83,7 @@
 
 > Supabase를 로컬에서도 실행하려면 [Local Development 문서](https://supabase.com/docs/guides/getting-started/local-development)를 참고하세요.
 >
-> 우동 프로젝트는 Supabase 무료 플랜 프로젝트를 다른 앱과 **공유**합니다. 신규 테이블은 전부 `udong_` 접두어로 격리하고 기존 테이블은 변경하지 않는다는 원칙을 따릅니다(PRD 5.0절 참고).
+> 우동 프로젝트는 Supabase 무료 플랜 프로젝트를 다른 앱과 **공유**합니다. 신규 테이블은 전부 `woodong_` 접두어로 격리하고 기존 테이블은 변경하지 않는다는 원칙을 따릅니다(PRD 5.0절 참고).
 
 ## Scripts
 

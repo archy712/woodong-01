@@ -2,12 +2,12 @@ import { z } from "zod";
 import type { Tables } from "@/lib/supabase/database.types";
 import { dateOnlyString, wonAmount } from "./common";
 
-/** 회비 항목 구분 — `udong_due_cycles.due_type` CHECK 제약(regular/extra, PRD 5.5, ROADMAP Task 002) */
+/** 회비 항목 구분 — `woodong_due_cycles.due_type` CHECK 제약(regular/extra, PRD 5.5, ROADMAP Task 002) */
 export type DueType = "regular" | "extra";
 
 export type DueCycle = Omit<
   Pick<
-    Tables<"udong_due_cycles">,
+    Tables<"woodong_due_cycles">,
     | "id"
     | "group_id"
     | "title"
@@ -23,15 +23,15 @@ export type DueCycle = Omit<
 > & { due_type: DueType };
 
 /**
- * 멤버별 회비 청구 상태 — `udong_dues.status` CHECK 제약(unpaid/partial/paid, PRD 5.6).
- * 연결된 `udong_payments.amount` 합계 기준으로 DB 트리거가 자동 갱신하며,
+ * 멤버별 회비 청구 상태 — `woodong_dues.status` CHECK 제약(unpaid/partial/paid, PRD 5.6).
+ * 연결된 `woodong_payments.amount` 합계 기준으로 DB 트리거가 자동 갱신하며,
  * 애플리케이션에서 직접 이 값을 쓰지 않는다(ROADMAP Task 003/023).
  */
 export type DuesStatus = "unpaid" | "partial" | "paid";
 
 export type Due = Omit<
   Pick<
-    Tables<"udong_dues">,
+    Tables<"woodong_dues">,
     | "id"
     | "due_cycle_id"
     | "group_id"
@@ -44,7 +44,7 @@ export type Due = Omit<
 > & { status: DuesStatus };
 
 export type Payment = Pick<
-  Tables<"udong_payments">,
+  Tables<"woodong_payments">,
   "id" | "due_id" | "group_id" | "amount" | "paid_at" | "recorded_by" | "memo"
 >;
 
@@ -81,8 +81,8 @@ export const createDueCycleSchema = z.object({
 export type CreateDueCycleInput = z.infer<typeof createDueCycleSchema>;
 
 /**
- * 납부 기록 폼 (PRD 3.4-a AC) — 저장된 이력은 `udong_payments`에 쌓이고
- * `udong_dues.status`는 트리거가 합계 비교로 자동 갱신한다.
+ * 납부 기록 폼 (PRD 3.4-a AC) — 저장된 이력은 `woodong_payments`에 쌓이고
+ * `woodong_dues.status`는 트리거가 합계 비교로 자동 갱신한다.
  */
 export const recordPaymentSchema = z.object({
   dueId: z.string().uuid("올바른 청구 ID가 아닙니다"),

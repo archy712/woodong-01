@@ -5,7 +5,7 @@
  * `penguin`/`tiger`/`dog`/`lion`/`koala`/`cow`/`pig`/`frog`/`monkey`/`unicorn`/`wolf`/
  * `raccoon`/`hamster`/`hedgehog`/`chicken`/`duck`/`butterfly`/`turtle` 24종 CHECK 제약)와
  * 동일한 프리셋 키 집합을 그대로 재사용하되, 저장은 우동 전용 테이블
- * `public.udong_profiles.avatar_key`에 한다(PRD 5.0 — 공유 테이블 컬럼은 재정의하지 않음).
+ * `public.woodong_profiles.avatar_key`에 한다(PRD 5.0 — 공유 테이블 컬럼은 재정의하지 않음).
  */
 export const AVATAR_KEYS = [
   "fox",

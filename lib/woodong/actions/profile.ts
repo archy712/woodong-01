@@ -4,13 +4,13 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
-import { mapSupabaseError } from "@/lib/udong/errors";
-import { AVATAR_KEYS } from "@/lib/udong/avatars";
+import { mapSupabaseError } from "@/lib/woodong/errors";
+import { AVATAR_KEYS } from "@/lib/woodong/avatars";
 import {
   updateProfileSchema,
   type UpdateProfileInput,
-} from "@/lib/udong/profile";
-import type { ActionResult } from "@/lib/udong/common";
+} from "@/lib/woodong/profile";
+import type { ActionResult } from "@/lib/woodong/common";
 
 const updateAvatarSchema = z.object({
   avatarKey: z.enum(AVATAR_KEYS),
@@ -22,9 +22,9 @@ export type UpdateAvatarInput = z.infer<typeof updateAvatarSchema>;
  * 아바타 선택 Server Action.
  *
  * `profiles.avatar_key`는 다른 앱 소유라 절대 쓰지 않고(PRD 5.0/5.1),
- * 우동 전용 테이블 `udong_profiles`에 upsert한다. `user_id`에 UNIQUE 제약이 있어
+ * 우동 전용 테이블 `woodong_profiles`에 upsert한다. `user_id`에 UNIQUE 제약이 있어
  * `onConflict: "user_id"`로 최초 선택(INSERT)과 재선택(UPDATE)을 하나의 쿼리로 처리한다.
- * `udong_profiles_insert_own`/`udong_profiles_update_own` 정책이 모두
+ * `woodong_profiles_insert_own`/`woodong_profiles_update_own` 정책이 모두
  * `user_id = auth.uid()`라 upsert의 두 분기 모두 통과한다.
  */
 export async function updateAvatarAction(
@@ -50,14 +50,17 @@ export async function updateAvatarAction(
   const { avatarKey } = parsed.data;
 
   const { error } = await supabase
-    .from("udong_profiles")
+    .from("woodong_profiles")
     .upsert(
       { user_id: userId, avatar_key: avatarKey },
       { onConflict: "user_id" },
     );
 
   if (error) {
-    console.error("[updateAvatarAction] udong_profiles upsert failed:", error);
+    console.error(
+      "[updateAvatarAction] woodong_profiles upsert failed:",
+      error,
+    );
     return { success: false, formError: mapSupabaseError(error) };
   }
 

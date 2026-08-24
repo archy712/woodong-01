@@ -23,7 +23,7 @@ async function GroupsContent() {
   // Task 008 범위: "내가 속한 모임 이름 나열" 정도의 최소 실데이터 조회만 붙인다.
   // 카드 UI/정렬/페이지네이션 등 전체 목록 화면 구현은 Task 012/019 범위.
   const { data: memberships } = await supabase
-    .from("udong_group_members")
+    .from("woodong_group_members")
     .select("group_id")
     .eq("user_id", userId)
     .eq("status", "active");
@@ -32,7 +32,7 @@ async function GroupsContent() {
 
   const { data: groups } = groupIds.length
     ? await supabase
-        .from("udong_groups")
+        .from("woodong_groups")
         .select("id, name")
         .in("id", groupIds)
         .order("created_at", { ascending: false })

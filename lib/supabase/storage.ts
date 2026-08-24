@@ -1,15 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 
-export const UDONG_COVERS_BUCKET = "udong-covers";
-export const UDONG_RECEIPTS_BUCKET = "udong-receipts";
-type UdongBucket = typeof UDONG_COVERS_BUCKET | typeof UDONG_RECEIPTS_BUCKET;
+export const WOODONG_COVERS_BUCKET = "woodong-covers";
+export const WOODONG_RECEIPTS_BUCKET = "woodong-receipts";
+type WoodongBucket =
+  typeof WOODONG_COVERS_BUCKET | typeof WOODONG_RECEIPTS_BUCKET;
 
 const DEFAULT_SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 60;
 
 export async function getSignedStorageUrl(
   supabase: SupabaseClient<Database>,
-  bucket: UdongBucket,
+  bucket: WoodongBucket,
   objectPath: string,
   expiresInSeconds = DEFAULT_SIGNED_URL_EXPIRES_IN_SECONDS,
 ): Promise<string | null> {

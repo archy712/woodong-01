@@ -27,7 +27,7 @@ Server Action 패턴을 따르지 않는다. 이 폼들은 Client Component에�
 아래 본문은 일반적인 React Hook Form + Zod + Server Actions 패턴을 폭넓게 설명하는
 참고 자료다. **이 저장소에서 실제로 재사용해야 하는 것은 다음 3개뿐이다:**
 
-- `lib/udong/common.ts`의 `ActionResult<T>` — 이 문서 본문에 나오는 `FormState`/자체
+- `lib/woodong/common.ts`의 `ActionResult<T>` — 이 문서 본문에 나오는 `FormState`/자체
   `ActionResult` 타입이 아니라 **이 타입을 그대로 쓴다**(discriminated union:
   `{ success: true; data: T }` 또는
   `{ success: false; fieldErrors?: Record<string, string[]>; formError?: string }`).
@@ -36,10 +36,10 @@ Server Action 패턴을 따르지 않는다. 이 폼들은 Client Component에�
   일반 에러 → `sonner` 토스트, 성공 → `onSuccess`/`successMessage`)를 감싼 공통 훅.
   아래 "기본 폼 컴포넌트 패턴"처럼 `useActionState` + `FormData`를 직접 다루지 않는다 —
   Server Action을 검증된 객체를 받는 일반 async 함수로 정의하고 클라이언트에서 그대로 호출한다.
-- `lib/udong/errors.ts`의 `mapSupabaseError()` — Supabase 쿼리 에러(특히 RLS 위반,
+- `lib/woodong/errors.ts`의 `mapSupabaseError()` — Supabase 쿼리 에러(특히 RLS 위반,
   Postgres 코드 `42501`)를 한국어 사용자 메시지로 변환해 `ActionResult.formError`에 담는다.
 
-샘플 구현: `lib/udong/actions/groups.ts`의 `createGroupAction` +
+샘플 구현: `lib/woodong/actions/groups.ts`의 `createGroupAction` +
 `components/create-group-form.tsx`(모임 생성 폼, `app/protected/groups/new/page.tsx`에서 렌더링).
 
 ## 🚀 기본 설정 및 셋업

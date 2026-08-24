@@ -2,7 +2,7 @@ import type { PostgrestError } from "@supabase/supabase-js";
 
 /**
  * Postgres 42501("insufficient_privilege")은 GRANT 누락과 RLS 정책(`WITH CHECK`/`USING`)
- * 위반을 모두 포괄하는 코드다. 이 프로젝트의 `udong_*` 테이블은 전부 RLS로 보호되고
+ * 위반을 모두 포괄하는 코드다. 이 프로젝트의 `woodong_*` 테이블은 전부 RLS로 보호되고
  * GRANT는 Supabase가 기본 제공하므로, 이 코드가 뜨면 사실상 항상 RLS 위반이다
  * (Supabase 공식 트러블슈팅 문서 "Database API 42501 errors" — `mcp__supabase__search_docs`로 확인,
  * `PostgrestError`의 `code` 필드에 담겨 온다: node_modules/@supabase/postgrest-js/src/PostgrestError.ts 참고).

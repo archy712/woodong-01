@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * 로그인 사용자에게만 "내 모임" 링크와 알림 종 아이콘을 보여준다.
- * 안 읽은 알림 뱃지는 udong_notifications가 붙는 Task 026에서 이 컴포넌트에 추가한다.
+ * 안 읽은 알림 뱃지는 woodong_notifications가 붙는 Task 026에서 이 컴포넌트에 추가한다.
  */
 export async function HeaderAuthNav({
   groupsLabel,

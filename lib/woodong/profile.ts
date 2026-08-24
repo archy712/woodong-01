@@ -7,7 +7,7 @@ import type { Tables } from "@/lib/supabase/database.types";
  * `phone_number`/`bio`는 다른 앱의 트리거·비즈니스 로직에 결합돼 있지 않은 범용 신원
  * 정보라 RLS(`profiles_update_own_or_admin`, `id = auth.uid()`)도 이미 본인 행 UPDATE를
  * 허용한다. `avatar_key`/`role`/`notify_on_*`만 다른 앱 로직에 결합돼 있어 재사용 금지다
- * (그건 그대로 `udong_profiles`/`udong_notification_preferences`로 분리 유지).
+ * (그건 그대로 `woodong_profiles`/`woodong_notification_preferences`로 분리 유지).
  */
 export type Profile = Pick<
   Tables<"profiles">,

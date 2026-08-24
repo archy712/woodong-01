@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile-form";
-import { DEFAULT_AVATAR_KEY, isAvatarKey } from "@/lib/udong/avatars";
+import { DEFAULT_AVATAR_KEY, isAvatarKey } from "@/lib/woodong/avatars";
 
 async function ProfileContent() {
   const supabase = await createClient();
@@ -25,19 +25,19 @@ async function ProfileContent() {
     throw profileError;
   }
 
-  const { data: udongProfile, error: udongProfileError } = await supabase
-    .from("udong_profiles")
+  const { data: woodongProfile, error: woodongProfileError } = await supabase
+    .from("woodong_profiles")
     .select("avatar_key")
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (udongProfileError) {
-    throw udongProfileError;
+  if (woodongProfileError) {
+    throw woodongProfileError;
   }
 
   const avatarKey =
-    udongProfile && isAvatarKey(udongProfile.avatar_key)
-      ? udongProfile.avatar_key
+    woodongProfile && isAvatarKey(woodongProfile.avatar_key)
+      ? woodongProfile.avatar_key
       : DEFAULT_AVATAR_KEY;
 
   return (

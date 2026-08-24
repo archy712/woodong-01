@@ -3,13 +3,13 @@
 import { Loader2Icon } from "lucide-react";
 
 import { useServerActionForm } from "@/hooks/use-server-action-form";
-import { updateProfileAction } from "@/lib/udong/actions/profile";
+import { updateProfileAction } from "@/lib/woodong/actions/profile";
 import {
   updateProfileSchema,
   type Profile,
   type UpdateProfileInput,
-} from "@/lib/udong/profile";
-import type { AvatarKey } from "@/lib/udong/avatars";
+} from "@/lib/woodong/profile";
+import type { AvatarKey } from "@/lib/woodong/avatars";
 import { cn } from "@/lib/utils";
 import { AvatarPicker } from "@/components/avatar-picker";
 import { Button } from "@/components/ui/button";

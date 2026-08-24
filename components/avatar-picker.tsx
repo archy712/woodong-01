@@ -3,8 +3,12 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { AVATAR_EMOJI, AVATAR_KEYS, type AvatarKey } from "@/lib/udong/avatars";
-import { updateAvatarAction } from "@/lib/udong/actions/profile";
+import {
+  AVATAR_EMOJI,
+  AVATAR_KEYS,
+  type AvatarKey,
+} from "@/lib/woodong/avatars";
+import { updateAvatarAction } from "@/lib/woodong/actions/profile";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";

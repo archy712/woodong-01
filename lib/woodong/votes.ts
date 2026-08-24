@@ -2,18 +2,18 @@ import { z } from "zod";
 import type { Database, Tables } from "@/lib/supabase/database.types";
 import { datetimeString } from "./common";
 
-/** 투표 형식 — `udong_votes.vote_type` CHECK 제약(multiple_choice/yes_no, PRD 5.10) */
+/** 투표 형식 — `woodong_votes.vote_type` CHECK 제약(multiple_choice/yes_no, PRD 5.10) */
 export type VoteType = "multiple_choice" | "yes_no";
 
 /**
- * 투표 상태 — `udong_votes.status` CHECK 제약(open/closed, PRD 5.10).
+ * 투표 상태 — `woodong_votes.status` CHECK 제약(open/closed, PRD 5.10).
  * 1차 MVP는 실시간 스케줄러 없이 조회 시점 lazy 마감으로 전환한다(ROADMAP Task 030).
  */
 export type VoteStatus = "open" | "closed";
 
 export type Vote = Omit<
   Pick<
-    Tables<"udong_votes">,
+    Tables<"woodong_votes">,
     | "id"
     | "group_id"
     | "title"
@@ -29,27 +29,27 @@ export type Vote = Omit<
 > & { vote_type: VoteType; status: VoteStatus };
 
 export type VoteOption = Pick<
-  Tables<"udong_vote_options">,
+  Tables<"woodong_vote_options">,
   "id" | "vote_id" | "label" | "sort_order"
 >;
 
 /**
- * `udong_vote_responses`는 익명 투표에서도 중복 투표 방지를 위해 `user_id`를 저장하지만,
+ * `woodong_vote_responses`는 익명 투표에서도 중복 투표 방지를 위해 `user_id`를 저장하지만,
  * RLS로 본인 레코드만 직접 SELECT 가능하도록 제한된다(PRD 4.2/5.11). 결과 집계는 이 테이블을
- * 직접 조회하지 않고 아래 `udong_get_vote_results()` RPC를 통해서만 노출한다.
+ * 직접 조회하지 않고 아래 `woodong_get_vote_results()` RPC를 통해서만 노출한다.
  */
 export type VoteResponse = Pick<
-  Tables<"udong_vote_responses">,
+  Tables<"woodong_vote_responses">,
   "id" | "vote_id" | "option_id" | "user_id" | "responded_at"
 >;
 
 /**
- * `udong_get_vote_results(p_vote_id)` RPC 반환 타입(`SECURITY DEFINER`, ROADMAP Task 003).
+ * `woodong_get_vote_results(p_vote_id)` RPC 반환 타입(`SECURITY DEFINER`, ROADMAP Task 003).
  * 익명 투표는 `voter_names`가 빈 배열(응답자 식별 불가), 실명 투표는 투표자 이름 배열을 반환한다.
  * 생성된 DB 함수 타입에서 그대로 파생시켜 수동 복제를 피한다.
  */
 export type VoteResult =
-  Database["public"]["Functions"]["udong_get_vote_results"]["Returns"][number];
+  Database["public"]["Functions"]["woodong_get_vote_results"]["Returns"][number];
 
 // ── zod 스키마 ────────────────────────────────────────────────────────────
 

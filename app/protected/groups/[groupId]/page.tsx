@@ -25,7 +25,7 @@ async function GroupDetailContent({
   // Task 008 범위: 생성 직후 진입했을 때 모임 이름이 보이는 정도의 최소 조회만 붙인다.
   // 멤버 목록/회비/공지 등 상세 화면 전체 구현은 Task 012/019 범위.
   const { data: group } = await supabase
-    .from("udong_groups")
+    .from("woodong_groups")
     .select("id, name, description")
     .eq("id", groupId)
     .maybeSingle();

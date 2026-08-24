@@ -3,12 +3,12 @@
 import { Loader2Icon } from "lucide-react";
 
 import { useServerActionForm } from "@/hooks/use-server-action-form";
-import { createGroupAction } from "@/lib/udong/actions/groups";
+import { createGroupAction } from "@/lib/woodong/actions/groups";
 import {
   createGroupSchema,
   GROUP_TYPE_SUGGESTIONS,
   type CreateGroupInput,
-} from "@/lib/udong/groups";
+} from "@/lib/woodong/groups";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +43,7 @@ const defaultValues: CreateGroupInput = {
  * 모임 생성 폼 — Task 008(폼 아키텍처) 검증용 샘플 폼.
  *
  * `useServerActionForm`(react-hook-form + zod + Server Action 공통 훅)과
- * `createGroupAction`(`lib/udong/actions/groups.ts`)을 연결하기만 하면 되고,
+ * `createGroupAction`(`lib/woodong/actions/groups.ts`)을 연결하기만 하면 되고,
  * 성공 시 `createGroupAction`이 직접 `redirect()`로 상세 페이지로 이동시키므로
  * 이 컴포넌트에는 성공 후 처리 로직이 따로 없다.
  */
@@ -156,7 +156,7 @@ export function CreateGroupForm({
         </CardContent>
       </Card>
 
-      {/* GROUP_TYPE_SUGGESTIONS는 힌트일 뿐, udong_groups.type은 자유 값이라 직접 타이핑도 허용한다. */}
+      {/* GROUP_TYPE_SUGGESTIONS는 힌트일 뿐, woodong_groups.type은 자유 값이라 직접 타이핑도 허용한다. */}
       <datalist id={GROUP_TYPE_DATALIST_ID}>
         {GROUP_TYPE_SUGGESTIONS.map((suggestion) => (
           <option key={suggestion} value={suggestion} />

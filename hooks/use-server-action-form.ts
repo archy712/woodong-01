@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import type { z } from "zod";
 
-import type { ActionResult } from "@/lib/udong/common";
+import type { ActionResult } from "@/lib/woodong/common";
 
 /**
  * react-hook-form이 검증한 입력값을 그대로 받아 `ActionResult`를 반환하는 Server Action의 타입.
@@ -60,14 +60,14 @@ export interface UseServerActionFormReturn<
  * react-hook-form + zod + Server Action 공통 래퍼.
  *
  * `docs/guides/forms-react-hook-form.md`의 패턴을 이 코드베이스의 실제 `ActionResult`
- * (`lib/udong/common.ts`)에 맞게 구현한 것 — 성공/필드 에러/폼 전체 에러 3갈래 분기를
+ * (`lib/woodong/common.ts`)에 맞게 구현한 것 — 성공/필드 에러/폼 전체 에러 3갈래 분기를
  * 매번 손으로 반복하지 않도록 이 훅 하나로 감싼다.
  *
  * 분기 규칙:
  * - `success: false` + `fieldErrors` → 해당 필드에 `form.setError(field, { type: "server" })`
  *   (react-hook-form의 `FormMessage`가 그대로 표시)
  * - `success: false` + `formError` → 필드에 속하지 않는 일반 에러이므로 `toast.error()`로 알림
- *   (RLS 거부 등 `lib/udong/errors.ts`의 `mapSupabaseError()`가 만든 메시지가 여기로 들어온다)
+ *   (RLS 거부 등 `lib/woodong/errors.ts`의 `mapSupabaseError()`가 만든 메시지가 여기로 들어온다)
  * - `success: true` → `successMessage`가 있으면 `toast.success()`, 이어서 `onSuccess(data)` 호출
  */
 export function useServerActionForm<

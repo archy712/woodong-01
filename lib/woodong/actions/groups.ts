@@ -4,27 +4,27 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
-import { mapSupabaseError } from "@/lib/udong/errors";
-import { createGroupSchema, type CreateGroupInput } from "@/lib/udong/groups";
-import type { ActionResult } from "@/lib/udong/common";
+import { mapSupabaseError } from "@/lib/woodong/errors";
+import { createGroupSchema, type CreateGroupInput } from "@/lib/woodong/groups";
+import type { ActionResult } from "@/lib/woodong/common";
 
 /**
  * 모임 생성 Server Action.
  *
- * 1) `udong_groups`에 INSERT(`created_by` = 현재 로그인 사용자)
- * 2) 생성된 모임에 대해 `udong_group_members`에 본인을 `role: "admin"`으로 자기등록
+ * 1) `woodong_groups`에 INSERT(`created_by` = 현재 로그인 사용자)
+ * 2) 생성된 모임에 대해 `woodong_group_members`에 본인을 `role: "admin"`으로 자기등록
  *
  * (2)가 가능한 이유: Task 003 마이그레이션에서 "자신이 만든 모임의 admin 자기등록"을
- * 허용하는 `udong_group_members_insert_bootstrap_admin` RLS 정책을 이미 만들어 뒀다
+ * 허용하는 `woodong_group_members_insert_bootstrap_admin` RLS 정책을 이미 만들어 뒀다
  * (`with_check`: `user_id = auth.uid() AND role = 'admin' AND group_id IN
- * (SELECT id FROM udong_groups WHERE created_by = auth.uid())`).
+ * (SELECT id FROM woodong_groups WHERE created_by = auth.uid())`).
  * 두 INSERT 모두 `createClient()`(요청 쿠키의 사용자 세션)로 실행하므로 RLS의 `auth.uid()`가
  * 로그인한 사용자로 정상 평가된다 — service role 클라이언트를 쓰면 이 정책들이 무의미해지므로 절대 쓰지 않는다.
  *
  * ⚠️ `.insert().select()`(= PostgREST `Prefer: return=representation`)를 쓰지 않는 이유:
  * Postgres RLS는 `INSERT ... RETURNING`에 대해 INSERT의 `WITH CHECK`뿐 아니라 **SELECT 정책까지도**
- * 함께 평가한다. `udong_groups_select_member`는 `udong_is_group_member(id)`를 요구하는데,
- * 방금 만든 모임은 아직 (2)의 `udong_group_members` 자기등록 전이라 이 시점엔 멤버가 아니므로
+ * 함께 평가한다. `woodong_groups_select_member`는 `woodong_is_group_member(id)`를 요구하는데,
+ * 방금 만든 모임은 아직 (2)의 `woodong_group_members` 자기등록 전이라 이 시점엔 멤버가 아니므로
  * SELECT 정책이 거부되고, 결과적으로 정상적인 `created_by = auth.uid()` INSERT조차
  * `42501`(row-level security policy violation)로 실패한다(실제로 재현·확인함 — curl로 동일 토큰을
  * 써서 `Prefer: return=representation` 유무에 따라 403/201이 갈리는 것까지 검증했다).
@@ -64,7 +64,7 @@ export async function createGroupAction(
   const { name, description, type, defaultDueAmount } = parsed.data;
   const groupId = crypto.randomUUID();
 
-  const { error: groupError } = await supabase.from("udong_groups").insert({
+  const { error: groupError } = await supabase.from("woodong_groups").insert({
     id: groupId,
     name,
     description: description || null,
@@ -75,14 +75,14 @@ export async function createGroupAction(
 
   if (groupError) {
     console.error(
-      "[createGroupAction] udong_groups insert failed:",
+      "[createGroupAction] woodong_groups insert failed:",
       groupError,
     );
     return { success: false, formError: mapSupabaseError(groupError) };
   }
 
   const { error: memberError } = await supabase
-    .from("udong_group_members")
+    .from("woodong_group_members")
     .insert({
       group_id: groupId,
       user_id: userId,
@@ -94,7 +94,7 @@ export async function createGroupAction(
     // 이 상태를 자동 롤백/정리하는 로직은 이번 Task 범위 밖(전체 CRUD는 Task 019)이므로,
     // 우선 사용자에게 실패를 알리고 서버 로그를 남기는 데 그친다.
     console.error(
-      "[createGroupAction] udong_group_members insert failed:",
+      "[createGroupAction] woodong_group_members insert failed:",
       memberError,
     );
     return { success: false, formError: mapSupabaseError(memberError) };

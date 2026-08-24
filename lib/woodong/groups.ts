@@ -3,8 +3,8 @@ import type { Tables } from "@/lib/supabase/database.types";
 import { datetimeString, wonAmount } from "./common";
 
 /**
- * 모임 유형 — `udong_groups.type`은 CHECK 제약이 없는 **자유 값**이다
- * (PRD 4.3 "확장성", ROADMAP Task 002 "udong_groups.type(자유 값)").
+ * 모임 유형 — `woodong_groups.type`은 CHECK 제약이 없는 **자유 값**이다
+ * (PRD 4.3 "확장성", ROADMAP Task 002 "woodong_groups.type(자유 값)").
  * 따라서 리터럴 유니온으로 좁히지 않고, UI 선택지 힌트용 상수만 제공한다.
  */
 export const GROUP_TYPE_SUGGESTIONS = [
@@ -15,7 +15,7 @@ export const GROUP_TYPE_SUGGESTIONS = [
 ] as const;
 
 export type Group = Pick<
-  Tables<"udong_groups">,
+  Tables<"woodong_groups">,
   | "id"
   | "name"
   | "description"
@@ -26,15 +26,15 @@ export type Group = Pick<
   | "created_at"
 >;
 
-/** 모임 멤버 역할 — `udong_group_members.role` CHECK 제약(PRD 5.3, ROADMAP Task 002/003) */
+/** 모임 멤버 역할 — `woodong_group_members.role` CHECK 제약(PRD 5.3, ROADMAP Task 002/003) */
 export type GroupMemberRole = "admin" | "member";
 
-/** 모임 멤버 상태 — `udong_group_members.status` CHECK 제약(PRD 5.3, ROADMAP Task 002/003) */
+/** 모임 멤버 상태 — `woodong_group_members.status` CHECK 제약(PRD 5.3, ROADMAP Task 002/003) */
 export type GroupMemberStatus = "active" | "left";
 
 export type GroupMember = Omit<
   Pick<
-    Tables<"udong_group_members">,
+    Tables<"woodong_group_members">,
     "id" | "group_id" | "user_id" | "role" | "status" | "joined_at"
   >,
   "role" | "status"
@@ -44,7 +44,7 @@ export type GroupMember = Omit<
 };
 
 export type GroupInvite = Pick<
-  Tables<"udong_group_invites">,
+  Tables<"woodong_group_invites">,
   | "id"
   | "group_id"
   | "code"
@@ -84,7 +84,7 @@ export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 /**
  * 초대 코드 발급 폼.
  *
- * `udong_group_invites.expires_at`/`max_uses`는 DB 컬럼 자체는 nullable(무제한 허용)이지만,
+ * `woodong_group_invites.expires_at`/`max_uses`는 DB 컬럼 자체는 nullable(무제한 허용)이지만,
  * PRD 9장 "초대 코드 보안" 리스크 대응으로 **애플리케이션(폼) 레벨에서는 필수값으로 강제**한다
  * (Task 007 지침 3번 및 ROADMAP Task 020 "만료 기간 및 최대 사용 횟수 설정 필수화").
  */

@@ -8,8 +8,8 @@
 - **기반 프롬프트**: `docs/prd/PRD_MVP_PROMPT.md`
 - **변경 이력**:
   - v1.0 (2026-08-23): 최초 작성
-  - v1.1 (2026-08-23): prd-validator 기술 검증 결과 반영. Supabase 프로젝트 공용 사용 원칙 확정(5.0절), 데이터 모델에 `udong_` 접두어 적용 및 스키마 보완, Naver OAuth 미지원 사실 정정 및 대안 제시(3.6, 9장), 계정 자동 연결 정책 재작성(3.6), 공지사항 테이블 추가, RLS 재귀 회피/Storage 정책 보완(4.2), MVP 범위 재조정(7장), 리스크 항목 보강(9장)
-  - v1.2 (2026-08-23): `docs/roadmap/ROADMAP_MVP.md`와의 교차 검토 과정에서 발견된 불일치 수정 — `udong_groups.cover_image_url`(text, URL)이 4.2절의 "모임 대표 이미지 버킷도 비공개"라는 Storage 정책과 모순되던 것을 `udong_expenses.receipt_object_path`와 동일한 패턴인 `cover_image_object_path`(오브젝트 경로 + 조회 시 서명 URL 발급)로 정정(5.0, 5.2절)
+  - v1.1 (2026-08-23): prd-validator 기술 검증 결과 반영. Supabase 프로젝트 공용 사용 원칙 확정(5.0절), 데이터 모델에 `woodong_` 접두어 적용 및 스키마 보완, Naver OAuth 미지원 사실 정정 및 대안 제시(3.6, 9장), 계정 자동 연결 정책 재작성(3.6), 공지사항 테이블 추가, RLS 재귀 회피/Storage 정책 보완(4.2), MVP 범위 재조정(7장), 리스크 항목 보강(9장)
+  - v1.2 (2026-08-23): `docs/roadmap/ROADMAP_MVP.md`와의 교차 검토 과정에서 발견된 불일치 수정 — `woodong_groups.cover_image_url`(text, URL)이 4.2절의 "모임 대표 이미지 버킷도 비공개"라는 Storage 정책과 모순되던 것을 `woodong_expenses.receipt_object_path`와 동일한 패턴인 `cover_image_object_path`(오브젝트 경로 + 조회 시 서명 URL 발급)로 정정(5.0, 5.2절)
 
 ---
 
@@ -43,7 +43,7 @@
 
 ## 2. 기술 스택 (고정 — 변경 제안 불필요)
 
-본 프로젝트는 기존 Next.js 16 + Supabase Auth 스타터킷(`udong-ops-01`) 위에 구축한다. 아래 스택은 프롬프트 지침과 현재 코드베이스(`CLAUDE.md`) 기준을 그대로 따른다.
+본 프로젝트는 기존 Next.js 16 + Supabase Auth 스타터킷(`woodong-ops-01`) 위에 구축한다. 아래 스택은 프롬프트 지침과 현재 코드베이스(`CLAUDE.md`) 기준을 그대로 따른다.
 
 | 영역                | 기술                                                                                                                                 | 비고                                                                                                                                                                                                   |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -55,7 +55,7 @@
 | Supabase 클라이언트 | `lib/supabase/client.ts`(브라우저) / `lib/supabase/server.ts`(서버, 요청마다 신규 생성) / `lib/supabase/proxy.ts`(`updateSession()`) | 세션 확인은 `getUser()`가 아닌 `getClaims()` 사용                                                                                                                                                      |
 | 인증                | 이메일/비밀번호 + Google OAuth(네이티브) + Kakao OAuth(네이티브)                                                                     | **Naver는 Supabase Auth 네이티브 미지원(기술 검증으로 확인됨)** — 1차 MVP 범위에서 제외, 대안은 3.6.1절 참고                                                                                           |
 | 알림 연동           | 카카오톡 알림톡 API(대행사 경유, 9장 참고), Slack Webhook/API, 이메일(Resend), 앱 내 알림(종 모양 아이콘 + 알림센터)                 | 1차 MVP는 앱 내 알림만 구현. 정기 발송(회비 리마인드 등)은 Supabase Cron(pg_cron) 기반 스케줄러로 2차 확장(7장, 9장 참고) — Edge Function 자체에는 스케줄러가 없음                                     |
-| Supabase 프로젝트   | 기존 계약된 무료 플랜 프로젝트 1개를 다른 앱과 **공유**(신규 프로젝트 생성 없음)                                                     | 상세 원칙은 5.0절 참고. 우동 전용 테이블은 전부 `udong_` 접두어로 격리하고 기존 테이블은 ALTER/DROP 금지                                                                                               |
+| Supabase 프로젝트   | 기존 계약된 무료 플랜 프로젝트 1개를 다른 앱과 **공유**(신규 프로젝트 생성 없음)                                                     | 상세 원칙은 5.0절 참고. 우동 전용 테이블은 전부 `woodong_` 접두어로 격리하고 기존 테이블은 ALTER/DROP 금지                                                                                             |
 | 다국어              | 기존 `lib/i18n/`(쿠키 + `Accept-Language`, ko/en/ja/zh) 구조 재사용                                                                  | 신규 문자열은 `Dictionary` 타입과 4개 언어 파일에 모두 추가                                                                                                                                            |
 | 배포/개발           | Claude Code 기반 개발, Vercel 배포                                                                                                   | 기존 스타터킷 배포 파이프라인 재사용                                                                                                                                                                   |
 
@@ -100,10 +100,10 @@
 - Given 로그인한 사용자가 모임 생성 페이지에서 이름/설명/월 회비 기본값을 입력했을 때, When "모임 만들기"를 클릭하면, Then 새 모임이 생성되고 생성자가 자동으로 `총무` 역할로 등록되며 모임 상세 페이지로 이동한다.
 - Given 필수 항목(모임 이름)이 비어 있을 때, When "모임 만들기"를 클릭하면, Then 유효성 검사 에러가 표시되고 생성 요청이 전송되지 않는다.
 - Given 총무가 모임 상세 페이지에서 "멤버 초대"를 클릭했을 때, When 초대 링크 생성을 요청하면, Then 만료 기간이 설정된 고유 초대 코드/링크가 생성되어 복사할 수 있다.
-- Given 신규 참여자가 유효한 초대 링크로 접속했을 때, When 로그인 상태에서 "참여하기"를 클릭하면, Then `udong_group_members`에 `일반회원`으로 등록되고 모임 상세 페이지로 이동한다.
+- Given 신규 참여자가 유효한 초대 링크로 접속했을 때, When 로그인 상태에서 "참여하기"를 클릭하면, Then `woodong_group_members`에 `일반회원`으로 등록되고 모임 상세 페이지로 이동한다.
 - Given 신규 참여자가 만료되었거나 잘못된 초대 코드를 입력했을 때, When "참여하기"를 클릭하면, Then "유효하지 않은 초대 코드입니다" 에러가 표시된다.
-- Given 이미 해당 모임의 멤버인 사용자가 같은 모임의 초대 링크로 재접속했을 때, When "참여하기"를 클릭하면, Then `udong_group_members`의 `UNIQUE(group_id, user_id)` 제약에 의해 중복 멤버십이 생성되지 않고 모임 상세로 바로 이동한다.
-- Given 총무가 기존 초대 코드를 재발급했을 때, When 새 코드가 생성되면, Then 이전 `udong_group_invites` 레코드는 `is_active = false`(`revoked_at` 기록)로 전환되어 더 이상 참여에 사용할 수 없다.
+- Given 이미 해당 모임의 멤버인 사용자가 같은 모임의 초대 링크로 재접속했을 때, When "참여하기"를 클릭하면, Then `woodong_group_members`의 `UNIQUE(group_id, user_id)` 제약에 의해 중복 멤버십이 생성되지 않고 모임 상세로 바로 이동한다.
+- Given 총무가 기존 초대 코드를 재발급했을 때, When 새 코드가 생성되면, Then 이전 `woodong_group_invites` 레코드는 `is_active = false`(`revoked_at` 기록)로 전환되어 더 이상 참여에 사용할 수 없다.
 - Given 일반회원이 다른 회원의 역할을 변경하려고 시도할 때, When 요청이 전송되면, Then 권한 없음(RLS 차단) 응답으로 거부된다.
 - Given 모임에 총무(admin)가 1명만 남아 있을 때, When 해당 총무가 자신의 역할을 일반회원으로 변경하거나 모임을 탈퇴하려고 시도하면, Then "마지막 총무는 역할을 변경하거나 탈퇴할 수 없습니다. 먼저 다른 멤버를 총무로 지정해주세요" 에러가 표시되고 요청이 거부된다(총무 단일 실패점 방지, 9장 참고).
 - Given 총무가 모임 삭제를 요청했을 때, When 확인 다이얼로그에서 "삭제"를 재확인하면, Then 모임과 연관된 회비/정산/투표 데이터가 함께 삭제(또는 소프트 삭제)되고 모임 목록 페이지로 이동한다.
@@ -112,7 +112,7 @@
 
 ### 3.3 모임 알림
 
-**설명**: 공지사항(`udong_announcements`) 등록 → 사용자별 알림 채널 설정(카카오톡/슬랙/이메일/앱내)에 따라 발송. 알림 유형: 공지, 회비 납부 리마인드, 투표 시작/마감, 정산 리포트 발행. **1차 MVP는 앱 내 알림만 구현**하며, 정기 발송이 필요한 리마인드류는 실시간 스케줄러 없이 "조회 시점 지연 처리(lazy)"로 대체한다(스케줄러 인프라 결정은 9장 참고).
+**설명**: 공지사항(`woodong_announcements`) 등록 → 사용자별 알림 채널 설정(카카오톡/슬랙/이메일/앱내)에 따라 발송. 알림 유형: 공지, 회비 납부 리마인드, 투표 시작/마감, 정산 리포트 발행. **1차 MVP는 앱 내 알림만 구현**하며, 정기 발송이 필요한 리마인드류는 실시간 스케줄러 없이 "조회 시점 지연 처리(lazy)"로 대체한다(스케줄러 인프라 결정은 9장 참고).
 
 **User Story**
 
@@ -122,19 +122,19 @@
 
 **수용 기준**
 
-- Given 총무가 공지사항 작성 후 "발송"을 클릭했을 때, When 발송 요청이 처리되면, Then `udong_announcements`에 공지 레코드가 생성되고, 각 멤버의 `udong_notification_preferences`에서 `in_app`이 활성화된 채널 기준으로 `udong_notifications`에 알림이 기록되어 앱 내 알림센터에 노출된다(1차 MVP는 in_app만 발송, 외부 채널은 2차).
+- Given 총무가 공지사항 작성 후 "발송"을 클릭했을 때, When 발송 요청이 처리되면, Then `woodong_announcements`에 공지 레코드가 생성되고, 각 멤버의 `woodong_notification_preferences`에서 `in_app`이 활성화된 채널 기준으로 `woodong_notifications`에 알림이 기록되어 앱 내 알림센터에 노출된다(1차 MVP는 in_app만 발송, 외부 채널은 2차).
 - Given 멤버가 회비 미납 상태일 때, When 해당 멤버가 회비 대시보드 또는 알림센터에 진입하면(1차: 실시간 스케줄러 대신 조회 시점 lazy 처리), Then 마지막 리마인드 발송 이후 설정된 주기가 지났는지 확인해 필요 시 새 리마인드 알림이 기록된다. 실제 배치 스케줄러(pg_cron) 기반 자동 발송은 2차 확장에서 적용한다.
-- Given 투표 마감일시가 지난 상태로 멤버가 해당 투표 상세/목록을 조회할 때(1차: lazy 마감), When 페이지가 로딩되면, Then 서버에서 마감 처리 및 결과 집계가 수행되고 조회한 멤버에게 결과가 표시되며 `udong_notifications`에 결과 알림이 기록된다. 참여 여부와 무관하게 전원에게 실시간으로 알림을 발송하는 것은 2차 확장(pg_cron 스케줄러) 대상이다.
-- Given 정산 리포트가 발행되었을 때, When 발행 액션이 완료되면, Then 모임 전체 멤버에게 "정산 리포트 발행" 알림이 `udong_notifications`에 기록된다(정산 발행 기능 자체는 2차 확장, 7장 참고).
+- Given 투표 마감일시가 지난 상태로 멤버가 해당 투표 상세/목록을 조회할 때(1차: lazy 마감), When 페이지가 로딩되면, Then 서버에서 마감 처리 및 결과 집계가 수행되고 조회한 멤버에게 결과가 표시되며 `woodong_notifications`에 결과 알림이 기록된다. 참여 여부와 무관하게 전원에게 실시간으로 알림을 발송하는 것은 2차 확장(pg_cron 스케줄러) 대상이다.
+- Given 정산 리포트가 발행되었을 때, When 발행 액션이 완료되면, Then 모임 전체 멤버에게 "정산 리포트 발행" 알림이 `woodong_notifications`에 기록된다(정산 발행 기능 자체는 2차 확장, 7장 참고).
 - Given 사용자가 마이페이지에서 특정 채널(예: 카카오톡)을 비활성화했을 때, When 새 알림 이벤트가 발생하면, Then 해당 채널로는 발송되지 않고 활성화된 다른 채널(예: 앱내)로만 발송된다.
-- Given 외부 알림 채널(카카오톡 알림톡/Slack/이메일, 2차 확장) 발송이 실패했을 때, When 재시도 정책이 트리거되면, Then 지정된 횟수만큼 재시도 후 최종 실패 시 앱 내 알림으로 폴백 발송되고 `udong_notifications` 테이블에 실패 상태가 기록된다.
-- Given 사용자가 알림센터에서 특정 알림 항목을 클릭했을 때, When 상세로 이동하면, Then `udong_notifications.read_at`/`clicked_at`이 갱신되고 알림센터 목록에서 읽음/안읽음이 구분되어 표시된다.
+- Given 외부 알림 채널(카카오톡 알림톡/Slack/이메일, 2차 확장) 발송이 실패했을 때, When 재시도 정책이 트리거되면, Then 지정된 횟수만큼 재시도 후 최종 실패 시 앱 내 알림으로 폴백 발송되고 `woodong_notifications` 테이블에 실패 상태가 기록된다.
+- Given 사용자가 알림센터에서 특정 알림 항목을 클릭했을 때, When 상세로 이동하면, Then `woodong_notifications.read_at`/`clicked_at`이 갱신되고 알림센터 목록에서 읽음/안읽음이 구분되어 표시된다.
 
 ---
 
 ### 3.4 회비 관리
 
-**설명**: 회원별 납부 현황 대시보드, 미납자 리마인드, 지출 내역 등록, 정산 리포트. **공수 비중이 커서 3.4-a(회비 현황 — 1차 MVP)와 3.4-b(지출/정산 — 2차 확장)로 분리한다(7장 참고).** 회비 "항목/사이클"(`udong_due_cycles`)과 멤버별 "청구"(`udong_dues`)를 분리해, 항목 단위 수정/리마인드 주기 설정이 가능하도록 설계를 보완했다(기존 PRD의 단일 `dues` 테이블 설계 오류 수정).
+**설명**: 회원별 납부 현황 대시보드, 미납자 리마인드, 지출 내역 등록, 정산 리포트. **공수 비중이 커서 3.4-a(회비 현황 — 1차 MVP)와 3.4-b(지출/정산 — 2차 확장)로 분리한다(7장 참고).** 회비 "항목/사이클"(`woodong_due_cycles`)과 멤버별 "청구"(`woodong_dues`)를 분리해, 항목 단위 수정/리마인드 주기 설정이 가능하도록 설계를 보완했다(기존 PRD의 단일 `dues` 테이블 설계 오류 수정).
 
 **User Story**
 
@@ -146,16 +146,16 @@
 
 **수용 기준 — 3.4-a 회비 현황 (1차 MVP)**
 
-- Given 총무가 회비 항목(제목/대상 기간/금액/리마인드 주기)을 생성했을 때, When 생성이 완료되면, Then `udong_due_cycles` 레코드가 1건 생성되고, 해당 시점의 모든 활성 멤버에 대해 `udong_dues` 레코드가 "미납" 상태로 자동 생성된다(멤버당 `udong_dues` 1건, `UNIQUE(due_cycle_id, user_id)`로 중복 생성 방지).
+- Given 총무가 회비 항목(제목/대상 기간/금액/리마인드 주기)을 생성했을 때, When 생성이 완료되면, Then `woodong_due_cycles` 레코드가 1건 생성되고, 해당 시점의 모든 활성 멤버에 대해 `woodong_dues` 레코드가 "미납" 상태로 자동 생성된다(멤버당 `woodong_dues` 1건, `UNIQUE(due_cycle_id, user_id)`로 중복 생성 방지).
 - Given 회비 대시보드에 진입했을 때, When 페이지가 로딩되면, Then 멤버별 납부/미납/부분납부 상태가 진행률 바 형태(인포그래픽 스타일)로 표시되고 전체 납부율이 상단에 요약된다.
-- Given 총무가 특정 멤버의 상태를 "납부완료"로 변경했을 때, When 저장하면, Then `udong_payments`에 납부 이력이 기록되고, `udong_dues.status`는 해당 `due_id`에 연결된 `udong_payments.amount` 합계와 `udong_dues.amount`를 비교해 `paid`/`partial`로 자동 갱신되며 대시보드가 즉시 반영된다.
-- Given 총무가 미납자 리마인드 주기(예: 3일마다)를 `udong_due_cycles.reminder_interval_days`에 설정했을 때, When 멤버가 회비 대시보드 또는 알림센터를 조회하면(1차: lazy 처리), Then 마지막 리마인드 이후 주기가 지난 미납 멤버에 한해 리마인드 알림이 `udong_notifications`에 기록된다. 실시간 배치 발송은 2차(pg_cron)로 확장한다.
+- Given 총무가 특정 멤버의 상태를 "납부완료"로 변경했을 때, When 저장하면, Then `woodong_payments`에 납부 이력이 기록되고, `woodong_dues.status`는 해당 `due_id`에 연결된 `woodong_payments.amount` 합계와 `woodong_dues.amount`를 비교해 `paid`/`partial`로 자동 갱신되며 대시보드가 즉시 반영된다.
+- Given 총무가 미납자 리마인드 주기(예: 3일마다)를 `woodong_due_cycles.reminder_interval_days`에 설정했을 때, When 멤버가 회비 대시보드 또는 알림센터를 조회하면(1차: lazy 처리), Then 마지막 리마인드 이후 주기가 지난 미납 멤버에 한해 리마인드 알림이 `woodong_notifications`에 기록된다. 실시간 배치 발송은 2차(pg_cron)로 확장한다.
 
 **수용 기준 — 3.4-b 지출/정산 (2차 확장)**
 
-- Given 총무가 지출 내역을 등록하며 영수증 이미지를 첨부했을 때, When "등록"을 클릭하면, Then 영수증이 Supabase Storage의 비공개(private) 버킷에 업로드되고 `udong_expenses` 레코드가 생성되며, 조회 시에는 서명된 URL(`createSignedUrl`)로만 접근 가능하다(4.2절 Storage 정책 참고).
+- Given 총무가 지출 내역을 등록하며 영수증 이미지를 첨부했을 때, When "등록"을 클릭하면, Then 영수증이 Supabase Storage의 비공개(private) 버킷에 업로드되고 `woodong_expenses` 레코드가 생성되며, 조회 시에는 서명된 URL(`createSignedUrl`)로만 접근 가능하다(4.2절 Storage 정책 참고).
 - Given 필수 항목(금액, 카테고리)이 누락된 지출 등록 요청일 때, When "등록"을 클릭하면, Then 유효성 검사 에러가 표시되고 등록되지 않는다.
-- Given 총무가 특정 기간(예: 2026년 8월)의 정산 리포트 생성을 요청했을 때, When 생성이 완료되면, Then 해당 기간의 총 수입, 총 지출, 잔액이 `udong_settlements`에, 항목별 상세 내역이 `udong_settlement_items`에 발행 시점 스냅샷으로 함께 생성되고 웹 뷰 또는 PDF로 다운로드할 수 있다.
+- Given 총무가 특정 기간(예: 2026년 8월)의 정산 리포트 생성을 요청했을 때, When 생성이 완료되면, Then 해당 기간의 총 수입, 총 지출, 잔액이 `woodong_settlements`에, 항목별 상세 내역이 `woodong_settlement_items`에 발행 시점 스냅샷으로 함께 생성되고 웹 뷰 또는 PDF로 다운로드할 수 있다.
 - Given 일반회원이 정산 리포트 페이지에 접근했을 때, When 페이지가 로딩되면, Then 조회는 가능하지만 수정/삭제 버튼은 노출되지 않는다(RLS 및 UI 이중 방어).
 
 > **1차 MVP 범위**: 위 3.4-a만 구현한다. 지출 등록/영수증 첨부/정산 리포트 발행·PDF는 3.4-b로 2차 확장에 포함한다(7장 참고). 단, 회비 대시보드의 "잔액" 표기는 1차에서는 노출하지 않거나 "수입만 집계"로 한정한다(지출 데이터가 없으므로).
@@ -176,15 +176,15 @@
 
 **수용 기준**
 
-- Given 총무가 투표 제목, 선택지 2개 이상, 마감일시, 복수 선택 허용 여부(`allow_multiple`), 익명 여부를 입력했을 때, When "투표 만들기"를 클릭하면, Then `udong_votes`와 `udong_vote_options` 레코드가 생성되고 멤버 전원에게 "새 투표 시작" 알림이 `udong_notifications`에 기록된다.
+- Given 총무가 투표 제목, 선택지 2개 이상, 마감일시, 복수 선택 허용 여부(`allow_multiple`), 익명 여부를 입력했을 때, When "투표 만들기"를 클릭하면, Then `woodong_votes`와 `woodong_vote_options` 레코드가 생성되고 멤버 전원에게 "새 투표 시작" 알림이 `woodong_notifications`에 기록된다.
 - Given 선택지가 1개 이하이거나 마감일시가 과거일 때, When "투표 만들기"를 클릭하면, Then 유효성 검사 에러가 표시되고 생성되지 않는다.
-- Given `allow_multiple = false`인 투표에서 일반회원이 마감 전 투표 상세 페이지에 진입했을 때, When 선택지 1개를 고르고 "투표하기"를 클릭하면, Then `udong_vote_responses`에 응답이 기록되고 `UNIQUE(vote_id, user_id)` 제약으로 같은 멤버의 중복 투표가 차단된다.
-- Given `allow_multiple = true`인 투표일 때, When 멤버가 여러 선택지를 고르고 "투표하기"를 클릭하면, Then 선택한 선택지 수만큼 `udong_vote_responses`가 생성되되 `UNIQUE(vote_id, user_id, option_id)` 제약으로 동일 선택지 중복 선택만 차단된다.
-- Given 투표가 "익명" 옵션으로 설정되었을 때, When 결과를 조회하면, Then `udong_vote_responses`를 직접 SELECT하는 대신 `SECURITY DEFINER` 집계 함수/뷰를 통해 선택지별 집계 수치만 반환되고 응답자 이름은 노출되지 않는다(4.2절 참고).
+- Given `allow_multiple = false`인 투표에서 일반회원이 마감 전 투표 상세 페이지에 진입했을 때, When 선택지 1개를 고르고 "투표하기"를 클릭하면, Then `woodong_vote_responses`에 응답이 기록되고 `UNIQUE(vote_id, user_id)` 제약으로 같은 멤버의 중복 투표가 차단된다.
+- Given `allow_multiple = true`인 투표일 때, When 멤버가 여러 선택지를 고르고 "투표하기"를 클릭하면, Then 선택한 선택지 수만큼 `woodong_vote_responses`가 생성되되 `UNIQUE(vote_id, user_id, option_id)` 제약으로 동일 선택지 중복 선택만 차단된다.
+- Given 투표가 "익명" 옵션으로 설정되었을 때, When 결과를 조회하면, Then `woodong_vote_responses`를 직접 SELECT하는 대신 `SECURITY DEFINER` 집계 함수/뷰를 통해 선택지별 집계 수치만 반환되고 응답자 이름은 노출되지 않는다(4.2절 참고).
 - Given 투표가 "실명" 옵션으로 설정되었을 때, When 결과를 조회하면, Then 각 선택지에 투표한 멤버 이름 목록이 함께 표시된다.
 - Given 투표 마감일시가 지난 상태에서 멤버가 해당 투표 목록/상세를 조회할 때(1차 MVP: lazy 마감 처리, 실시간 스케줄러는 2차), When 페이지가 로딩되면, Then 서버에서 투표 상태가 "마감"으로 전환되고 결과가 집계되어 조회한 멤버에게 즉시 표시된다.
 - Given 총무가 마감 전 투표를 수동으로 조기 마감하려고 할 때, When "지금 마감"을 클릭하면, Then 확인 다이얼로그 이후 즉시 마감 처리와 동일한 로직이 수행된다.
-- Given 투표가 (lazy 처리든 수동 마감이든) 방금 마감 상태로 전환되었을 때, When 마감 처리가 완료되면, Then 참여 여부와 무관하게 모임 멤버 전원에게 결과 알림이 `udong_notifications`에 기록된다(1차: 조회 트리거 기반, 2차: pg_cron 스케줄러로 실시간 발송 전환).
+- Given 투표가 (lazy 처리든 수동 마감이든) 방금 마감 상태로 전환되었을 때, When 마감 처리가 완료되면, Then 참여 여부와 무관하게 모임 멤버 전원에게 결과 알림이 `woodong_notifications`에 기록된다(1차: 조회 트리거 기반, 2차: pg_cron 스케줄러로 실시간 발송 전환).
 
 ---
 
@@ -286,48 +286,48 @@
 
 ### 4.2 보안 (Supabase RLS 설계 방향)
 
-- 모든 `udong_*` 테이블은 기본적으로 RLS(Row Level Security) 활성화(`ENABLE ROW LEVEL SECURITY`)를 원칙으로 한다. **기존 공유 프로젝트의 다른 테이블(`profiles` 포함)에는 RLS 정책이든 스키마든 어떠한 변경도 가하지 않는다**(5.0절 원칙).
-- **RLS 무한 재귀 회피(재작성)**: `udong_group_members`에 해당 `user_id`가 속한 `group_id`의 데이터만 SELECT 가능하도록 정책을 설계하되, `udong_group_members` 자신의 정책에서 자기 테이블을 서브쿼리로 참조하면 Postgres가 `infinite recursion detected in policy(42P17)` 오류를 낸다(흔한 실패 지점). 이를 피하기 위해 `SECURITY DEFINER` + `search_path` 고정 헬퍼 함수를 먼저 정의하고 모든 정책에서 이 함수를 사용한다.
+- 모든 `woodong_*` 테이블은 기본적으로 RLS(Row Level Security) 활성화(`ENABLE ROW LEVEL SECURITY`)를 원칙으로 한다. **기존 공유 프로젝트의 다른 테이블(`profiles` 포함)에는 RLS 정책이든 스키마든 어떠한 변경도 가하지 않는다**(5.0절 원칙).
+- **RLS 무한 재귀 회피(재작성)**: `woodong_group_members`에 해당 `user_id`가 속한 `group_id`의 데이터만 SELECT 가능하도록 정책을 설계하되, `woodong_group_members` 자신의 정책에서 자기 테이블을 서브쿼리로 참조하면 Postgres가 `infinite recursion detected in policy(42P17)` 오류를 낸다(흔한 실패 지점). 이를 피하기 위해 `SECURITY DEFINER` + `search_path` 고정 헬퍼 함수를 먼저 정의하고 모든 정책에서 이 함수를 사용한다.
 
   ```sql
-  create or replace function udong_is_group_member(p_group_id uuid)
+  create or replace function woodong_is_group_member(p_group_id uuid)
   returns boolean language sql security definer set search_path = '' as $$
     select exists (
-      select 1 from public.udong_group_members
+      select 1 from public.woodong_group_members
       where group_id = p_group_id and user_id = auth.uid() and status = 'active'
     );
   $$;
 
-  create or replace function udong_is_group_admin(p_group_id uuid)
+  create or replace function woodong_is_group_admin(p_group_id uuid)
   returns boolean language sql security definer set search_path = '' as $$
     select exists (
-      select 1 from public.udong_group_members
+      select 1 from public.woodong_group_members
       where group_id = p_group_id and user_id = auth.uid() and role = 'admin' and status = 'active'
     );
   $$;
   ```
 
-  `udong_groups`, `udong_dues`, `udong_payments`, `udong_expenses`, `udong_settlements`, `udong_votes`, `udong_vote_options`, `udong_vote_responses`, `udong_announcements`는 SELECT 정책에 `udong_is_group_member(group_id)`를, 쓰기 정책에 `udong_is_group_admin(group_id)`를 사용한다. `udong_group_members` 자신의 SELECT 정책도 동일 함수를 사용해 재귀를 피한다.
+  `woodong_groups`, `woodong_dues`, `woodong_payments`, `woodong_expenses`, `woodong_settlements`, `woodong_votes`, `woodong_vote_options`, `woodong_vote_responses`, `woodong_announcements`는 SELECT 정책에 `woodong_is_group_member(group_id)`를, 쓰기 정책에 `woodong_is_group_admin(group_id)`를 사용한다. `woodong_group_members` 자신의 SELECT 정책도 동일 함수를 사용해 재귀를 피한다.
 
-- **쓰기 권한 분리**: 회비 상태 변경, 지출 등록, 정산 발행, 투표 생성/조기마감, 멤버 역할 변경, 모임 삭제는 `udong_is_group_admin(group_id)`가 참인 경우에만 허용한다.
-- **투표 응답 보호(정정)**: Postgres RLS는 행 단위 정책만 지원하며 컬럼 단위 차단은 불가능하다("응답자 식별 컬럼만 RLS로 차단"은 구현 불가능한 표현이므로 삭제). 대신 `udong_vote_responses`는 (a) 본인 레코드만 직접 SELECT/INSERT 가능하도록 행 단위로 제한하고, (b) 익명 투표의 집계 결과는 `SECURITY DEFINER` 함수 또는 뷰로 별도 노출해 응답자 식별 없이 카운트만 반환한다. 중복 투표 방지를 위해 `user_id`는 익명 투표에서도 반드시 저장하되, 이 컬럼은 위 (a)/(b) 경로 밖으로 노출하지 않는다.
-- **알림 설정**: `udong_notification_preferences`는 본인 레코드만 SELECT/UPDATE 가능. `udong_notifications`는 본인이 수신자인 레코드만 SELECT 가능하고, `read_at`/`clicked_at`만 본인이 UPDATE 가능하도록 컬럼 보호 트리거(기존 프로젝트의 `notifications_protect_columns`와 동일한 패턴을 `udong_notifications` 전용으로 별도 구현)를 둔다. 모임 전체에 대한 팬아웃 INSERT(공지 발송 등)는 클라이언트 RLS로는 불가능하므로 Edge Function에서 **service_role 키**로 수행한다(서버 전용 환경 변수로 관리).
-- **Storage 정책(신규)**: 영수증(`udong-receipts`)·모임 대표 이미지(`udong-covers`) 버킷은 모두 **비공개(private)**로 생성한다. 영수증은 재무 정보이므로 public URL로 저장하지 않고, 조회 시점에 `udong_is_group_member(group_id)`를 만족하는 사용자에게만 `createSignedUrl()`로 임시 URL을 발급한다. `storage.objects`에도 동일한 헬퍼 함수 기반 정책을 적용한다.
+- **쓰기 권한 분리**: 회비 상태 변경, 지출 등록, 정산 발행, 투표 생성/조기마감, 멤버 역할 변경, 모임 삭제는 `woodong_is_group_admin(group_id)`가 참인 경우에만 허용한다.
+- **투표 응답 보호(정정)**: Postgres RLS는 행 단위 정책만 지원하며 컬럼 단위 차단은 불가능하다("응답자 식별 컬럼만 RLS로 차단"은 구현 불가능한 표현이므로 삭제). 대신 `woodong_vote_responses`는 (a) 본인 레코드만 직접 SELECT/INSERT 가능하도록 행 단위로 제한하고, (b) 익명 투표의 집계 결과는 `SECURITY DEFINER` 함수 또는 뷰로 별도 노출해 응답자 식별 없이 카운트만 반환한다. 중복 투표 방지를 위해 `user_id`는 익명 투표에서도 반드시 저장하되, 이 컬럼은 위 (a)/(b) 경로 밖으로 노출하지 않는다.
+- **알림 설정**: `woodong_notification_preferences`는 본인 레코드만 SELECT/UPDATE 가능. `woodong_notifications`는 본인이 수신자인 레코드만 SELECT 가능하고, `read_at`/`clicked_at`만 본인이 UPDATE 가능하도록 컬럼 보호 트리거(기존 프로젝트의 `notifications_protect_columns`와 동일한 패턴을 `woodong_notifications` 전용으로 별도 구현)를 둔다. 모임 전체에 대한 팬아웃 INSERT(공지 발송 등)는 클라이언트 RLS로는 불가능하므로 Edge Function에서 **service_role 키**로 수행한다(서버 전용 환경 변수로 관리).
+- **Storage 정책(신규)**: 영수증(`woodong-receipts`)·모임 대표 이미지(`woodong-covers`) 버킷은 모두 **비공개(private)**로 생성한다. 영수증은 재무 정보이므로 public URL로 저장하지 않고, 조회 시점에 `woodong_is_group_member(group_id)`를 만족하는 사용자에게만 `createSignedUrl()`로 임시 URL을 발급한다. `storage.objects`에도 동일한 헬퍼 함수 기반 정책을 적용한다.
 - 세션 확인은 코드베이스 관례에 따라 서버 컴포넌트/Route Handler에서 `getClaims()`를 사용하고, 보호 페이지는 `proxy.ts`의 1차 방어 + 개별 서버 컴포넌트의 2차 방어(이중 방어 패턴)를 유지한다.
 - 카카오톡 알림톡/Slack/이메일 발송에 사용되는 API 키, Webhook URL, Supabase `service_role` 키는 서버 전용 환경 변수(`NEXT_PUBLIC_` 접두사 없이)로 관리하고 클라이언트에 노출하지 않는다.
 
 ### 4.3 확장성
 
-- 데이터 모델은 `udong_groups` 테이블에 `type`(예: `동호회`, `계모임`, `스터디`, `취미모임`) 컬럼을 두어 향후 모임 유형이 다양화되어도 스키마 변경 없이 확장 가능하도록 설계한다.
-- 알림 채널은 `udong_notification_preferences.channel`을 `text + CHECK(channel in ('kakao','slack','email','in_app'))` 제약으로 관리한다(정정: "컬럼 추가만으로 대응"은 표현 오류 — enum 확장은 `ALTER TYPE`, 신규 채널 추가는 `CHECK` 제약 갱신 또는 애플리케이션 레벨 화이트리스트로 대응하는 것이 정확하다. 채널별 목적지(`destination`)는 이미 컬럼으로 존재하므로 신규 채널 추가 시 로직만 추가하면 된다).
-- 회비 항목(`udong_due_cycles`)은 "월 정기 회비"뿐 아니라 향후 "일회성 회비/추가 징수"도 동일 모델로 표현 가능하도록 `due_type`(정기/비정기) 컬럼을 둔다.
-- 우동 전용 테이블은 모두 `udong_` 접두어로 격리되어 있어(5.0절), 향후 우동을 별도 Supabase 프로젝트로 이관해야 할 때도 `udong_*` 테이블만 `pg_dump`로 추출하면 되어 이관 비용이 낮다.
+- 데이터 모델은 `woodong_groups` 테이블에 `type`(예: `동호회`, `계모임`, `스터디`, `취미모임`) 컬럼을 두어 향후 모임 유형이 다양화되어도 스키마 변경 없이 확장 가능하도록 설계한다.
+- 알림 채널은 `woodong_notification_preferences.channel`을 `text + CHECK(channel in ('kakao','slack','email','in_app'))` 제약으로 관리한다(정정: "컬럼 추가만으로 대응"은 표현 오류 — enum 확장은 `ALTER TYPE`, 신규 채널 추가는 `CHECK` 제약 갱신 또는 애플리케이션 레벨 화이트리스트로 대응하는 것이 정확하다. 채널별 목적지(`destination`)는 이미 컬럼으로 존재하므로 신규 채널 추가 시 로직만 추가하면 된다).
+- 회비 항목(`woodong_due_cycles`)은 "월 정기 회비"뿐 아니라 향후 "일회성 회비/추가 징수"도 동일 모델로 표현 가능하도록 `due_type`(정기/비정기) 컬럼을 둔다.
+- 우동 전용 테이블은 모두 `woodong_` 접두어로 격리되어 있어(5.0절), 향후 우동을 별도 Supabase 프로젝트로 이관해야 할 때도 `woodong_*` 테이블만 `pg_dump`로 추출하면 되어 이관 비용이 낮다.
 
 ### 4.4 알림 발송 실패 재시도/폴백 정책
 
 - 외부 채널(카카오톡 알림톡, Slack, 이메일) 발송 실패 시 최대 3회, 지수 백오프(1분 → 5분 → 15분)로 재시도한다.
 - 최종 실패 시 앱 내 알림(종 아이콘 + 알림센터)으로 반드시 폴백 발송하여 사용자가 서비스 내에서는 정보를 놓치지 않도록 한다.
-- 모든 발송 시도(성공/실패/재시도 이력)는 `udong_notifications` 테이블에 상태(`pending`/`sent`/`failed`/`fallback_sent`)로 기록한다.
+- 모든 발송 시도(성공/실패/재시도 이력)는 `woodong_notifications` 테이블에 상태(`pending`/`sent`/`failed`/`fallback_sent`)로 기록한다.
 
 ---
 
@@ -337,26 +337,26 @@
 
 > **배경**: Supabase 무료 플랜 프로젝트 슬롯 2개(계정 한도)가 이미 다른 앱에서 사용 중이라, 우동을 위한 신규 무료 프로젝트를 만들 수 없다. 따라서 **기존 프로젝트를 그대로 공유**하며, 아래 원칙으로 다른 앱과의 충돌을 방지한다.
 
-**네이밍 규칙(확정)**: 우동에서 새로 만드는 모든 테이블/함수/트리거는 `public` 스키마 안에 **`udong_` 접두어**를 붙인다(별도 Postgres 스키마 분리는 하지 않음 — PostgREST 노출 스키마 설정 변경 등 다른 앱에 영향을 줄 수 있는 프로젝트 전역 설정 변경을 피하기 위함). **기존 테이블(`profiles`, `notifications`, `weekly_logs`, `organizations` 등)에는 어떠한 `ALTER`/`DROP`/`TRUNCATE`도 수행하지 않는다.**
+**네이밍 규칙(확정)**: 우동에서 새로 만드는 모든 테이블/함수/트리거는 `public` 스키마 안에 **`woodong_` 접두어**를 붙인다(별도 Postgres 스키마 분리는 하지 않음 — PostgREST 노출 스키마 설정 변경 등 다른 앱에 영향을 줄 수 있는 프로젝트 전역 설정 변경을 피하기 위함). **기존 테이블(`profiles`, `notifications`, `weekly_logs`, `organizations` 등)에는 어떠한 `ALTER`/`DROP`/`TRUNCATE`도 수행하지 않는다.**
 
 **`profiles` 공용 재사용 여부 — 검토 결과: 가능 (읽기 재사용)**
 
 [FACT — 실제 DB 확인] `auth.users`에 `AFTER INSERT` 트리거 `on_auth_user_created`(`handle_new_user()`)가 걸려 있어, **어느 앱을 통해 가입하든** 모든 신규 사용자에 대해 `public.profiles(id, email)` 행이 자동 생성된다(`SECURITY DEFINER`로 RLS 우회, NOT NULL 컬럼은 모두 기본값이 있어 우동 가입 시에도 실패하지 않음). 컬럼 구성:
 
-| 컬럼                                                             | 우동에서 사용 가능 여부                                                                                                                                                                                                                                                 |
-| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`, `email`, `name`, `phone_number`, `bio`                     | ✅ 읽기 재사용 가능 — 우동 화면(마이페이지, 모임 멤버 목록)에서 그대로 표시. `phone_number`는 2차 카카오 알림톡 발송 시 수신 번호로도 활용 가능                                                                                                                         |
-| `avatar_key`                                                     | ⚠️ 다른 앱의 아바타 프리셋 키(기본값 `'fox'`). 우동은 자체 이미지 업로드가 필요하면 이 컬럼을 재정의하지 않고 `udong_groups.cover_image_object_path`처럼 우동 전용 테이블에 Storage 오브젝트 경로를 저장한다                                                            |
-| `role`                                                           | ❌ 재사용 금지 — 전역 `user`/`admin`/`superadmin` 값이며 "마지막 관리자는 강등 불가" 등 다른 앱의 조직 권한 로직에 강결합된 트리거(`prevent_unauthorized_role_change`)가 걸려 있다. 우동의 총무/일반회원 구분은 `udong_group_members.role`(모임별 값)로 완전히 분리한다 |
-| `notify_on_comment` / `notify_on_mention` / `notify_on_reminder` | ❌ 재사용 금지 — 다른 앱의 주간보고 댓글/멘션 알림 전용 플래그. 우동의 채널별 알림 설정은 `udong_notification_preferences`로 별도 관리한다                                                                                                                              |
+| 컬럼                                                             | 우동에서 사용 가능 여부                                                                                                                                                                                                                                                   |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `email`, `name`, `phone_number`, `bio`                     | ✅ 읽기 재사용 가능 — 우동 화면(마이페이지, 모임 멤버 목록)에서 그대로 표시. `phone_number`는 2차 카카오 알림톡 발송 시 수신 번호로도 활용 가능                                                                                                                           |
+| `avatar_key`                                                     | ⚠️ 다른 앱의 아바타 프리셋 키(기본값 `'fox'`). 우동은 자체 이미지 업로드가 필요하면 이 컬럼을 재정의하지 않고 `woodong_groups.cover_image_object_path`처럼 우동 전용 테이블에 Storage 오브젝트 경로를 저장한다                                                            |
+| `role`                                                           | ❌ 재사용 금지 — 전역 `user`/`admin`/`superadmin` 값이며 "마지막 관리자는 강등 불가" 등 다른 앱의 조직 권한 로직에 강결합된 트리거(`prevent_unauthorized_role_change`)가 걸려 있다. 우동의 총무/일반회원 구분은 `woodong_group_members.role`(모임별 값)로 완전히 분리한다 |
+| `notify_on_comment` / `notify_on_mention` / `notify_on_reminder` | ❌ 재사용 금지 — 다른 앱의 주간보고 댓글/멘션 알림 전용 플래그. 우동의 채널별 알림 설정은 `woodong_notification_preferences`로 별도 관리한다                                                                                                                              |
 
 → **결론: `profiles`는 스키마 변경 없이 읽기 전용으로 공용 사용한다.** 우동 전용 테이블에서 사용자를 참조할 때는 `auth.users(id)`를 FK 대상으로 하고(다른 앱이 `profiles` 컬럼을 변경하더라도 우동의 참조 무결성에는 영향이 없도록), 화면에서 이름/연락처를 표시할 때만 `public.profiles`를 조인해서 읽는다.
 
 **`notifications` 공용 재사용 여부 — 검토 결과: 불가능**
 
-[FACT — 실제 DB 확인] 컬럼이 `recipient_id`/`actor_id`/`weekly_log_id`/`comment_id`/`period_start`로 다른 앱의 주간보고 도메인에 고정돼 있고, `notifications_protect_columns` 트리거가 `read_at` 외 모든 컬럼의 UPDATE를 차단하며, `authenticated` 역할에 대한 INSERT RLS 정책이 없어(서비스 롤 전용) 범용 알림함으로 쓸 수 없다. → **재사용하지 않고 `udong_notifications`를 신규 생성한다.**
+[FACT — 실제 DB 확인] 컬럼이 `recipient_id`/`actor_id`/`weekly_log_id`/`comment_id`/`period_start`로 다른 앱의 주간보고 도메인에 고정돼 있고, `notifications_protect_columns` 트리거가 `read_at` 외 모든 컬럼의 UPDATE를 차단하며, `authenticated` 역할에 대한 INSERT RLS 정책이 없어(서비스 롤 전용) 범용 알림함으로 쓸 수 없다. → **재사용하지 않고 `woodong_notifications`를 신규 생성한다.**
 
-**적용 방침**: 아래 5.1~5.13의 모든 테이블은 `udong_` 접두어를 붙여 `public` 스키마에 생성하고, RLS는 4.2절의 헬퍼 함수 기반 정책을 적용한다. `→`는 외래키(FK) 관계를 의미하며, `profiles`로 표시된 행은 위 원칙에 따라 **기존 공유 테이블을 그대로 참조**(신규 생성 아님)한다.
+**적용 방침**: 아래 5.1~5.13의 모든 테이블은 `woodong_` 접두어를 붙여 `public` 스키마에 생성하고, RLS는 4.2절의 헬퍼 함수 기반 정책을 적용한다. `→`는 외래키(FK) 관계를 의미하며, `profiles`로 표시된 행은 위 원칙에 따라 **기존 공유 테이블을 그대로 참조**(신규 생성 아님)한다.
 
 ### 5.1 profiles (기존 공유 테이블 — 읽기 전용 재사용, 신규 생성 아님)
 
@@ -369,38 +369,38 @@
 | bio          | text      | 자기소개(nullable, 우동에서는 미사용)                                            |
 | avatar_key   | text      | 다른 앱의 아바타 프리셋 키(우동은 참조만, 재정의하지 않음)                       |
 
-### 5.2 udong_groups (모임)
+### 5.2 woodong_groups (모임)
 
-| 컬럼                    | 타입          | 설명                                                                                                                                                                        |
-| ----------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| id                      | uuid (PK)     | 모임 고유 ID                                                                                                                                                                |
-| name                    | text          | 모임 이름                                                                                                                                                                   |
-| description             | text          | 모임 소개                                                                                                                                                                   |
-| type                    | text          | 모임 유형(동호회/계모임/스터디/취미모임 등, 확장용)                                                                                                                         |
-| cover_image_object_path | text          | Storage 오브젝트 경로(`udong-covers` 버킷, 비공개 — 조회 시 서명 URL 발급, public URL 저장 금지. `udong_expenses.receipt_object_path`와 동일 패턴, 4.2절 Storage 정책 참고) |
-| default_due_amount      | numeric(14,0) | 기본 월 회비 금액(원 단위, 소수점 없음)                                                                                                                                     |
-| created_by              | uuid          | → `auth.users.id`                                                                                                                                                           |
-| created_at              | timestamptz   | 생성 일시                                                                                                                                                                   |
+| 컬럼                    | 타입          | 설명                                                                                                                                                                            |
+| ----------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id                      | uuid (PK)     | 모임 고유 ID                                                                                                                                                                    |
+| name                    | text          | 모임 이름                                                                                                                                                                       |
+| description             | text          | 모임 소개                                                                                                                                                                       |
+| type                    | text          | 모임 유형(동호회/계모임/스터디/취미모임 등, 확장용)                                                                                                                             |
+| cover_image_object_path | text          | Storage 오브젝트 경로(`woodong-covers` 버킷, 비공개 — 조회 시 서명 URL 발급, public URL 저장 금지. `woodong_expenses.receipt_object_path`와 동일 패턴, 4.2절 Storage 정책 참고) |
+| default_due_amount      | numeric(14,0) | 기본 월 회비 금액(원 단위, 소수점 없음)                                                                                                                                         |
+| created_by              | uuid          | → `auth.users.id`                                                                                                                                                               |
+| created_at              | timestamptz   | 생성 일시                                                                                                                                                                       |
 
-### 5.3 udong_group_members (모임 멤버십)
+### 5.3 woodong_group_members (모임 멤버십)
 
 | 컬럼      | 타입        | 설명                               |
 | --------- | ----------- | ---------------------------------- |
 | id        | uuid (PK)   | 멤버십 고유 ID                     |
-| group_id  | uuid        | → `udong_groups.id`                |
+| group_id  | uuid        | → `woodong_groups.id`              |
 | user_id   | uuid        | → `auth.users.id`                  |
 | role      | text        | `admin`(총무) / `member`(일반회원) |
 | joined_at | timestamptz | 가입 일시                          |
 | status    | text        | `active` / `left`                  |
 
-제약: `UNIQUE(group_id, user_id)`(중복 가입 방지). 마지막 남은 `admin`은 `role` 변경 또는 `status='left'` 전환이 금지되도록 기존 공유 테이블 `profiles`에 이미 걸려 있는 `prevent_unauthorized_role_change`와 유사한 트리거를 `udong_group_members` 전용으로 별도 구현한다(5.1절, 3.2절 AC 참고).
+제약: `UNIQUE(group_id, user_id)`(중복 가입 방지). 마지막 남은 `admin`은 `role` 변경 또는 `status='left'` 전환이 금지되도록 기존 공유 테이블 `profiles`에 이미 걸려 있는 `prevent_unauthorized_role_change`와 유사한 트리거를 `woodong_group_members` 전용으로 별도 구현한다(5.1절, 3.2절 AC 참고).
 
-### 5.4 udong_group_invites (모임 초대)
+### 5.4 woodong_group_invites (모임 초대)
 
 | 컬럼       | 타입        | 설명                                             |
 | ---------- | ----------- | ------------------------------------------------ |
 | id         | uuid (PK)   | 초대 고유 ID                                     |
-| group_id   | uuid        | → `udong_groups.id`                              |
+| group_id   | uuid        | → `woodong_groups.id`                            |
 | code       | text        | 초대 코드                                        |
 | created_by | uuid        | → `auth.users.id`                                |
 | expires_at | timestamptz | 만료 일시                                        |
@@ -411,14 +411,14 @@
 
 제약: `UNIQUE(code)`. 참여 가능 조건은 `is_active = true AND revoked_at IS NULL AND expires_at > now() AND (max_uses IS NULL OR used_count < max_uses)`.
 
-### 5.5 udong_due_cycles (회비 항목/사이클)
+### 5.5 woodong_due_cycles (회비 항목/사이클)
 
 > 기존 설계는 "회비 항목"과 "멤버별 청구"가 하나의 `dues` 테이블에 뭉쳐 있어 항목 단위 수정이 불가능했다(기술 검증 M2). 항목(사이클)과 청구를 분리했다.
 
 | 컬럼                   | 타입          | 설명                                               |
 | ---------------------- | ------------- | -------------------------------------------------- |
 | id                     | uuid (PK)     | 회비 항목 고유 ID                                  |
-| group_id               | uuid          | → `udong_groups.id`                                |
+| group_id               | uuid          | → `woodong_groups.id`                              |
 | title                  | text          | 항목명(예: `2026년 8월 정기 회비`)                 |
 | period                 | text          | 대상 기간(예: `2026-08`)                           |
 | amount                 | numeric(14,0) | 멤버당 청구 금액(원 단위)                          |
@@ -428,53 +428,53 @@
 | created_by             | uuid          | → `auth.users.id`                                  |
 | created_at             | timestamptz   | 생성 일시                                          |
 
-### 5.6 udong_dues (멤버별 회비 청구)
+### 5.6 woodong_dues (멤버별 회비 청구)
 
-| 컬럼             | 타입          | 설명                                                                                |
-| ---------------- | ------------- | ----------------------------------------------------------------------------------- |
-| id               | uuid (PK)     | 청구 고유 ID                                                                        |
-| due_cycle_id     | uuid          | → `udong_due_cycles.id`                                                             |
-| group_id         | uuid          | → `udong_groups.id`(비정규화 — RLS 정책 단순화 목적)                                |
-| user_id          | uuid          | → `auth.users.id`, 대상 멤버                                                        |
-| amount           | numeric(14,0) | 청구 금액(생성 시점 `due_cycles.amount` 스냅샷)                                     |
-| status           | text          | `unpaid` / `partial` / `paid`(연결된 `udong_payments` 합계 기준 트리거로 자동 갱신) |
-| last_reminded_at | timestamptz   | 마지막 리마인드 발송 일시(nullable)                                                 |
+| 컬럼             | 타입          | 설명                                                                                  |
+| ---------------- | ------------- | ------------------------------------------------------------------------------------- |
+| id               | uuid (PK)     | 청구 고유 ID                                                                          |
+| due_cycle_id     | uuid          | → `woodong_due_cycles.id`                                                             |
+| group_id         | uuid          | → `woodong_groups.id`(비정규화 — RLS 정책 단순화 목적)                                |
+| user_id          | uuid          | → `auth.users.id`, 대상 멤버                                                          |
+| amount           | numeric(14,0) | 청구 금액(생성 시점 `due_cycles.amount` 스냅샷)                                       |
+| status           | text          | `unpaid` / `partial` / `paid`(연결된 `woodong_payments` 합계 기준 트리거로 자동 갱신) |
+| last_reminded_at | timestamptz   | 마지막 리마인드 발송 일시(nullable)                                                   |
 
 제약: `UNIQUE(due_cycle_id, user_id)`.
 
-### 5.7 udong_payments (납부 이력)
+### 5.7 woodong_payments (납부 이력)
 
-| 컬럼        | 타입          | 설명                                                 |
-| ----------- | ------------- | ---------------------------------------------------- |
-| id          | uuid (PK)     | 납부 이력 고유 ID                                    |
-| due_id      | uuid          | → `udong_dues.id`                                    |
-| group_id    | uuid          | → `udong_groups.id`(비정규화 — RLS 정책 단순화 목적) |
-| amount      | numeric(14,0) | 실제 납부 금액                                       |
-| paid_at     | timestamptz   | 납부 확인 일시                                       |
-| recorded_by | uuid          | → `auth.users.id`, 확인 처리한 총무                  |
-| memo        | text          | 비고(입금자명 등)                                    |
+| 컬럼        | 타입          | 설명                                                   |
+| ----------- | ------------- | ------------------------------------------------------ |
+| id          | uuid (PK)     | 납부 이력 고유 ID                                      |
+| due_id      | uuid          | → `woodong_dues.id`                                    |
+| group_id    | uuid          | → `woodong_groups.id`(비정규화 — RLS 정책 단순화 목적) |
+| amount      | numeric(14,0) | 실제 납부 금액                                         |
+| paid_at     | timestamptz   | 납부 확인 일시                                         |
+| recorded_by | uuid          | → `auth.users.id`, 확인 처리한 총무                    |
+| memo        | text          | 비고(입금자명 등)                                      |
 
-### 5.8 udong_expenses (지출 내역, 2차 확장)
+### 5.8 woodong_expenses (지출 내역, 2차 확장)
 
-| 컬럼                | 타입          | 설명                                                                                               |
-| ------------------- | ------------- | -------------------------------------------------------------------------------------------------- |
-| id                  | uuid (PK)     | 지출 고유 ID                                                                                       |
-| group_id            | uuid          | → `udong_groups.id`                                                                                |
-| category            | text          | 지출 카테고리(회식비/행사비/기타 등)                                                               |
-| amount              | numeric(14,0) | 지출 금액                                                                                          |
-| receipt_object_path | text          | Storage 오브젝트 경로(`udong-receipts` 버킷, 비공개 — 조회 시 서명 URL 발급, public URL 저장 금지) |
-| paid_by             | uuid          | → `auth.users.id`, 담당자                                                                          |
-| spent_at            | date          | 지출 일자                                                                                          |
-| memo                | text          | 비고                                                                                               |
+| 컬럼                | 타입          | 설명                                                                                                 |
+| ------------------- | ------------- | ---------------------------------------------------------------------------------------------------- |
+| id                  | uuid (PK)     | 지출 고유 ID                                                                                         |
+| group_id            | uuid          | → `woodong_groups.id`                                                                                |
+| category            | text          | 지출 카테고리(회식비/행사비/기타 등)                                                                 |
+| amount              | numeric(14,0) | 지출 금액                                                                                            |
+| receipt_object_path | text          | Storage 오브젝트 경로(`woodong-receipts` 버킷, 비공개 — 조회 시 서명 URL 발급, public URL 저장 금지) |
+| paid_by             | uuid          | → `auth.users.id`, 담당자                                                                            |
+| spent_at            | date          | 지출 일자                                                                                            |
+| memo                | text          | 비고                                                                                                 |
 
-### 5.9 udong_settlements / udong_settlement_items (정산 리포트, 2차 확장)
+### 5.9 woodong_settlements / woodong_settlement_items (정산 리포트, 2차 확장)
 
-**udong_settlements**
+**woodong_settlements**
 
 | 컬럼          | 타입          | 설명                      |
 | ------------- | ------------- | ------------------------- |
 | id            | uuid (PK)     | 정산 리포트 고유 ID       |
-| group_id      | uuid          | → `udong_groups.id`       |
+| group_id      | uuid          | → `woodong_groups.id`     |
 | period_start  | date          | 정산 시작일               |
 | period_end    | date          | 정산 종료일               |
 | total_income  | numeric(14,0) | 총 수입(발행 시점 스냅샷) |
@@ -483,23 +483,23 @@
 | published_at  | timestamptz   | 발행 일시                 |
 | published_by  | uuid          | → `auth.users.id`         |
 
-**udong_settlement_items** (항목별 상세 스냅샷 — 기존 설계는 총계만 저장해 "항목별 상세 내역 포함" 요구사항과 모순이었음, M4 수정)
+**woodong_settlement_items** (항목별 상세 스냅샷 — 기존 설계는 총계만 저장해 "항목별 상세 내역 포함" 요구사항과 모순이었음, M4 수정)
 
 | 컬럼          | 타입          | 설명                            |
 | ------------- | ------------- | ------------------------------- |
 | id            | uuid (PK)     | 항목 고유 ID                    |
-| settlement_id | uuid          | → `udong_settlements.id`        |
+| settlement_id | uuid          | → `woodong_settlements.id`      |
 | item_type     | text          | `income` / `expense`            |
 | category      | text          | 카테고리(회비/회식비/행사비 등) |
 | amount        | numeric(14,0) | 금액                            |
 | description   | text          | 설명                            |
 
-### 5.10 udong_votes (투표)
+### 5.10 woodong_votes (투표)
 
 | 컬럼           | 타입        | 설명                                                           |
 | -------------- | ----------- | -------------------------------------------------------------- |
 | id             | uuid (PK)   | 투표 고유 ID                                                   |
-| group_id       | uuid        | → `udong_groups.id`                                            |
+| group_id       | uuid        | → `woodong_groups.id`                                          |
 | title          | text        | 투표 제목                                                      |
 | vote_type      | text        | `multiple_choice`(객관식) / `yes_no`(찬반)                     |
 | allow_multiple | boolean     | 복수 선택 허용 여부(기본 `false`)                              |
@@ -509,51 +509,51 @@
 | created_by     | uuid        | → `auth.users.id`                                              |
 | created_at     | timestamptz | 생성 일시                                                      |
 
-### 5.11 udong_vote_options / udong_vote_responses (투표 선택지/응답)
+### 5.11 woodong_vote_options / woodong_vote_responses (투표 선택지/응답)
 
-**udong_vote_options**
+**woodong_vote_options**
 
-| 컬럼       | 타입      | 설명               |
-| ---------- | --------- | ------------------ |
-| id         | uuid (PK) | 선택지 고유 ID     |
-| vote_id    | uuid      | → `udong_votes.id` |
-| label      | text      | 선택지 텍스트      |
-| sort_order | integer   | 표시 순서          |
+| 컬럼       | 타입      | 설명                 |
+| ---------- | --------- | -------------------- |
+| id         | uuid (PK) | 선택지 고유 ID       |
+| vote_id    | uuid      | → `woodong_votes.id` |
+| label      | text      | 선택지 텍스트        |
+| sort_order | integer   | 표시 순서            |
 
-**udong_vote_responses**
+**woodong_vote_responses**
 
 | 컬럼         | 타입        | 설명                                                                                               |
 | ------------ | ----------- | -------------------------------------------------------------------------------------------------- |
 | id           | uuid (PK)   | 응답 고유 ID                                                                                       |
-| vote_id      | uuid        | → `udong_votes.id`                                                                                 |
-| option_id    | uuid        | → `udong_vote_options.id`                                                                          |
+| vote_id      | uuid        | → `woodong_votes.id`                                                                               |
+| option_id    | uuid        | → `woodong_vote_options.id`                                                                        |
 | user_id      | uuid        | → `auth.users.id`(익명 투표에서도 중복 투표 방지를 위해 필수 저장 — RLS로 노출만 제한, 4.2절 참고) |
 | responded_at | timestamptz | 응답 일시                                                                                          |
 
-제약: `allow_multiple = false`인 투표는 `UNIQUE(vote_id, user_id)`, `allow_multiple = true`인 투표는 `UNIQUE(vote_id, user_id, option_id)`로 애플리케이션/트리거 단에서 분기 검증한다(단일 CHECK로 표현 불가하므로 `udong_votes.allow_multiple`을 조회하는 `BEFORE INSERT` 트리거로 검증).
+제약: `allow_multiple = false`인 투표는 `UNIQUE(vote_id, user_id)`, `allow_multiple = true`인 투표는 `UNIQUE(vote_id, user_id, option_id)`로 애플리케이션/트리거 단에서 분기 검증한다(단일 CHECK로 표현 불가하므로 `woodong_votes.allow_multiple`을 조회하는 `BEFORE INSERT` 트리거로 검증).
 
-### 5.12 udong_announcements (공지사항 — 신규 추가)
+### 5.12 woodong_announcements (공지사항 — 신규 추가)
 
-> 기존 설계는 3.3/6.3의 "공지 등록/목록/작성" 기능과 `udong_notifications.related_id`("관련 리소스: 공지")를 전제로 했으나 공지 본문을 저장할 테이블이 ERD에 없었다(기술 검증 C4). 신규 추가.
+> 기존 설계는 3.3/6.3의 "공지 등록/목록/작성" 기능과 `woodong_notifications.related_id`("관련 리소스: 공지")를 전제로 했으나 공지 본문을 저장할 테이블이 ERD에 없었다(기술 검증 C4). 신규 추가.
 
-| 컬럼       | 타입        | 설명                |
-| ---------- | ----------- | ------------------- |
-| id         | uuid (PK)   | 공지 고유 ID        |
-| group_id   | uuid        | → `udong_groups.id` |
-| title      | text        | 공지 제목           |
-| body       | text        | 공지 본문           |
-| created_by | uuid        | → `auth.users.id`   |
-| created_at | timestamptz | 작성 일시           |
-| updated_at | timestamptz | 수정 일시           |
+| 컬럼       | 타입        | 설명                  |
+| ---------- | ----------- | --------------------- |
+| id         | uuid (PK)   | 공지 고유 ID          |
+| group_id   | uuid        | → `woodong_groups.id` |
+| title      | text        | 공지 제목             |
+| body       | text        | 공지 본문             |
+| created_by | uuid        | → `auth.users.id`     |
+| created_at | timestamptz | 작성 일시             |
+| updated_at | timestamptz | 수정 일시             |
 
-### 5.13 udong_notifications / udong_notification_preferences (알림)
+### 5.13 woodong_notifications / woodong_notification_preferences (알림)
 
-**udong_notifications** (알림 발송 이력)
+**woodong_notifications** (알림 발송 이력)
 
 | 컬럼         | 타입        | 설명                                                                                                  |
 | ------------ | ----------- | ----------------------------------------------------------------------------------------------------- |
 | id           | uuid (PK)   | 알림 고유 ID                                                                                          |
-| group_id     | uuid        | → `udong_groups.id` (nullable, 시스템 알림은 null 가능)                                               |
+| group_id     | uuid        | → `woodong_groups.id` (nullable, 시스템 알림은 null 가능)                                             |
 | user_id      | uuid        | → `auth.users.id`, 수신자                                                                             |
 | type         | text        | `notice`(공지) / `due_reminder`(회비 리마인드) / `vote_start` / `vote_close` / `settlement_published` |
 | related_type | text        | `announcement` / `vote` / `settlement` / `due`(다형 참조 구분, nullable)                              |
@@ -566,7 +566,7 @@
 | clicked_at   | timestamptz | 클릭 일시(nullable)                                                                                   |
 | created_at   | timestamptz | 생성 일시                                                                                             |
 
-**udong_notification_preferences** (알림 채널 설정)
+**woodong_notification_preferences** (알림 채널 설정)
 
 | 컬럼        | 타입        | 설명                                                                                                                                                  |
 | ----------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -640,17 +640,17 @@
 
 ### 7.1 1차 MVP (4주 내 개발 가능한 수준)
 
-| 우선순위 | 기능                              | 포함 범위                                                                                                                                                                                                                   |
-| -------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0        | Supabase 프로젝트 정비 (5.0, 4.2) | 공유 프로젝트에 `udong_*` 테이블 생성, RLS 헬퍼 함수(`udong_is_group_member`/`udong_is_group_admin`) 구현, Storage 비공개 버킷 2개 생성, `database.types.ts` 재생성. **다른 기능 개발의 선행 작업**                         |
-| 1        | 인증 (3.6)                        | 이메일 회원가입/로그인 + Google 소셜 로그인. Kakao는 이메일 미제공 예외 처리(3.6.1)까지 포함해 1차에 구현. **Naver는 1차 범위에서 완전히 제외**(스파이크 후 2차 여부 결정)                                                  |
-| 2        | 모임 관리 (3.2)                   | 모임 생성/수정/삭제, 초대 코드 기반 참여(무효화/재발급 포함), 역할(총무/일반회원) 구분, 마지막 총무 보호 로직                                                                                                               |
-| 3        | 회비 현황 관리 (3.4-a)            | 회비 항목(`udong_due_cycles`) 생성, 납부 상태 수동 변경, 납부 현황 대시보드. **지출 등록·정산 리포트 발행(3.4-b)은 2차로 이동**                                                                                             |
-| 4        | 모임 알림 (3.3) — 앱 내 알림만    | 공지 작성(`udong_announcements`) 시 앱 내 알림센터 발송, 읽음/클릭 처리. 회비 리마인드·투표 마감 알림은 **조회 시점 lazy 처리**로 구현(실시간 pg_cron 스케줄러는 2차). 외부 채널(카카오톡 알림톡/Slack/이메일)은 2차로 연기 |
-| 5        | 투표 관리 (3.5)                   | 투표 생성(객관식/찬반, 복수선택 옵션), 참여, **lazy 마감**(조회 시점 자동 마감 + 총무 수동 조기마감), 앱 내 알림으로 결과 통지                                                                                              |
-| 6        | 모임 메인 페이지 (3.1)            | 서비스 소개 + 로그인 상태별 CTA (기술 스택 인포그래픽은 간소화 버전)                                                                                                                                                        |
-| 7        | 디자인 시스템 (3.7)               | 모바일 반응형, shadcn/ui 기반 기본 컴포넌트, recharts 기반 진행률 바                                                                                                                                                        |
-| 8        | 푸터 특수 요구사항 (3.8)          | 기존 `/icons`, `/gallery` 링크만 추가 (신규 개발 없음)                                                                                                                                                                      |
+| 우선순위 | 기능                              | 포함 범위                                                                                                                                                                                                                     |
+| -------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0        | Supabase 프로젝트 정비 (5.0, 4.2) | 공유 프로젝트에 `woodong_*` 테이블 생성, RLS 헬퍼 함수(`woodong_is_group_member`/`woodong_is_group_admin`) 구현, Storage 비공개 버킷 2개 생성, `database.types.ts` 재생성. **다른 기능 개발의 선행 작업**                     |
+| 1        | 인증 (3.6)                        | 이메일 회원가입/로그인 + Google 소셜 로그인. Kakao는 이메일 미제공 예외 처리(3.6.1)까지 포함해 1차에 구현. **Naver는 1차 범위에서 완전히 제외**(스파이크 후 2차 여부 결정)                                                    |
+| 2        | 모임 관리 (3.2)                   | 모임 생성/수정/삭제, 초대 코드 기반 참여(무효화/재발급 포함), 역할(총무/일반회원) 구분, 마지막 총무 보호 로직                                                                                                                 |
+| 3        | 회비 현황 관리 (3.4-a)            | 회비 항목(`woodong_due_cycles`) 생성, 납부 상태 수동 변경, 납부 현황 대시보드. **지출 등록·정산 리포트 발행(3.4-b)은 2차로 이동**                                                                                             |
+| 4        | 모임 알림 (3.3) — 앱 내 알림만    | 공지 작성(`woodong_announcements`) 시 앱 내 알림센터 발송, 읽음/클릭 처리. 회비 리마인드·투표 마감 알림은 **조회 시점 lazy 처리**로 구현(실시간 pg_cron 스케줄러는 2차). 외부 채널(카카오톡 알림톡/Slack/이메일)은 2차로 연기 |
+| 5        | 투표 관리 (3.5)                   | 투표 생성(객관식/찬반, 복수선택 옵션), 참여, **lazy 마감**(조회 시점 자동 마감 + 총무 수동 조기마감), 앱 내 알림으로 결과 통지                                                                                                |
+| 6        | 모임 메인 페이지 (3.1)            | 서비스 소개 + 로그인 상태별 CTA (기술 스택 인포그래픽은 간소화 버전)                                                                                                                                                          |
+| 7        | 디자인 시스템 (3.7)               | 모바일 반응형, shadcn/ui 기반 기본 컴포넌트, recharts 기반 진행률 바                                                                                                                                                          |
+| 8        | 푸터 특수 요구사항 (3.8)          | 기존 `/icons`, `/gallery` 링크만 추가 (신규 개발 없음)                                                                                                                                                                        |
 
 ### 7.2 2차 확장 (MVP 이후)
 
@@ -681,21 +681,21 @@
 
 ## 9. 리스크 및 결정 필요 사항
 
-| 구분                                               | 내용                                                                                                                                                                                                                                                                                                                        | 대응/결정 필요 사항                                                                                                                                                                                                                                                        |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Supabase 프로젝트 공유** (신규, Critical→해결됨) | 무료 플랜 슬롯 2개가 이미 다른 앱에 사용 중이라 우동 전용 프로젝트를 만들 수 없음                                                                                                                                                                                                                                           | **해결**: 5.0절 원칙대로 `udong_` 접두어 테이블 격리 + 기존 테이블 무변경으로 동일 프로젝트 공유. 잔여 리스크는 DB 용량(Free 500MB)·커넥션 풀을 다른 앱과 공유한다는 점 — 사용량 모니터링 후 필요 시 유료 플랜 전환 또는 신규 프로젝트 확보 시점에 `udong_*` 테이블만 이관 |
-| **Naver OAuth 미지원** (수정됨)                    | [FACT] Supabase Auth는 Naver를 네이티브 provider로 지원하지 않음                                                                                                                                                                                                                                                            | 1차 MVP 범위에서 제외(3.6.1). 2차 착수 전 Custom OAuth/자체 구현 적합성을 1~2일 스파이크로 검증 후 진행 여부 결정                                                                                                                                                          |
-| **계정 자동 연결 정책** (재작성 완료)              | [FACT] Supabase는 verified 이메일 기준 자동 identity 연결이 기본 동작이며 끌 수 없음                                                                                                                                                                                                                                        | **결정 완료**: "자동 연결 수용 + 사후 고지" 정책으로 3.6.2절에 확정. 추가 결정 필요 사항: 자동 연결 발생 시 이메일 알림까지 1차에 포함할지(현재는 2차로 분류)                                                                                                              |
-| **Kakao Biz App 요건이 로그인에도 적용됨** (신규)  | [FACT] `account_email` 동의항목은 Biz App(사업자 정보 등록) 완료 앱에서만 제공됨. 개인 개발자 앱은 Kakao 로그인 시 이메일을 받지 못할 수 있음 — 이는 카카오톡 **알림톡**뿐 아니라 **로그인**에도 동일하게 적용되는 요건                                                                                                     | Supabase 프로젝트에서 "Allow users without an email" 활성화를 1차 착수 시점에 미리 결정. Biz App 등록(사업자 정보 필요) 여부와 일정을 조기에 확인 — 등록 전이면 이메일 없는 Kakao 계정을 정상 플로우로 처리(3.6.2절 예외 케이스)                                           |
-| **카카오톡 알림톡 API**                            | 비즈니스 계정 및 발신 프로필 등록, 알림톡 템플릿 사전 검수(영업일 기준 수일 소요)가 필요해 1차 MVP 일정에 포함하기 어려움. 또한 실무적으로 카카오와 직접 연동하기보다 **발송대행사(예: 솔라피, 알리고, NHN Cloud 등)를 경유하는 것이 일반적**이며, 이는 별도 계약·정산 리드타임을 수반함(최초 PRD에는 반영되지 않았던 부분) | 1차 MVP는 앱 내 알림으로 대체하고, 2차 확장에서 카카오 비즈니스 계정 신청과 발송대행사 계약을 조기 착수(리드타임 확보)                                                                                                                                                     |
-| **Storage 플랜 제약** (신규)                       | [FACT] Supabase Storage의 서버 사이드 이미지 변환은 Pro 플랜 이상 전용. 본 프로젝트는 Free 플랜을 공유 중                                                                                                                                                                                                                   | 1차 MVP는 클라이언트 사이드 리사이즈로 대체(4.1절). Free 플랜의 "7일 미사용 시 프로젝트 일시정지" 정책도 함께 고려해, 데모/QA 기간 중 정기적으로 프로젝트에 접근하도록 운영                                                                                                |
-| **개인정보보호법(PIPA) 대응** (신규)               | 회비 납부 이력(실명 + 금액) + 전화번호(2차 알림톡용) 조합은 개인정보 수집·이용 동의 및 처리방침이 필요한 개인정보에 해당할 가능성이 높음                                                                                                                                                                                    | 서비스 출시 전 개인정보 처리방침 초안 작성 및 회원가입 시 동의 절차 추가 여부 결정(법률 자문 권장)                                                                                                                                                                         |
-| **총무 단일 실패점** (신규)                        | 모임의 마지막 총무가 탈퇴하거나 역할을 변경하면 해당 모임이 관리 불능 상태가 될 수 있음                                                                                                                                                                                                                                     | 5.3절 제약 및 3.2절 AC로 "마지막 총무는 역할 변경/탈퇴 불가" 방어 로직을 1차 MVP에 포함하기로 결정 완료                                                                                                                                                                    |
-| **정산 데이터 이관 부재** (신규)                   | 총무 교체 시 정산 데이터를 새 총무에게 인계할 CSV 내보내기 등의 수단이 없음                                                                                                                                                                                                                                                 | 1차 MVP 범위에서는 제외하고 2차 확장 항목으로 등록(7.2절)                                                                                                                                                                                                                  |
-| **금융 정보 취급 법적 고지**                       | 회비/정산은 실제 계좌이체를 서비스 내에서 직접 처리하지 않고 "납부 확인 기록"만 다루므로 전자금융업 등록 대상은 아닐 가능성이 높으나, 법률 자문을 통한 최종 확인 필요                                                                                                                                                       | 서비스 내 결제/PG 연동은 MVP 범위에서 명시적으로 제외. 이용약관에 "회비 송금은 사용자 간 직접 이체이며 본 서비스는 확인·기록만 제공함"을 명시할지 결정 필요                                                                                                                |
-| 초대 코드 보안                                     | 초대 코드가 유출될 경우 원치 않는 인원이 모임에 가입할 위험                                                                                                                                                                                                                                                                 | 만료 기간 및 최대 사용 횟수(`udong_group_invites.max_uses`) 설정 필수화, 총무가 언제든 코드 재발급(기존 코드 `is_active=false` 무효화, 5.4절) 가능하도록 설계 완료                                                                                                         |
-| 정산 데이터 정확성                                 | 회비 수입과 지출이 수동 입력에 의존하므로 총무의 입력 누락/오류 시 정산 리포트 신뢰도 저하                                                                                                                                                                                                                                  | 정산 리포트(2차 확장, 3.4-b) 발행 전 "검토 단계"(초안 → 발행) 도입 여부 결정 필요                                                                                                                                                                                          |
-| 알림 발송 비용                                     | 카카오톡 알림톡/이메일은 발송 건당 과금이므로 모임 수/멤버 수 증가 시 비용 급증 가능                                                                                                                                                                                                                                        | 2차 확장 착수 전 예상 발송량 기준 비용 시뮬레이션 및 채널별 발송 우선순위(예: 앱내 우선, 외부채널은 옵트인) 정책 결정 필요                                                                                                                                                 |
+| 구분                                               | 내용                                                                                                                                                                                                                                                                                                                        | 대응/결정 필요 사항                                                                                                                                                                                                                                                            |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Supabase 프로젝트 공유** (신규, Critical→해결됨) | 무료 플랜 슬롯 2개가 이미 다른 앱에 사용 중이라 우동 전용 프로젝트를 만들 수 없음                                                                                                                                                                                                                                           | **해결**: 5.0절 원칙대로 `woodong_` 접두어 테이블 격리 + 기존 테이블 무변경으로 동일 프로젝트 공유. 잔여 리스크는 DB 용량(Free 500MB)·커넥션 풀을 다른 앱과 공유한다는 점 — 사용량 모니터링 후 필요 시 유료 플랜 전환 또는 신규 프로젝트 확보 시점에 `woodong_*` 테이블만 이관 |
+| **Naver OAuth 미지원** (수정됨)                    | [FACT] Supabase Auth는 Naver를 네이티브 provider로 지원하지 않음                                                                                                                                                                                                                                                            | 1차 MVP 범위에서 제외(3.6.1). 2차 착수 전 Custom OAuth/자체 구현 적합성을 1~2일 스파이크로 검증 후 진행 여부 결정                                                                                                                                                              |
+| **계정 자동 연결 정책** (재작성 완료)              | [FACT] Supabase는 verified 이메일 기준 자동 identity 연결이 기본 동작이며 끌 수 없음                                                                                                                                                                                                                                        | **결정 완료**: "자동 연결 수용 + 사후 고지" 정책으로 3.6.2절에 확정. 추가 결정 필요 사항: 자동 연결 발생 시 이메일 알림까지 1차에 포함할지(현재는 2차로 분류)                                                                                                                  |
+| **Kakao Biz App 요건이 로그인에도 적용됨** (신규)  | [FACT] `account_email` 동의항목은 Biz App(사업자 정보 등록) 완료 앱에서만 제공됨. 개인 개발자 앱은 Kakao 로그인 시 이메일을 받지 못할 수 있음 — 이는 카카오톡 **알림톡**뿐 아니라 **로그인**에도 동일하게 적용되는 요건                                                                                                     | Supabase 프로젝트에서 "Allow users without an email" 활성화를 1차 착수 시점에 미리 결정. Biz App 등록(사업자 정보 필요) 여부와 일정을 조기에 확인 — 등록 전이면 이메일 없는 Kakao 계정을 정상 플로우로 처리(3.6.2절 예외 케이스)                                               |
+| **카카오톡 알림톡 API**                            | 비즈니스 계정 및 발신 프로필 등록, 알림톡 템플릿 사전 검수(영업일 기준 수일 소요)가 필요해 1차 MVP 일정에 포함하기 어려움. 또한 실무적으로 카카오와 직접 연동하기보다 **발송대행사(예: 솔라피, 알리고, NHN Cloud 등)를 경유하는 것이 일반적**이며, 이는 별도 계약·정산 리드타임을 수반함(최초 PRD에는 반영되지 않았던 부분) | 1차 MVP는 앱 내 알림으로 대체하고, 2차 확장에서 카카오 비즈니스 계정 신청과 발송대행사 계약을 조기 착수(리드타임 확보)                                                                                                                                                         |
+| **Storage 플랜 제약** (신규)                       | [FACT] Supabase Storage의 서버 사이드 이미지 변환은 Pro 플랜 이상 전용. 본 프로젝트는 Free 플랜을 공유 중                                                                                                                                                                                                                   | 1차 MVP는 클라이언트 사이드 리사이즈로 대체(4.1절). Free 플랜의 "7일 미사용 시 프로젝트 일시정지" 정책도 함께 고려해, 데모/QA 기간 중 정기적으로 프로젝트에 접근하도록 운영                                                                                                    |
+| **개인정보보호법(PIPA) 대응** (신규)               | 회비 납부 이력(실명 + 금액) + 전화번호(2차 알림톡용) 조합은 개인정보 수집·이용 동의 및 처리방침이 필요한 개인정보에 해당할 가능성이 높음                                                                                                                                                                                    | 서비스 출시 전 개인정보 처리방침 초안 작성 및 회원가입 시 동의 절차 추가 여부 결정(법률 자문 권장)                                                                                                                                                                             |
+| **총무 단일 실패점** (신규)                        | 모임의 마지막 총무가 탈퇴하거나 역할을 변경하면 해당 모임이 관리 불능 상태가 될 수 있음                                                                                                                                                                                                                                     | 5.3절 제약 및 3.2절 AC로 "마지막 총무는 역할 변경/탈퇴 불가" 방어 로직을 1차 MVP에 포함하기로 결정 완료                                                                                                                                                                        |
+| **정산 데이터 이관 부재** (신규)                   | 총무 교체 시 정산 데이터를 새 총무에게 인계할 CSV 내보내기 등의 수단이 없음                                                                                                                                                                                                                                                 | 1차 MVP 범위에서는 제외하고 2차 확장 항목으로 등록(7.2절)                                                                                                                                                                                                                      |
+| **금융 정보 취급 법적 고지**                       | 회비/정산은 실제 계좌이체를 서비스 내에서 직접 처리하지 않고 "납부 확인 기록"만 다루므로 전자금융업 등록 대상은 아닐 가능성이 높으나, 법률 자문을 통한 최종 확인 필요                                                                                                                                                       | 서비스 내 결제/PG 연동은 MVP 범위에서 명시적으로 제외. 이용약관에 "회비 송금은 사용자 간 직접 이체이며 본 서비스는 확인·기록만 제공함"을 명시할지 결정 필요                                                                                                                    |
+| 초대 코드 보안                                     | 초대 코드가 유출될 경우 원치 않는 인원이 모임에 가입할 위험                                                                                                                                                                                                                                                                 | 만료 기간 및 최대 사용 횟수(`woodong_group_invites.max_uses`) 설정 필수화, 총무가 언제든 코드 재발급(기존 코드 `is_active=false` 무효화, 5.4절) 가능하도록 설계 완료                                                                                                           |
+| 정산 데이터 정확성                                 | 회비 수입과 지출이 수동 입력에 의존하므로 총무의 입력 누락/오류 시 정산 리포트 신뢰도 저하                                                                                                                                                                                                                                  | 정산 리포트(2차 확장, 3.4-b) 발행 전 "검토 단계"(초안 → 발행) 도입 여부 결정 필요                                                                                                                                                                                              |
+| 알림 발송 비용                                     | 카카오톡 알림톡/이메일은 발송 건당 과금이므로 모임 수/멤버 수 증가 시 비용 급증 가능                                                                                                                                                                                                                                        | 2차 확장 착수 전 예상 발송량 기준 비용 시뮬레이션 및 채널별 발송 우선순위(예: 앱내 우선, 외부채널은 옵트인) 정책 결정 필요                                                                                                                                                     |
 
 ---
 
@@ -704,7 +704,7 @@
 - 신규 페이지 추가 시 `lib/supabase/proxy.ts`의 `updateSession()` 공개 페이지 allow-list에 반드시 등록해야 한다(6.2절 공개 페이지 대상).
 - `getClaims()`, `<Suspense>` 경계, 얇은 `Page` + `XxxContent` 패턴은 모든 신규 페이지(특히 회비 대시보드, 투표 상세 등 request-time API를 사용하는 서버 컴포넌트)에 동일하게 적용한다.
 - 신규 UI 문자열은 `lib/i18n/dictionaries/{ko,en,ja,zh}.ts` 4개 파일과 `lib/i18n/dictionaries/types.ts`의 `Dictionary` 타입에 함께 반영해야 한다. **(정정)** `Dictionary`는 strict 인터페이스이고 pre-commit 훅이 `tsc --noEmit`을 강제하므로, en/ja/zh 키를 아예 비워두면 커밋 자체가 실패한다. 1차 MVP는 한국어(`ko`) 문구를 우선 확정하되, en/ja/zh 3개 파일에도 최소한 **동일 한국어 문자열을 스텁으로 복사**해 타입을 충족시키고, 실제 번역은 2차 확장에서 순차 진행한다.
-- 스키마 변경(본 PRD 5장의 `udong_*` 테이블 생성) 후에는 `mcp__supabase__generate_typescript_types`로 `lib/supabase/database.types.ts`를 재생성해야 한다. 이 프로젝트는 다른 앱과 공유 중이므로 재생성된 파일에는 `weekly_logs`, `organizations` 등 다른 앱의 테이블 타입도 함께 포함되지만, 이는 타입 정의 파일 갱신일 뿐 실제 DB에는 영향이 없다.
+- 스키마 변경(본 PRD 5장의 `woodong_*` 테이블 생성) 후에는 `mcp__supabase__generate_typescript_types`로 `lib/supabase/database.types.ts`를 재생성해야 한다. 이 프로젝트는 다른 앱과 공유 중이므로 재생성된 파일에는 `weekly_logs`, `organizations` 등 다른 앱의 테이블 타입도 함께 포함되지만, 이는 타입 정의 파일 갱신일 뿐 실제 DB에는 영향이 없다.
 - 색상 테마(코럴/앰버)를 적용할 때는 `app/globals.css`의 `:root`/`.dark`와 `tailwind.config.ts`의 `theme.extend.colors`를 함께 수정한다(v3 HSL 변수 방식 유지).
 - **(신규)** 저장소에는 react-hook-form + zod + Server Actions 기반 폼 가이드(`docs/guides/forms-react-hook-form.md`)와, `login-form.tsx` 등 기존 인증 폼의 "Client Component에서 `supabase.auth.*` 직접 호출" 패턴이 공존한다. 우동의 신규 폼(모임 생성, 회비 항목 생성, 지출 등록, 투표 생성 등)은 **가이드 문서의 react-hook-form + zod + Server Actions 패턴**을 기본으로 채택하고, `cacheComponents: true` 환경에서 뮤테이션 후 데이터 갱신은 `revalidatePath`/`revalidateTag`로 처리한다(인증 폼만 기존 Client Component 직접 호출 패턴을 그대로 유지).
 - **(신규)** `app/protected/page.tsx`의 서버 컴포넌트 이중 방어 패턴과 별개로, 로그인 리다이렉트 후 원래 경로로 복귀하는 기능은 현재 미구현 상태다(`proxy.ts`가 `next` 파라미터 없이 `/auth/login`으로 보내고, `login-form.tsx`가 `/protected`로 하드코딩 리다이렉트). 3.6.2절 AC에 따라 이 3개 지점(`proxy.ts`, `login-form.tsx`, 콜백 라우트)을 함께 수정하는 작업을 1차 MVP 개발 태스크에 포함한다.

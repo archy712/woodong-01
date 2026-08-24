@@ -40,8 +40,8 @@ export const datetimeString = (message = "올바른 일시를 입력해주세요
 /**
  * 원 단위 정수 금액(`numeric(14,0)`) 공통 검증.
  *
- * `udong_groups.default_due_amount`, `udong_due_cycles.amount`, `udong_dues.amount`,
- * `udong_payments.amount` 등 소수점 없는 금액 컬럼 전반에서 재사용한다.
+ * `woodong_groups.default_due_amount`, `woodong_due_cycles.amount`, `woodong_dues.amount`,
+ * `woodong_payments.amount` 등 소수점 없는 금액 컬럼 전반에서 재사용한다.
  * 상한(`999_999_999_999_99`)은 `numeric(14,0)` 컬럼이 담을 수 있는 최댓값(10^14 - 1)이다.
  */
 export const wonAmount = (opts: { min?: number; minMessage?: string } = {}) => {

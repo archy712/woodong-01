@@ -1489,512 +1489,6 @@ export type Database = {
           },
         ];
       };
-      udong_announcements: {
-        Row: {
-          body: string;
-          created_at: string;
-          created_by: string | null;
-          group_id: string;
-          id: string;
-          title: string;
-          updated_at: string;
-        };
-        Insert: {
-          body: string;
-          created_at?: string;
-          created_by?: string | null;
-          group_id: string;
-          id?: string;
-          title: string;
-          updated_at?: string;
-        };
-        Update: {
-          body?: string;
-          created_at?: string;
-          created_by?: string | null;
-          group_id?: string;
-          id?: string;
-          title?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "udong_announcements_group_id_fkey";
-            columns: ["group_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_groups";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      udong_due_cycles: {
-        Row: {
-          amount: number;
-          created_at: string;
-          created_by: string | null;
-          due_date: string;
-          due_type: string;
-          group_id: string;
-          id: string;
-          period: string;
-          reminder_interval_days: number | null;
-          title: string;
-        };
-        Insert: {
-          amount: number;
-          created_at?: string;
-          created_by?: string | null;
-          due_date: string;
-          due_type: string;
-          group_id: string;
-          id?: string;
-          period: string;
-          reminder_interval_days?: number | null;
-          title: string;
-        };
-        Update: {
-          amount?: number;
-          created_at?: string;
-          created_by?: string | null;
-          due_date?: string;
-          due_type?: string;
-          group_id?: string;
-          id?: string;
-          period?: string;
-          reminder_interval_days?: number | null;
-          title?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "udong_due_cycles_group_id_fkey";
-            columns: ["group_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_groups";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      udong_dues: {
-        Row: {
-          amount: number;
-          due_cycle_id: string;
-          group_id: string;
-          id: string;
-          last_reminded_at: string | null;
-          status: string;
-          user_id: string;
-        };
-        Insert: {
-          amount: number;
-          due_cycle_id: string;
-          group_id: string;
-          id?: string;
-          last_reminded_at?: string | null;
-          status?: string;
-          user_id: string;
-        };
-        Update: {
-          amount?: number;
-          due_cycle_id?: string;
-          group_id?: string;
-          id?: string;
-          last_reminded_at?: string | null;
-          status?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "udong_dues_due_cycle_id_fkey";
-            columns: ["due_cycle_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_due_cycles";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "udong_dues_group_id_fkey";
-            columns: ["group_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_groups";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      udong_group_invites: {
-        Row: {
-          code: string;
-          created_by: string | null;
-          expires_at: string | null;
-          group_id: string;
-          id: string;
-          is_active: boolean;
-          max_uses: number | null;
-          revoked_at: string | null;
-          used_count: number;
-        };
-        Insert: {
-          code: string;
-          created_by?: string | null;
-          expires_at?: string | null;
-          group_id: string;
-          id?: string;
-          is_active?: boolean;
-          max_uses?: number | null;
-          revoked_at?: string | null;
-          used_count?: number;
-        };
-        Update: {
-          code?: string;
-          created_by?: string | null;
-          expires_at?: string | null;
-          group_id?: string;
-          id?: string;
-          is_active?: boolean;
-          max_uses?: number | null;
-          revoked_at?: string | null;
-          used_count?: number;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "udong_group_invites_group_id_fkey";
-            columns: ["group_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_groups";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      udong_group_members: {
-        Row: {
-          group_id: string;
-          id: string;
-          joined_at: string | null;
-          role: string;
-          status: string;
-          user_id: string;
-        };
-        Insert: {
-          group_id: string;
-          id?: string;
-          joined_at?: string | null;
-          role: string;
-          status?: string;
-          user_id: string;
-        };
-        Update: {
-          group_id?: string;
-          id?: string;
-          joined_at?: string | null;
-          role?: string;
-          status?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "udong_group_members_group_id_fkey";
-            columns: ["group_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_groups";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      udong_groups: {
-        Row: {
-          cover_image_object_path: string | null;
-          created_at: string;
-          created_by: string | null;
-          default_due_amount: number | null;
-          description: string | null;
-          id: string;
-          name: string;
-          type: string | null;
-        };
-        Insert: {
-          cover_image_object_path?: string | null;
-          created_at?: string;
-          created_by?: string | null;
-          default_due_amount?: number | null;
-          description?: string | null;
-          id?: string;
-          name: string;
-          type?: string | null;
-        };
-        Update: {
-          cover_image_object_path?: string | null;
-          created_at?: string;
-          created_by?: string | null;
-          default_due_amount?: number | null;
-          description?: string | null;
-          id?: string;
-          name?: string;
-          type?: string | null;
-        };
-        Relationships: [];
-      };
-      udong_notification_preferences: {
-        Row: {
-          channel: string;
-          destination: string | null;
-          enabled: boolean;
-          id: string;
-          updated_at: string | null;
-          user_id: string;
-        };
-        Insert: {
-          channel: string;
-          destination?: string | null;
-          enabled?: boolean;
-          id?: string;
-          updated_at?: string | null;
-          user_id: string;
-        };
-        Update: {
-          channel?: string;
-          destination?: string | null;
-          enabled?: boolean;
-          id?: string;
-          updated_at?: string | null;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-      udong_notifications: {
-        Row: {
-          body: string;
-          channel: string;
-          clicked_at: string | null;
-          created_at: string;
-          group_id: string | null;
-          id: string;
-          read_at: string | null;
-          related_id: string | null;
-          related_type: string | null;
-          status: string;
-          title: string;
-          type: string;
-          user_id: string;
-        };
-        Insert: {
-          body: string;
-          channel: string;
-          clicked_at?: string | null;
-          created_at?: string;
-          group_id?: string | null;
-          id?: string;
-          read_at?: string | null;
-          related_id?: string | null;
-          related_type?: string | null;
-          status?: string;
-          title: string;
-          type: string;
-          user_id: string;
-        };
-        Update: {
-          body?: string;
-          channel?: string;
-          clicked_at?: string | null;
-          created_at?: string;
-          group_id?: string | null;
-          id?: string;
-          read_at?: string | null;
-          related_id?: string | null;
-          related_type?: string | null;
-          status?: string;
-          title?: string;
-          type?: string;
-          user_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "udong_notifications_group_id_fkey";
-            columns: ["group_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_groups";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      udong_payments: {
-        Row: {
-          amount: number;
-          due_id: string;
-          group_id: string;
-          id: string;
-          memo: string | null;
-          paid_at: string;
-          recorded_by: string | null;
-        };
-        Insert: {
-          amount: number;
-          due_id: string;
-          group_id: string;
-          id?: string;
-          memo?: string | null;
-          paid_at?: string;
-          recorded_by?: string | null;
-        };
-        Update: {
-          amount?: number;
-          due_id?: string;
-          group_id?: string;
-          id?: string;
-          memo?: string | null;
-          paid_at?: string;
-          recorded_by?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "udong_payments_due_id_fkey";
-            columns: ["due_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_dues";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "udong_payments_group_id_fkey";
-            columns: ["group_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_groups";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      udong_profiles: {
-        Row: {
-          avatar_key: string;
-          id: string;
-          updated_at: string;
-          user_id: string;
-        };
-        Insert: {
-          avatar_key?: string;
-          id?: string;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          avatar_key?: string;
-          id?: string;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-      udong_vote_options: {
-        Row: {
-          id: string;
-          label: string;
-          sort_order: number;
-          vote_id: string;
-        };
-        Insert: {
-          id?: string;
-          label: string;
-          sort_order?: number;
-          vote_id: string;
-        };
-        Update: {
-          id?: string;
-          label?: string;
-          sort_order?: number;
-          vote_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "udong_vote_options_vote_id_fkey";
-            columns: ["vote_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_votes";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      udong_vote_responses: {
-        Row: {
-          id: string;
-          option_id: string;
-          responded_at: string | null;
-          user_id: string;
-          vote_id: string;
-        };
-        Insert: {
-          id?: string;
-          option_id: string;
-          responded_at?: string | null;
-          user_id: string;
-          vote_id: string;
-        };
-        Update: {
-          id?: string;
-          option_id?: string;
-          responded_at?: string | null;
-          user_id?: string;
-          vote_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "udong_vote_responses_option_id_fkey";
-            columns: ["option_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_vote_options";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "udong_vote_responses_vote_id_fkey";
-            columns: ["vote_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_votes";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      udong_votes: {
-        Row: {
-          allow_multiple: boolean;
-          closes_at: string;
-          created_at: string;
-          created_by: string | null;
-          group_id: string;
-          id: string;
-          is_anonymous: boolean;
-          status: string;
-          title: string;
-          vote_type: string;
-        };
-        Insert: {
-          allow_multiple?: boolean;
-          closes_at: string;
-          created_at?: string;
-          created_by?: string | null;
-          group_id: string;
-          id?: string;
-          is_anonymous?: boolean;
-          status?: string;
-          title: string;
-          vote_type: string;
-        };
-        Update: {
-          allow_multiple?: boolean;
-          closes_at?: string;
-          created_at?: string;
-          created_by?: string | null;
-          group_id?: string;
-          id?: string;
-          is_anonymous?: boolean;
-          status?: string;
-          title?: string;
-          vote_type?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "udong_votes_group_id_fkey";
-            columns: ["group_id"];
-            isOneToOne: false;
-            referencedRelation: "udong_groups";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       user_menu_permissions: {
         Row: {
           granted_at: string;
@@ -2346,6 +1840,512 @@ export type Database = {
           },
         ];
       };
+      woodong_announcements: {
+        Row: {
+          body: string;
+          created_at: string;
+          created_by: string | null;
+          group_id: string;
+          id: string;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          created_by?: string | null;
+          group_id: string;
+          id?: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          created_by?: string | null;
+          group_id?: string;
+          id?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_announcements_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      woodong_due_cycles: {
+        Row: {
+          amount: number;
+          created_at: string;
+          created_by: string | null;
+          due_date: string;
+          due_type: string;
+          group_id: string;
+          id: string;
+          period: string;
+          reminder_interval_days: number | null;
+          title: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          created_by?: string | null;
+          due_date: string;
+          due_type: string;
+          group_id: string;
+          id?: string;
+          period: string;
+          reminder_interval_days?: number | null;
+          title: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          created_by?: string | null;
+          due_date?: string;
+          due_type?: string;
+          group_id?: string;
+          id?: string;
+          period?: string;
+          reminder_interval_days?: number | null;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_due_cycles_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      woodong_dues: {
+        Row: {
+          amount: number;
+          due_cycle_id: string;
+          group_id: string;
+          id: string;
+          last_reminded_at: string | null;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          amount: number;
+          due_cycle_id: string;
+          group_id: string;
+          id?: string;
+          last_reminded_at?: string | null;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          amount?: number;
+          due_cycle_id?: string;
+          group_id?: string;
+          id?: string;
+          last_reminded_at?: string | null;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_dues_due_cycle_id_fkey";
+            columns: ["due_cycle_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_due_cycles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "woodong_dues_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      woodong_group_invites: {
+        Row: {
+          code: string;
+          created_by: string | null;
+          expires_at: string | null;
+          group_id: string;
+          id: string;
+          is_active: boolean;
+          max_uses: number | null;
+          revoked_at: string | null;
+          used_count: number;
+        };
+        Insert: {
+          code: string;
+          created_by?: string | null;
+          expires_at?: string | null;
+          group_id: string;
+          id?: string;
+          is_active?: boolean;
+          max_uses?: number | null;
+          revoked_at?: string | null;
+          used_count?: number;
+        };
+        Update: {
+          code?: string;
+          created_by?: string | null;
+          expires_at?: string | null;
+          group_id?: string;
+          id?: string;
+          is_active?: boolean;
+          max_uses?: number | null;
+          revoked_at?: string | null;
+          used_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_group_invites_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      woodong_group_members: {
+        Row: {
+          group_id: string;
+          id: string;
+          joined_at: string | null;
+          role: string;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          group_id: string;
+          id?: string;
+          joined_at?: string | null;
+          role: string;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          group_id?: string;
+          id?: string;
+          joined_at?: string | null;
+          role?: string;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_group_members_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      woodong_groups: {
+        Row: {
+          cover_image_object_path: string | null;
+          created_at: string;
+          created_by: string | null;
+          default_due_amount: number | null;
+          description: string | null;
+          id: string;
+          name: string;
+          type: string | null;
+        };
+        Insert: {
+          cover_image_object_path?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          default_due_amount?: number | null;
+          description?: string | null;
+          id?: string;
+          name: string;
+          type?: string | null;
+        };
+        Update: {
+          cover_image_object_path?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          default_due_amount?: number | null;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          type?: string | null;
+        };
+        Relationships: [];
+      };
+      woodong_notification_preferences: {
+        Row: {
+          channel: string;
+          destination: string | null;
+          enabled: boolean;
+          id: string;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          channel: string;
+          destination?: string | null;
+          enabled?: boolean;
+          id?: string;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          channel?: string;
+          destination?: string | null;
+          enabled?: boolean;
+          id?: string;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      woodong_notifications: {
+        Row: {
+          body: string;
+          channel: string;
+          clicked_at: string | null;
+          created_at: string;
+          group_id: string | null;
+          id: string;
+          read_at: string | null;
+          related_id: string | null;
+          related_type: string | null;
+          status: string;
+          title: string;
+          type: string;
+          user_id: string;
+        };
+        Insert: {
+          body: string;
+          channel: string;
+          clicked_at?: string | null;
+          created_at?: string;
+          group_id?: string | null;
+          id?: string;
+          read_at?: string | null;
+          related_id?: string | null;
+          related_type?: string | null;
+          status?: string;
+          title: string;
+          type: string;
+          user_id: string;
+        };
+        Update: {
+          body?: string;
+          channel?: string;
+          clicked_at?: string | null;
+          created_at?: string;
+          group_id?: string | null;
+          id?: string;
+          read_at?: string | null;
+          related_id?: string | null;
+          related_type?: string | null;
+          status?: string;
+          title?: string;
+          type?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_notifications_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      woodong_payments: {
+        Row: {
+          amount: number;
+          due_id: string;
+          group_id: string;
+          id: string;
+          memo: string | null;
+          paid_at: string;
+          recorded_by: string | null;
+        };
+        Insert: {
+          amount: number;
+          due_id: string;
+          group_id: string;
+          id?: string;
+          memo?: string | null;
+          paid_at?: string;
+          recorded_by?: string | null;
+        };
+        Update: {
+          amount?: number;
+          due_id?: string;
+          group_id?: string;
+          id?: string;
+          memo?: string | null;
+          paid_at?: string;
+          recorded_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_payments_due_id_fkey";
+            columns: ["due_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_dues";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "woodong_payments_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      woodong_profiles: {
+        Row: {
+          avatar_key: string;
+          id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          avatar_key?: string;
+          id?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          avatar_key?: string;
+          id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      woodong_vote_options: {
+        Row: {
+          id: string;
+          label: string;
+          sort_order: number;
+          vote_id: string;
+        };
+        Insert: {
+          id?: string;
+          label: string;
+          sort_order?: number;
+          vote_id: string;
+        };
+        Update: {
+          id?: string;
+          label?: string;
+          sort_order?: number;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_vote_options_vote_id_fkey";
+            columns: ["vote_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_votes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      woodong_vote_responses: {
+        Row: {
+          id: string;
+          option_id: string;
+          responded_at: string | null;
+          user_id: string;
+          vote_id: string;
+        };
+        Insert: {
+          id?: string;
+          option_id: string;
+          responded_at?: string | null;
+          user_id: string;
+          vote_id: string;
+        };
+        Update: {
+          id?: string;
+          option_id?: string;
+          responded_at?: string | null;
+          user_id?: string;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_vote_responses_option_id_fkey";
+            columns: ["option_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_vote_options";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "woodong_vote_responses_vote_id_fkey";
+            columns: ["vote_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_votes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      woodong_votes: {
+        Row: {
+          allow_multiple: boolean;
+          closes_at: string;
+          created_at: string;
+          created_by: string | null;
+          group_id: string;
+          id: string;
+          is_anonymous: boolean;
+          status: string;
+          title: string;
+          vote_type: string;
+        };
+        Insert: {
+          allow_multiple?: boolean;
+          closes_at: string;
+          created_at?: string;
+          created_by?: string | null;
+          group_id: string;
+          id?: string;
+          is_anonymous?: boolean;
+          status?: string;
+          title: string;
+          vote_type: string;
+        };
+        Update: {
+          allow_multiple?: boolean;
+          closes_at?: string;
+          created_at?: string;
+          created_by?: string | null;
+          group_id?: string;
+          id?: string;
+          is_anonymous?: boolean;
+          status?: string;
+          title?: string;
+          vote_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_votes_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       work_types: {
         Row: {
           archived_at: string | null;
@@ -2566,8 +2566,8 @@ export type Database = {
           total_count: number;
         }[];
       };
-      udong_created_group: { Args: { p_group_id: string }; Returns: boolean };
-      udong_get_vote_results: {
+      woodong_created_group: { Args: { p_group_id: string }; Returns: boolean };
+      woodong_get_vote_results: {
         Args: { p_vote_id: string };
         Returns: {
           label: string;
@@ -2577,7 +2577,7 @@ export type Database = {
           voter_names: string[];
         }[];
       };
-      udong_increment_invite_used_count: {
+      woodong_increment_invite_used_count: {
         Args: { p_invite_id: string };
         Returns: {
           code: string;
@@ -2592,13 +2592,19 @@ export type Database = {
         };
         SetofOptions: {
           from: "*";
-          to: "udong_group_invites";
+          to: "woodong_group_invites";
           isOneToOne: true;
           isSetofReturn: false;
         };
       };
-      udong_is_group_admin: { Args: { p_group_id: string }; Returns: boolean };
-      udong_is_group_member: { Args: { p_group_id: string }; Returns: boolean };
+      woodong_is_group_admin: {
+        Args: { p_group_id: string };
+        Returns: boolean;
+      };
+      woodong_is_group_member: {
+        Args: { p_group_id: string };
+        Returns: boolean;
+      };
     };
     Enums: {
       [_ in never]: never;
