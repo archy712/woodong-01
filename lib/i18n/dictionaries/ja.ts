@@ -46,6 +46,13 @@ export const ja: Dictionary = {
       subtitle:
         "会費、精算、投票、お知らせまで — 幹事は管理しやすく、メンバーは参加しやすいグループ運営サービスです。",
       cta: "無料で始める",
+      ctaLoggedIn: "自分のグループを見る",
+    },
+    techStackPreview: {
+      heading: "堅牢な技術スタックの上に",
+      description: "最新のNext.jsとSupabaseを基盤に、速く安定して動作します。",
+      items: ["Next.js 16", "Supabase", "Tailwind CSS", "shadcn/ui"],
+      cta: "技術スタックをもっと見る",
     },
     features: {
       heading: "主な機能",

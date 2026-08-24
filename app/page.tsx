@@ -1,4 +1,5 @@
 import {
+  ArrowRightIcon,
   BellIcon,
   CalendarCheckIcon,
   MegaphoneIcon,
@@ -9,9 +10,11 @@ import {
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { createClient } from "@/lib/supabase/server";
 
 const FEATURE_ICONS = [
   UsersRoundIcon,
@@ -33,6 +36,10 @@ export default function Home() {
 async function HomeContent() {
   const locale = await getLocale();
   const dict = getDictionary(locale);
+
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const isLoggedIn = Boolean(claimsData?.claims);
 
   const features = dict.home.features.items.map((item, i) => ({
     ...item,
@@ -62,9 +69,18 @@ async function HomeContent() {
         <p className="whitespace-pre-line text-muted-foreground lg:text-lg">
           {dict.home.hero.subtitle}
         </p>
-        <Button asChild size="lg" className="rounded-full px-8">
-          <Link href="/auth/sign-up">{dict.home.hero.cta}</Link>
-        </Button>
+        {isLoggedIn ? (
+          <Button asChild size="lg" className="rounded-full px-8">
+            <Link href="/protected/groups">
+              {dict.home.hero.ctaLoggedIn}
+              <ArrowRightIcon />
+            </Link>
+          </Button>
+        ) : (
+          <Button asChild size="lg" className="rounded-full px-8">
+            <Link href="/auth/sign-up">{dict.home.hero.cta}</Link>
+          </Button>
+        )}
       </section>
 
       <section className="flex flex-col gap-8">
@@ -91,6 +107,29 @@ async function HomeContent() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="mx-auto flex max-w-2xl flex-col items-center gap-4 text-center">
+        <h2 className="text-xl font-bold lg:text-2xl">
+          {dict.home.techStackPreview.heading}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {dict.home.techStackPreview.description}
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {dict.home.techStackPreview.items.map((item) => (
+            <Badge key={item} variant="secondary">
+              {item}
+            </Badge>
+          ))}
+        </div>
+        <Link
+          href="/tech-stack"
+          className="inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
+        >
+          {dict.home.techStackPreview.cta}
+          <ArrowRightIcon className="size-4" />
+        </Link>
       </section>
     </div>
   );

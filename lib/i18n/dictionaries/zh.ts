@@ -46,6 +46,13 @@ export const zh: Dictionary = {
       subtitle:
         "从会费到结算、投票、公告——组长易于管理，成员也能轻松参与的小组运营服务。",
       cta: "免费开始使用",
+      ctaLoggedIn: "查看我的小组",
+    },
+    techStackPreview: {
+      heading: "构建在稳固的技术栈之上",
+      description: "基于最新的 Next.js 和 Supabase，快速而稳定地运行。",
+      items: ["Next.js 16", "Supabase", "Tailwind CSS", "shadcn/ui"],
+      cta: "查看完整技术栈",
     },
     features: {
       heading: "主要功能",

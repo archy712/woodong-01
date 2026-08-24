@@ -42,11 +42,18 @@ export interface Dictionary {
       title: string;
       subtitle: string;
       cta: string;
+      ctaLoggedIn: string;
     };
     features: {
       heading: string;
       description: string;
       items: { title: string; description: string }[];
+    };
+    techStackPreview: {
+      heading: string;
+      description: string;
+      items: string[];
+      cta: string;
     };
     footer: {
       techStack: string;

@@ -46,6 +46,14 @@ export const en: Dictionary = {
       subtitle:
         "From dues to settlements, votes, and announcements — an easy-to-manage service for organizers, and an easy-to-join experience for members.",
       cta: "Get started for free",
+      ctaLoggedIn: "View my groups",
+    },
+    techStackPreview: {
+      heading: "Built on a solid stack",
+      description:
+        "Powered by the latest Next.js and Supabase for a fast, reliable experience.",
+      items: ["Next.js 16", "Supabase", "Tailwind CSS", "shadcn/ui"],
+      cta: "See the full tech stack",
     },
     features: {
       heading: "Key Features",

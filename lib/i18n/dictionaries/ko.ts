@@ -45,6 +45,14 @@ export const ko: Dictionary = {
       subtitle:
         "회비, 정산, 투표, 공지까지\n총무는 관리하기 쉽고 멤버는 참여하기 편한 모임 운영 서비스입니다.",
       cta: "무료로 시작하기",
+      ctaLoggedIn: "내 모임 보기",
+    },
+    techStackPreview: {
+      heading: "탄탄한 기술 스택 위에서",
+      description:
+        "최신 Next.js와 Supabase를 기반으로 빠르고 안정적으로 동작합니다.",
+      items: ["Next.js 16", "Supabase", "Tailwind CSS", "shadcn/ui"],
+      cta: "기술 스택 더 보기",
     },
     features: {
       heading: "주요 기능",
