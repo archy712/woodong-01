@@ -24,6 +24,8 @@ export const zh: Dictionary = {
     notificationsLabel: "通知",
     profileLabel: "个人资料",
     logoutLabel: "退出登录",
+    signInLabel: "登录",
+    signUpLabel: "注册",
     groupTabs: {
       home: "首页",
       announcements: "公告",

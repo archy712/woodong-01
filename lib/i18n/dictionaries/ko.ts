@@ -24,6 +24,8 @@ export const ko: Dictionary = {
     notificationsLabel: "알림",
     profileLabel: "프로필",
     logoutLabel: "로그아웃",
+    signInLabel: "로그인",
+    signUpLabel: "회원가입",
     groupTabs: {
       home: "홈",
       announcements: "공지",

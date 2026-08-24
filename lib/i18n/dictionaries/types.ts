@@ -22,6 +22,8 @@ export interface Dictionary {
     notificationsLabel: string;
     profileLabel: string;
     logoutLabel: string;
+    signInLabel: string;
+    signUpLabel: string;
     groupTabs: {
       home: string;
       announcements: string;

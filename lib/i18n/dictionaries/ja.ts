@@ -24,6 +24,8 @@ export const ja: Dictionary = {
     notificationsLabel: "通知",
     profileLabel: "プロフィール",
     logoutLabel: "ログアウト",
+    signInLabel: "ログイン",
+    signUpLabel: "新規登録",
     groupTabs: {
       home: "ホーム",
       announcements: "お知らせ",

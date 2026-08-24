@@ -24,6 +24,8 @@ export const en: Dictionary = {
     notificationsLabel: "Notifications",
     profileLabel: "Profile",
     logoutLabel: "Log out",
+    signInLabel: "Sign in",
+    signUpLabel: "Sign up",
     groupTabs: {
       home: "Home",
       announcements: "Announcements",

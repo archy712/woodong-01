@@ -38,6 +38,8 @@ export async function AppHeader() {
               <AuthButton
                 profileLabel={dict.nav.profileLabel}
                 logoutLabel={dict.nav.logoutLabel}
+                signInLabel={dict.nav.signInLabel}
+                signUpLabel={dict.nav.signUpLabel}
               />
             </Suspense>
           )}
