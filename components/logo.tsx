@@ -2,7 +2,7 @@ import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
 
 /**
- * 우동 브랜드 로고마크: 그릇 + 면발. "우동"이라는 이름의 정체성(음식 펀네이밍)은 아이콘이
+ * 우동 브랜드 로고마크: 그릇 + 면발 + 젓가락. "우동"이라는 이름의 정체성(음식 펀네이밍)은 아이콘이
  * 담당하고, "우리 동호회"라는 뜻풀이는 옆의 워드마크/태그라인(Logo 컴포넌트)이 텍스트로
  * 전담한다 — 아이콘 하나로 의미까지 설명하려 하지 않는다. 김(steam)은 "뜨거운 음식"이라는
  * 신호가 가장 강해 오독을 유발하므로 넣지 않는다.
@@ -14,6 +14,7 @@ const CORAL = "#EF6339";
 const CORAL_DARK = "#D03D11";
 const CORAL_TINT = "#FBE3DA";
 const NOODLE = "#FDF1DC";
+const CHOPSTICK = "#8B4A2B";
 
 export function LogoMark({ className }: { className?: string }) {
   return (
@@ -44,6 +45,25 @@ export function LogoMark({ className }: { className?: string }) {
         strokeLinecap="round"
         fill="none"
         opacity={0.85}
+      />
+      {/* 젓가락 */}
+      <line
+        x1={22}
+        y1={21}
+        x2={30}
+        y2={2}
+        stroke={CHOPSTICK}
+        strokeWidth={1.6}
+        strokeLinecap="round"
+      />
+      <line
+        x1={26}
+        y1={22}
+        x2={34}
+        y2={3}
+        stroke={CHOPSTICK}
+        strokeWidth={1.6}
+        strokeLinecap="round"
       />
     </svg>
   );
