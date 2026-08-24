@@ -14,11 +14,14 @@ export interface Dictionary {
     loading: string;
     retry: string;
     required: string;
+    or: string;
+    groupIdLabel: string;
   };
   nav: {
     groupsLabel: string;
     notificationsLabel: string;
-    devDocsLabel: string;
+    profileLabel: string;
+    logoutLabel: string;
     groupTabs: {
       home: string;
       announcements: string;
@@ -28,9 +31,17 @@ export interface Dictionary {
     };
   };
   home: {
-    heading: string;
+    hero: {
+      title: string;
+      subtitle: string;
+      cta: string;
+    };
+    features: {
+      heading: string;
+      description: string;
+      items: { title: string; description: string }[];
+    };
     footer: {
-      about: string;
       techStack: string;
       componentGallery: string;
       iconGallery: string;
@@ -76,6 +87,7 @@ export interface Dictionary {
   groups: {
     pageTitle: string;
     createButton: string;
+    detailTitle: string;
     detailNotFound: string;
     create: {
       title: string;
@@ -150,6 +162,8 @@ export interface Dictionary {
   };
   votes: {
     pageTitle: string;
+    detailTitle: string;
+    voteIdLabel: string;
     create: {
       title: string;
       titleLabel: string;
@@ -187,12 +201,69 @@ export interface Dictionary {
       settlementReport: string;
     };
   };
+  me: {
+    pageTitle: string;
+  };
   auth: {
     socialAccountLinkedToast: string;
     kakaoNoEmailNotice: string;
     manualLinkCta: string;
     loginWithGoogle: string;
     loginWithKakao: string;
+    googleConnecting: string;
+    login: {
+      title: string;
+      description: string;
+      emailLabel: string;
+      passwordLabel: string;
+      forgotPasswordLink: string;
+      submitButton: string;
+      submittingButton: string;
+      noAccountText: string;
+      signUpLink: string;
+    };
+    signUp: {
+      title: string;
+      description: string;
+      emailLabel: string;
+      passwordLabel: string;
+      repeatPasswordLabel: string;
+      submitButton: string;
+      submittingButton: string;
+      haveAccountText: string;
+      loginLink: string;
+      passwordMismatchError: string;
+    };
+    signUpSuccess: {
+      title: string;
+      description: string;
+      message: string;
+    };
+    forgotPassword: {
+      title: string;
+      description: string;
+      emailLabel: string;
+      submitButton: string;
+      submittingButton: string;
+      haveAccountText: string;
+      loginLink: string;
+      successTitle: string;
+      successDescription: string;
+      successMessage: string;
+    };
+    updatePassword: {
+      title: string;
+      description: string;
+      passwordLabel: string;
+      passwordPlaceholder: string;
+      submitButton: string;
+      submittingButton: string;
+    };
+    error: {
+      title: string;
+      codeErrorPrefix: string;
+      unspecifiedError: string;
+    };
   };
   errors: {
     networkError: string;

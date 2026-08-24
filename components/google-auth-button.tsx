@@ -4,7 +4,13 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
-export function GoogleAuthButton() {
+export function GoogleAuthButton({
+  label,
+  connectingLabel,
+}: {
+  label: string;
+  connectingLabel: string;
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +60,7 @@ export function GoogleAuthButton() {
             fill="#EA4335"
           />
         </svg>
-        {isLoading ? "연결하는 중..." : "Google로 계속하기"}
+        {isLoading ? connectingLabel : label}
       </Button>
       {error && <p className="text-sm text-red-500">{error}</p>}
     </div>

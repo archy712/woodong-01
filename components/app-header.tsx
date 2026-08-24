@@ -35,7 +35,10 @@ export async function AppHeader() {
             <EnvVarWarning />
           ) : (
             <Suspense fallback={<div className="h-9 w-20" />}>
-              <AuthButton />
+              <AuthButton
+                profileLabel={dict.nav.profileLabel}
+                logoutLabel={dict.nav.logoutLabel}
+              />
             </Suspense>
           )}
         </div>

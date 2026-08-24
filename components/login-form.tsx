@@ -14,14 +14,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { GoogleAuthButton } from "@/components/google-auth-button";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function LoginForm({
   className,
+  auth,
+  or,
+  genericError,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: {
+  auth: Dictionary["auth"];
+  or: string;
+  genericError: string;
+} & React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +51,7 @@ export function LoginForm({
       // Update this route to redirect to an authenticated route. The user already has an active session.
       router.push("/protected");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : genericError);
     } finally {
       setIsLoading(false);
     }
@@ -53,16 +61,14 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
+          <CardTitle className="text-2xl">{auth.login.title}</CardTitle>
+          <CardDescription>{auth.login.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{auth.login.emailLabel}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -74,12 +80,12 @@ export function LoginForm({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{auth.login.passwordLabel}</Label>
                   <Link
                     href="/auth/forgot-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
-                    Forgot your password?
+                    {auth.login.forgotPasswordLink}
                   </Link>
                 </div>
                 <Input
@@ -92,25 +98,30 @@ export function LoginForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading
+                  ? auth.login.submittingButton
+                  : auth.login.submitButton}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
+              {auth.login.noAccountText}{" "}
               <Link
                 href="/auth/sign-up"
                 className="underline underline-offset-4"
               >
-                Sign up
+                {auth.login.signUpLink}
               </Link>
             </div>
           </form>
           <div className="my-6 flex items-center gap-4">
             <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">또는</span>
+            <span className="text-xs text-muted-foreground">{or}</span>
             <Separator className="flex-1" />
           </div>
-          <GoogleAuthButton />
+          <GoogleAuthButton
+            label={auth.loginWithGoogle}
+            connectingLabel={auth.googleConnecting}
+          />
         </CardContent>
       </Card>
     </div>

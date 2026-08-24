@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getLocale } from "@/lib/i18n/get-locale";
 
 async function VoteDetailContent({
   params,
@@ -16,12 +18,15 @@ async function VoteDetailContent({
   }
 
   const { groupId, voteId } = await params;
+  const locale = await getLocale();
+  const dict = getDictionary(locale);
 
   return (
     <div className="flex w-full flex-1 flex-col gap-4 p-8">
-      <h1 className="text-2xl font-bold">투표 상세</h1>
+      <h1 className="text-2xl font-bold">{dict.votes.detailTitle}</h1>
       <p className="text-sm text-muted-foreground">
-        모임 ID: {groupId} / 투표 ID: {voteId}
+        {dict.common.groupIdLabel}: {groupId} / {dict.votes.voteIdLabel}:{" "}
+        {voteId}
       </p>
     </div>
   );

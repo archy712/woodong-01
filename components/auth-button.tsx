@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/server";
-import { LogoutButton } from "./logout-button";
+import { UserNavMenu } from "./user-nav-menu";
 
-export async function AuthButton() {
+export async function AuthButton({
+  profileLabel,
+  logoutLabel,
+}: {
+  profileLabel: string;
+  logoutLabel: string;
+}) {
   const supabase = await createClient();
 
   // You can also use getUser() which will be slower.
@@ -12,13 +18,11 @@ export async function AuthButton() {
   const user = data?.claims;
 
   return user ? (
-    <div className="flex items-center gap-4">
-      Hey, {user.email}!
-      <Button asChild size="sm" variant={"outline"}>
-        <Link href="/protected/profile">Profile</Link>
-      </Button>
-      <LogoutButton />
-    </div>
+    <UserNavMenu
+      email={user.email ?? ""}
+      profileLabel={profileLabel}
+      logoutLabel={logoutLabel}
+    />
   ) : (
     <div className="flex gap-2">
       <Button asChild size="sm" variant={"outline"}>

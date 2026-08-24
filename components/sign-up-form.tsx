@@ -14,14 +14,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { GoogleAuthButton } from "@/components/google-auth-button";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function SignUpForm({
   className,
+  auth,
+  or,
+  genericError,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: {
+  auth: Dictionary["auth"];
+  or: string;
+  genericError: string;
+} & React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -36,7 +44,7 @@ export function SignUpForm({
     setError(null);
 
     if (password !== repeatPassword) {
-      setError("Passwords do not match");
+      setError(auth.signUp.passwordMismatchError);
       setIsLoading(false);
       return;
     }
@@ -52,7 +60,7 @@ export function SignUpForm({
       if (error) throw error;
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : genericError);
     } finally {
       setIsLoading(false);
     }
@@ -62,14 +70,14 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <CardTitle className="text-2xl">{auth.signUp.title}</CardTitle>
+          <CardDescription>{auth.signUp.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{auth.signUp.emailLabel}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -81,7 +89,7 @@ export function SignUpForm({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">{auth.signUp.passwordLabel}</Label>
                 </div>
                 <Input
                   id="password"
@@ -93,7 +101,9 @@ export function SignUpForm({
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="repeat-password">Repeat Password</Label>
+                  <Label htmlFor="repeat-password">
+                    {auth.signUp.repeatPasswordLabel}
+                  </Label>
                 </div>
                 <Input
                   id="repeat-password"
@@ -105,22 +115,27 @@ export function SignUpForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+                {isLoading
+                  ? auth.signUp.submittingButton
+                  : auth.signUp.submitButton}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
+              {auth.signUp.haveAccountText}{" "}
               <Link href="/auth/login" className="underline underline-offset-4">
-                Login
+                {auth.signUp.loginLink}
               </Link>
             </div>
           </form>
           <div className="my-6 flex items-center gap-4">
             <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">또는</span>
+            <span className="text-xs text-muted-foreground">{or}</span>
             <Separator className="flex-1" />
           </div>
-          <GoogleAuthButton />
+          <GoogleAuthButton
+            label={auth.loginWithGoogle}
+            connectingLabel={auth.googleConnecting}
+          />
         </CardContent>
       </Card>
     </div>

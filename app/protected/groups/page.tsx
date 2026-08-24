@@ -4,6 +4,8 @@ import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getLocale } from "@/lib/i18n/get-locale";
 
 async function GroupsContent() {
   const supabase = await createClient();
@@ -14,6 +16,9 @@ async function GroupsContent() {
   if (claimsError || !userId) {
     redirect("/auth/login");
   }
+
+  const locale = await getLocale();
+  const dict = getDictionary(locale);
 
   // Task 008 범위: "내가 속한 모임 이름 나열" 정도의 최소 실데이터 조회만 붙인다.
   // 카드 UI/정렬/페이지네이션 등 전체 목록 화면 구현은 Task 012/019 범위.
@@ -36,9 +41,9 @@ async function GroupsContent() {
   return (
     <div className="flex w-full flex-1 flex-col gap-4 p-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">모임 목록</h1>
+        <h1 className="text-2xl font-bold">{dict.groups.pageTitle}</h1>
         <Button asChild size="sm">
-          <Link href="/protected/groups/new">모임 만들기</Link>
+          <Link href="/protected/groups/new">{dict.groups.createButton}</Link>
         </Button>
       </div>
 
@@ -57,7 +62,7 @@ async function GroupsContent() {
         </ul>
       ) : (
         <p className="text-sm text-muted-foreground">
-          아직 속한 모임이 없습니다.
+          {dict.emptyStates.noGroups}
         </p>
       )}
     </div>

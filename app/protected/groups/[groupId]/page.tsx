@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getLocale } from "@/lib/i18n/get-locale";
 
 async function GroupDetailContent({
   params,
@@ -17,6 +19,8 @@ async function GroupDetailContent({
   }
 
   const { groupId } = await params;
+  const locale = await getLocale();
+  const dict = getDictionary(locale);
 
   // Task 008 범위: 생성 직후 진입했을 때 모임 이름이 보이는 정도의 최소 조회만 붙인다.
   // 멤버 목록/회비/공지 등 상세 화면 전체 구현은 Task 012/019 범위.
@@ -29,9 +33,9 @@ async function GroupDetailContent({
   if (!group) {
     return (
       <div className="flex w-full flex-1 flex-col gap-4 p-8">
-        <h1 className="text-2xl font-bold">모임 상세</h1>
+        <h1 className="text-2xl font-bold">{dict.groups.detailTitle}</h1>
         <p className="text-sm text-muted-foreground">
-          모임을 찾을 수 없거나 접근 권한이 없습니다.
+          {dict.groups.detailNotFound}
         </p>
       </div>
     );

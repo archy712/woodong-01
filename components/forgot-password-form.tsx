@@ -12,13 +12,19 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import Link from "next/link";
 import { useState } from "react";
 
 export function ForgotPasswordForm({
   className,
+  auth,
+  genericError,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: {
+  auth: Dictionary["auth"];
+  genericError: string;
+} & React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -38,7 +44,7 @@ export function ForgotPasswordForm({
       if (error) throw error;
       setSuccess(true);
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : genericError);
     } finally {
       setIsLoading(false);
     }
@@ -49,30 +55,34 @@ export function ForgotPasswordForm({
       {success ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>Password reset instructions sent</CardDescription>
+            <CardTitle className="text-2xl">
+              {auth.forgotPassword.successTitle}
+            </CardTitle>
+            <CardDescription>
+              {auth.forgotPassword.successDescription}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              If you registered using your email and password, you will receive
-              a password reset email.
+              {auth.forgotPassword.successMessage}
             </p>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Reset Your Password</CardTitle>
-            <CardDescription>
-              Type in your email and we&apos;ll send you a link to reset your
-              password
-            </CardDescription>
+            <CardTitle className="text-2xl">
+              {auth.forgotPassword.title}
+            </CardTitle>
+            <CardDescription>{auth.forgotPassword.description}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleForgotPassword}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">
+                    {auth.forgotPassword.emailLabel}
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -84,16 +94,18 @@ export function ForgotPasswordForm({
                 </div>
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send reset email"}
+                  {isLoading
+                    ? auth.forgotPassword.submittingButton
+                    : auth.forgotPassword.submitButton}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">
-                Already have an account?{" "}
+                {auth.forgotPassword.haveAccountText}{" "}
                 <Link
                   href="/auth/login"
                   className="underline underline-offset-4"
                 >
-                  Login
+                  {auth.forgotPassword.loginLink}
                 </Link>
               </div>
             </form>

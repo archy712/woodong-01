@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 const GROUP_TYPE_DATALIST_ID = "group-type-suggestions";
 
@@ -48,8 +49,11 @@ const defaultValues: CreateGroupInput = {
  */
 export function CreateGroupForm({
   className,
+  labels,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: {
+  labels: Dictionary["groups"]["create"];
+} & React.ComponentPropsWithoutRef<"div">) {
   const { form, onSubmit, isPending } = useServerActionForm({
     schema: createGroupSchema,
     defaultValues,
@@ -60,11 +64,8 @@ export function CreateGroupForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">모임 만들기</CardTitle>
-          <CardDescription>
-            모임 이름만 입력하면 바로 만들 수 있어요. 나머지 정보는 언제든
-            수정할 수 있습니다.
-          </CardDescription>
+          <CardTitle className="text-2xl">{labels.title}</CardTitle>
+          <CardDescription>{labels.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -74,9 +75,9 @@ export function CreateGroupForm({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>모임 이름</FormLabel>
+                    <FormLabel>{labels.nameLabel}</FormLabel>
                     <FormControl>
-                      <Input placeholder="예: 주말 등산 모임" {...field} />
+                      <Input placeholder={labels.namePlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -88,10 +89,10 @@ export function CreateGroupForm({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>모임 소개 (선택)</FormLabel>
+                    <FormLabel>{labels.descriptionLabel}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="모임을 간단히 소개해주세요"
+                        placeholder={labels.descriptionPlaceholder}
                         {...field}
                       />
                     </FormControl>
@@ -105,10 +106,10 @@ export function CreateGroupForm({
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>모임 유형 (선택)</FormLabel>
+                    <FormLabel>{labels.typeLabel}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="예: 동호회"
+                        placeholder={labels.typePlaceholder}
                         list={GROUP_TYPE_DATALIST_ID}
                         {...field}
                       />
@@ -123,14 +124,14 @@ export function CreateGroupForm({
                 name="defaultDueAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>기본 회비 금액 (선택, 원)</FormLabel>
+                    <FormLabel>{labels.defaultDueAmountLabel}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         inputMode="numeric"
                         min={0}
                         step={1000}
-                        placeholder="예: 30000"
+                        placeholder={labels.defaultDueAmountPlaceholder}
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -144,10 +145,10 @@ export function CreateGroupForm({
                 {isPending ? (
                   <>
                     <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-                    만드는 중...
+                    {labels.submittingLabel}
                   </>
                 ) : (
-                  "모임 만들기"
+                  labels.submitButton
                 )}
               </Button>
             </form>

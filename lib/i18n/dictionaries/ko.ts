@@ -16,11 +16,14 @@ export const ko: Dictionary = {
     loading: "불러오는 중...",
     retry: "다시 시도",
     required: "필수",
+    or: "또는",
+    groupIdLabel: "모임 ID",
   },
   nav: {
     groupsLabel: "내 모임",
     notificationsLabel: "알림",
-    devDocsLabel: "개발자 문서",
+    profileLabel: "프로필",
+    logoutLabel: "로그아웃",
     groupTabs: {
       home: "홈",
       announcements: "공지",
@@ -30,9 +33,49 @@ export const ko: Dictionary = {
     },
   },
   home: {
-    heading: "Next.js 스타터킷 3",
+    hero: {
+      title: "모임 운영을 한 곳에서, 우동과 함께 기록하고 관리하세요",
+      subtitle:
+        "회비, 정산, 투표, 공지까지 — 총무는 관리하기 쉽고 멤버는 참여하기 편한 모임 운영 서비스입니다.",
+      cta: "무료로 시작하기",
+    },
+    features: {
+      heading: "주요 기능",
+      description:
+        "생성부터 회비, 정산, 투표, 공지, 알림까지 — 모임 운영에 필요한 기능을 한 곳에 담았습니다.",
+      items: [
+        {
+          title: "모임 관리",
+          description:
+            "모임을 만들고 멤버를 초대하세요. 총무와 일반회원 역할을 구분해 권한을 관리할 수 있습니다.",
+        },
+        {
+          title: "회비 관리",
+          description:
+            "정기·추가 회비를 등록하고 멤버별 납부 현황을 한눈에 확인하세요. 미납자에게는 자동으로 리마인드가 발송됩니다.",
+        },
+        {
+          title: "정산 리포트",
+          description:
+            "지출 내역을 기록하고 모임 전체에 정산 리포트를 투명하게 공유하세요.",
+        },
+        {
+          title: "투표",
+          description:
+            "안건을 올리고 마감일까지 투표를 진행하세요. 복수 선택과 익명 투표도 지원합니다.",
+        },
+        {
+          title: "공지사항",
+          description: "모임 소식을 작성해 멤버 전원에게 알리세요.",
+        },
+        {
+          title: "알림센터",
+          description:
+            "댓글·투표·회비 리마인드 등 모든 소식을 한 곳에서 확인하고 채널별로 알림을 설정하세요.",
+        },
+      ],
+    },
     footer: {
-      about: "next.js 스타터킷3 소개",
       techStack: "기술 스택",
       componentGallery: "컴포넌트 갤러리",
       iconGallery: "아이콘 갤러리",
@@ -146,6 +189,7 @@ export const ko: Dictionary = {
   groups: {
     pageTitle: "모임 목록",
     createButton: "모임 만들기",
+    detailTitle: "모임 상세",
     detailNotFound: "모임을 찾을 수 없거나 접근 권한이 없어요.",
     create: {
       title: "모임 만들기",
@@ -224,6 +268,8 @@ export const ko: Dictionary = {
   },
   votes: {
     pageTitle: "투표 목록",
+    detailTitle: "투표 상세",
+    voteIdLabel: "투표 ID",
     create: {
       title: "투표 만들기",
       titleLabel: "투표 제목",
@@ -262,6 +308,9 @@ export const ko: Dictionary = {
       settlementReport: "정산 리포트 발행",
     },
   },
+  me: {
+    pageTitle: "마이페이지",
+  },
   auth: {
     socialAccountLinkedToast: "기존 계정에 연결됐어요.",
     kakaoNoEmailNotice:
@@ -269,6 +318,62 @@ export const ko: Dictionary = {
     manualLinkCta: "계정 연동하기",
     loginWithGoogle: "Google로 계속하기",
     loginWithKakao: "카카오로 계속하기",
+    googleConnecting: "연결하는 중...",
+    login: {
+      title: "로그인",
+      description: "이메일로 로그인해 모임을 확인하세요.",
+      emailLabel: "이메일",
+      passwordLabel: "비밀번호",
+      forgotPasswordLink: "비밀번호를 잊으셨나요?",
+      submitButton: "로그인",
+      submittingButton: "로그인하는 중...",
+      noAccountText: "계정이 없으신가요?",
+      signUpLink: "회원가입",
+    },
+    signUp: {
+      title: "회원가입",
+      description: "새 계정을 만들어보세요.",
+      emailLabel: "이메일",
+      passwordLabel: "비밀번호",
+      repeatPasswordLabel: "비밀번호 확인",
+      submitButton: "회원가입",
+      submittingButton: "계정을 만드는 중...",
+      haveAccountText: "이미 계정이 있으신가요?",
+      loginLink: "로그인",
+      passwordMismatchError: "비밀번호가 일치하지 않아요.",
+    },
+    signUpSuccess: {
+      title: "회원가입을 완료했어요!",
+      description: "이메일을 확인해주세요",
+      message:
+        "회원가입이 완료되었어요. 로그인하기 전에 이메일을 확인해 계정을 인증해주세요.",
+    },
+    forgotPassword: {
+      title: "비밀번호 재설정",
+      description: "이메일을 입력하면 비밀번호 재설정 링크를 보내드려요.",
+      emailLabel: "이메일",
+      submitButton: "재설정 메일 보내기",
+      submittingButton: "보내는 중...",
+      haveAccountText: "이미 계정이 있으신가요?",
+      loginLink: "로그인",
+      successTitle: "이메일을 확인해주세요",
+      successDescription: "비밀번호 재설정 안내를 보냈어요",
+      successMessage:
+        "이메일과 비밀번호로 가입하셨다면 비밀번호 재설정 메일을 받으실 수 있어요.",
+    },
+    updatePassword: {
+      title: "비밀번호 재설정",
+      description: "새 비밀번호를 입력해주세요.",
+      passwordLabel: "새 비밀번호",
+      passwordPlaceholder: "새 비밀번호",
+      submitButton: "비밀번호 저장",
+      submittingButton: "저장하는 중...",
+    },
+    error: {
+      title: "문제가 발생했어요.",
+      codeErrorPrefix: "오류 코드: ",
+      unspecifiedError: "알 수 없는 오류가 발생했어요.",
+    },
   },
   errors: {
     networkError: "네트워크 연결을 확인해주세요.",
