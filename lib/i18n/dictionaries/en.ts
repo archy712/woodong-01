@@ -20,6 +20,7 @@ export const en: Dictionary = {
     groupIdLabel: "Group ID",
   },
   nav: {
+    brandTagline: "Our Club",
     groupsLabel: "My Groups",
     notificationsLabel: "Notifications",
     profileLabel: "Profile",
@@ -36,6 +37,7 @@ export const en: Dictionary = {
   },
   home: {
     hero: {
+      kicker: 'Woodong — Korean for "our club"',
       title: "Run your group in one place, with Woodong",
       subtitle:
         "From dues to settlements, votes, and announcements — an easy-to-manage service for organizers, and an easy-to-join experience for members.",

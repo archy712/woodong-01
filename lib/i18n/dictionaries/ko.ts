@@ -20,6 +20,7 @@ export const ko: Dictionary = {
     groupIdLabel: "모임 ID",
   },
   nav: {
+    brandTagline: "우리동호회",
     groupsLabel: "내 모임",
     notificationsLabel: "알림",
     profileLabel: "프로필",
@@ -36,6 +37,7 @@ export const ko: Dictionary = {
   },
   home: {
     hero: {
+      kicker: "우리 동호회 운영 플랫폼",
       title: "모임 운영을 한 곳에서,\n우동과 함께 기록하고 관리하세요",
       subtitle:
         "회비, 정산, 투표, 공지까지\n총무는 관리하기 쉽고 멤버는 참여하기 편한 모임 운영 서비스입니다.",

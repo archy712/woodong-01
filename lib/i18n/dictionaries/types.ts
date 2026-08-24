@@ -18,6 +18,7 @@ export interface Dictionary {
     groupIdLabel: string;
   };
   nav: {
+    brandTagline: string;
     groupsLabel: string;
     notificationsLabel: string;
     profileLabel: string;
@@ -34,6 +35,7 @@ export interface Dictionary {
   };
   home: {
     hero: {
+      kicker: string;
       title: string;
       subtitle: string;
       cta: string;

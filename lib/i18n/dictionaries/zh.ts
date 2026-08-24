@@ -20,6 +20,7 @@ export const zh: Dictionary = {
     groupIdLabel: "小组 ID",
   },
   nav: {
+    brandTagline: "我们的同好会",
     groupsLabel: "我的小组",
     notificationsLabel: "通知",
     profileLabel: "个人资料",
@@ -36,6 +37,7 @@ export const zh: Dictionary = {
   },
   home: {
     hero: {
+      kicker: "Woodong＝韩语里的“我们的同好会”",
       title: "在一个地方运营你的小组，与 Woodong 一起",
       subtitle:
         "从会费到结算、投票、公告——组长易于管理，成员也能轻松参与的小组运营服务。",

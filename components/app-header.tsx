@@ -19,7 +19,7 @@ export async function AppHeader() {
     <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-center border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="flex w-full max-w-5xl items-center justify-between px-5">
         <Link href="/" className="shrink-0">
-          <Logo />
+          <Logo locale={locale} taglineText={dict.nav.brandTagline} />
         </Link>
 
         <div className="flex items-center gap-1 sm:gap-2">

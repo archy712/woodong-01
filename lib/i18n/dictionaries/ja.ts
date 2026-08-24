@@ -20,6 +20,7 @@ export const ja: Dictionary = {
     groupIdLabel: "グループID",
   },
   nav: {
+    brandTagline: "私たちのサークル",
     groupsLabel: "マイグループ",
     notificationsLabel: "通知",
     profileLabel: "プロフィール",
@@ -36,6 +37,7 @@ export const ja: Dictionary = {
   },
   home: {
     hero: {
+      kicker: "Woodong＝韓国語で「私たちのサークル」",
       title: "グループ運営を一か所で、Woodongと一緒に",
       subtitle:
         "会費、精算、投票、お知らせまで — 幹事は管理しやすく、メンバーは参加しやすいグループ運営サービスです。",
