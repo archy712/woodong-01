@@ -54,8 +54,8 @@
 2. 저장소를 클론하고 의존성을 설치합니다.
 
    ```bash
-   git clone https://github.com/archy712/woodong-ops-01.git
-   cd woodong-ops-01
+   git clone https://github.com/archy712/woodong-01.git
+   cd woodong-01
    npm install
    ```
 
