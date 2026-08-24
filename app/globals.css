@@ -86,5 +86,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* 한글 단어 중간(음절 경계)에서 줄바꿈되지 않고 띄어쓰기 기준으로만 줄바꿈되도록 함 */
+    word-break: keep-all;
   }
 }

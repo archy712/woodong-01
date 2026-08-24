@@ -42,10 +42,10 @@ async function HomeContent() {
   return (
     <div className="flex w-full max-w-5xl flex-col gap-20 px-5 py-16">
       <section className="mx-auto flex max-w-2xl flex-col items-center gap-6 text-center">
-        <h1 className="text-3xl !leading-tight font-bold lg:text-4xl">
+        <h1 className="text-3xl !leading-tight font-bold whitespace-pre-line lg:text-4xl">
           {dict.home.hero.title}
         </h1>
-        <p className="text-muted-foreground lg:text-lg">
+        <p className="whitespace-pre-line text-muted-foreground lg:text-lg">
           {dict.home.hero.subtitle}
         </p>
         <Button asChild size="lg" className="rounded-full px-8">
