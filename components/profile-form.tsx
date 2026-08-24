@@ -1,4 +1,18 @@
+"use client";
+
+import { Loader2Icon } from "lucide-react";
+
+import { useServerActionForm } from "@/hooks/use-server-action-form";
+import { updateProfileAction } from "@/lib/udong/actions/profile";
+import {
+  updateProfileSchema,
+  type Profile,
+  type UpdateProfileInput,
+} from "@/lib/udong/profile";
+import type { AvatarKey } from "@/lib/udong/avatars";
 import { cn } from "@/lib/utils";
+import { AvatarPicker } from "@/components/avatar-picker";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,30 +20,55 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Tables } from "@/lib/supabase/database.types";
-
-// profiles는 다른 앱과 공유하는 테이블이라 읽기 전용으로만 표시한다(PRD 5.0/5.1 — id/email/name/phone_number/bio 외 컬럼은 재사용 금지).
-type Profile = Pick<
-  Tables<"profiles">,
-  "id" | "email" | "name" | "phone_number" | "bio"
->;
+import { Textarea } from "@/components/ui/textarea";
 
 export function ProfileForm({
   profile,
+  avatarKey,
   className,
   ...props
-}: { profile: Profile } & React.ComponentPropsWithoutRef<"div">) {
+}: {
+  profile: Profile;
+  avatarKey: AvatarKey;
+} & React.ComponentPropsWithoutRef<"div">) {
+  const defaultValues: UpdateProfileInput = {
+    name: profile.name ?? "",
+    phoneNumber: profile.phone_number ?? "",
+    bio: profile.bio ?? "",
+  };
+
+  const { form, onSubmit, isPending } = useServerActionForm({
+    schema: updateProfileSchema,
+    defaultValues,
+    action: updateProfileAction,
+    successMessage: "프로필을 저장했습니다.",
+  });
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">내 프로필</CardTitle>
-          <CardDescription>회원 프로필 정보입니다(읽기 전용).</CardDescription>
+          <CardDescription>
+            회원 프로필 정보를 확인하고 수정할 수 있습니다.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-8">
+            <div className="grid gap-2">
+              <Label>아바타</Label>
+              <AvatarPicker avatarKey={avatarKey} />
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="email">이메일</Label>
               <Input
@@ -39,28 +78,70 @@ export function ProfileForm({
                 disabled
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="name">이름</Label>
-              <Input
-                id="name"
-                type="text"
-                value={profile.name ?? ""}
-                disabled
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="phone-number">전화번호</Label>
-              <Input
-                id="phone-number"
-                type="text"
-                value={profile.phone_number ?? ""}
-                disabled
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="bio">자기소개</Label>
-              <Input id="bio" type="text" value={profile.bio ?? ""} disabled />
-            </div>
+
+            <Form {...form}>
+              <form onSubmit={onSubmit} className="flex flex-col gap-8">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>이름</FormLabel>
+                      <FormControl>
+                        <Input placeholder="이름을 입력해주세요" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>전화번호</FormLabel>
+                      <FormControl>
+                        <Input placeholder="010-1234-5678" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="bio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>자기소개</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="자기소개를 입력해주세요"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full sm:w-fit"
+                  disabled={isPending}
+                >
+                  {isPending ? (
+                    <>
+                      <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                      저장 중...
+                    </>
+                  ) : (
+                    "저장"
+                  )}
+                </Button>
+              </form>
+            </Form>
           </div>
         </CardContent>
       </Card>

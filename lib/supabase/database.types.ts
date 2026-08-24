@@ -1859,6 +1859,27 @@ export type Database = {
           },
         ];
       };
+      udong_profiles: {
+        Row: {
+          avatar_key: string;
+          id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          avatar_key?: string;
+          id?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          avatar_key?: string;
+          id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       udong_vote_options: {
         Row: {
           id: string;

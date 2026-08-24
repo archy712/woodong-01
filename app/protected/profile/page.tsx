@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile-form";
+import { DEFAULT_AVATAR_KEY, isAvatarKey } from "@/lib/udong/avatars";
 
 async function ProfileContent() {
   const supabase = await createClient();
@@ -24,6 +25,21 @@ async function ProfileContent() {
     throw profileError;
   }
 
+  const { data: udongProfile, error: udongProfileError } = await supabase
+    .from("udong_profiles")
+    .select("avatar_key")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (udongProfileError) {
+    throw udongProfileError;
+  }
+
+  const avatarKey =
+    udongProfile && isAvatarKey(udongProfile.avatar_key)
+      ? udongProfile.avatar_key
+      : DEFAULT_AVATAR_KEY;
+
   return (
     <ProfileForm
       profile={
@@ -35,6 +51,7 @@ async function ProfileContent() {
           bio: null,
         }
       }
+      avatarKey={avatarKey}
     />
   );
 }
