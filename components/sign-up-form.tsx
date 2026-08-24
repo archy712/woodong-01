@@ -50,15 +50,10 @@ export function SignUpForm({
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
-        },
-      });
+      const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
-      router.push("/auth/sign-up-success");
+      // Update this route to redirect to an authenticated route. The user already has an active session.
+      router.push("/protected");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : genericError);
     } finally {
@@ -113,7 +108,7 @@ export function SignUpForm({
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading
                   ? auth.signUp.submittingButton

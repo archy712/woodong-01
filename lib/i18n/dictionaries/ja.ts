@@ -438,7 +438,6 @@ export const ja: Dictionary = {
       description: "メールでログインしてグループを確認しましょう。",
       emailLabel: "メールアドレス",
       passwordLabel: "パスワード",
-      forgotPasswordLink: "パスワードをお忘れですか？",
       submitButton: "ログイン",
       submittingButton: "ログイン中...",
       noAccountText: "アカウントをお持ちでないですか？",
@@ -456,33 +455,16 @@ export const ja: Dictionary = {
       loginLink: "ログイン",
       passwordMismatchError: "パスワードが一致しません。",
     },
-    signUpSuccess: {
-      title: "登録が完了しました！",
-      description: "メールをご確認ください",
-      message:
-        "会員登録が完了しました。ログイン前にメールを確認してアカウントを認証してください。",
-    },
-    forgotPassword: {
-      title: "パスワードの再設定",
-      description:
-        "メールアドレスを入力すると、パスワード再設定用のリンクをお送りします。",
-      emailLabel: "メールアドレス",
-      submitButton: "再設定メールを送信",
-      submittingButton: "送信中...",
-      haveAccountText: "すでにアカウントをお持ちですか？",
-      loginLink: "ログイン",
-      successTitle: "メールをご確認ください",
-      successDescription: "パスワード再設定のご案内をお送りしました",
-      successMessage:
-        "メールとパスワードで登録された方には、パスワード再設定メールが届きます。",
-    },
-    updatePassword: {
-      title: "パスワードの再設定",
-      description: "新しいパスワードを入力してください。",
-      passwordLabel: "新しいパスワード",
-      passwordPlaceholder: "新しいパスワード",
-      submitButton: "パスワードを保存",
-      submittingButton: "保存中...",
+    changePassword: {
+      title: "パスワード変更",
+      currentPasswordLabel: "現在のパスワード",
+      newPasswordLabel: "新しいパスワード",
+      confirmPasswordLabel: "新しいパスワード（確認）",
+      submitButton: "パスワードを変更",
+      submittingButton: "変更中...",
+      successMessage: "パスワードを変更しました。",
+      passwordMismatchError: "新しいパスワードが一致しません。",
+      currentPasswordIncorrectError: "現在のパスワードが正しくありません。",
     },
     error: {
       title: "問題が発生しました。",

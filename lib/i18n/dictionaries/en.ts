@@ -438,7 +438,6 @@ export const en: Dictionary = {
       description: "Sign in with your email to see your groups.",
       emailLabel: "Email",
       passwordLabel: "Password",
-      forgotPasswordLink: "Forgot your password?",
       submitButton: "Login",
       submittingButton: "Logging in...",
       noAccountText: "Don't have an account?",
@@ -456,33 +455,16 @@ export const en: Dictionary = {
       loginLink: "Login",
       passwordMismatchError: "Passwords do not match.",
     },
-    signUpSuccess: {
-      title: "You're signed up!",
-      description: "Check your email",
-      message:
-        "Sign-up is complete. Please check your email to confirm your account before logging in.",
-    },
-    forgotPassword: {
-      title: "Reset Password",
-      description:
-        "Enter your email and we'll send you a link to reset your password.",
-      emailLabel: "Email",
-      submitButton: "Send Reset Email",
-      submittingButton: "Sending...",
-      haveAccountText: "Already have an account?",
-      loginLink: "Login",
-      successTitle: "Check Your Email",
-      successDescription: "Password reset instructions sent",
-      successMessage:
-        "If you signed up with an email and password, you'll receive a password reset email.",
-    },
-    updatePassword: {
-      title: "Reset Password",
-      description: "Please enter your new password.",
-      passwordLabel: "New Password",
-      passwordPlaceholder: "New password",
-      submitButton: "Save New Password",
-      submittingButton: "Saving...",
+    changePassword: {
+      title: "Change Password",
+      currentPasswordLabel: "Current Password",
+      newPasswordLabel: "New Password",
+      confirmPasswordLabel: "Confirm New Password",
+      submitButton: "Change Password",
+      submittingButton: "Changing...",
+      successMessage: "Your password has been changed.",
+      passwordMismatchError: "New passwords do not match.",
+      currentPasswordIncorrectError: "Current password is incorrect.",
     },
     error: {
       title: "Sorry, something went wrong.",

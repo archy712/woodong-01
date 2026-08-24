@@ -301,7 +301,6 @@ export interface Dictionary {
       description: string;
       emailLabel: string;
       passwordLabel: string;
-      forgotPasswordLink: string;
       submitButton: string;
       submittingButton: string;
       noAccountText: string;
@@ -319,30 +318,16 @@ export interface Dictionary {
       loginLink: string;
       passwordMismatchError: string;
     };
-    signUpSuccess: {
+    changePassword: {
       title: string;
-      description: string;
-      message: string;
-    };
-    forgotPassword: {
-      title: string;
-      description: string;
-      emailLabel: string;
+      currentPasswordLabel: string;
+      newPasswordLabel: string;
+      confirmPasswordLabel: string;
       submitButton: string;
       submittingButton: string;
-      haveAccountText: string;
-      loginLink: string;
-      successTitle: string;
-      successDescription: string;
       successMessage: string;
-    };
-    updatePassword: {
-      title: string;
-      description: string;
-      passwordLabel: string;
-      passwordPlaceholder: string;
-      submitButton: string;
-      submittingButton: string;
+      passwordMismatchError: string;
+      currentPasswordIncorrectError: string;
     };
     error: {
       title: string;

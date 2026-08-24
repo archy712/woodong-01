@@ -79,15 +79,7 @@ export function LoginForm({
                 />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">{auth.login.passwordLabel}</Label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    {auth.login.forgotPasswordLink}
-                  </Link>
-                </div>
+                <Label htmlFor="password">{auth.login.passwordLabel}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -96,7 +88,7 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading
                   ? auth.login.submittingButton

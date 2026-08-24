@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { UserIcon } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
+import { ChangePasswordForm } from "@/components/change-password-form";
 import { NotificationChannelSettings } from "@/components/notifications/notification-channel-settings";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +80,21 @@ async function MeContent() {
           <Button asChild variant="outline" size="sm">
             <Link href="/protected/profile">{dict.me.editProfileButton}</Link>
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            {dict.auth.changePassword.title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm
+            auth={dict.auth}
+            email={data.claims.email ?? ""}
+            genericError={dict.errors.genericError}
+          />
         </CardContent>
       </Card>
 
