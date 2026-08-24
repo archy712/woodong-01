@@ -2,8 +2,8 @@
 
 동호회/모임의 운영·회비 정산·투표를 한 곳에서 관리해 "총무 1인 부담"을 줄이는 모바일 우선 웹 서비스.
 
-- **문서 버전**: v1.5 (Task 015 완료 반영 — 비밀번호 변경 화면 내 처리로 재설계)
-- **기준 PRD**: `docs/prd/PRD_MVP.md` (v1.4, 2026-08-24)
+- **문서 버전**: v1.6 (알림 매체 로드맵 변경 — 카카오톡 알림톡/Slack/이메일 제외, 웹 푸시로 대체)
+- **기준 PRD**: `docs/prd/PRD_MVP.md` (v1.5, 2026-08-24)
 - **레포지토리(코드네임)**: `moim-ops` / 작업 디렉토리 `woodong-01`
 - **사용자 노출명**: 우동 (Woodong)
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
@@ -112,7 +112,7 @@
   - ✅ PRD 5.8~5.9(`woodong_expenses`, `woodong_settlements`, `woodong_settlement_items`)는 **2차 확장 대상**으로 확정, 기본 방침대로 Phase 8로 미룸(이번 Task에서 미생성)
   - ✅ 제약 조건 반영: `UNIQUE(group_id, user_id)`(멤버십), `UNIQUE(code)`(초대), `UNIQUE(due_cycle_id, user_id)`(청구), `UNIQUE(user_id, channel)`(알림 설정)
   - ✅ 사용자 참조는 **`auth.users(id)`를 FK 대상**으로 설계(생성/기록자 컬럼은 `ON DELETE SET NULL`, 소유 주체 컬럼은 `ON DELETE CASCADE`로 분기)
-  - ✅ 확장성 컬럼 반영: `woodong_groups.type`(자유 값), `woodong_due_cycles.due_type`(`regular`/`extra`), `woodong_notification_preferences.channel`의 `CHECK(channel in ('kakao','slack','email','in_app'))` — 그 외 열거형 컬럼에도 CHECK 제약 동일 적용
+  - ✅ 확장성 컬럼 반영: `woodong_groups.type`(자유 값), `woodong_due_cycles.due_type`(`regular`/`extra`), `woodong_notification_preferences.channel`의 `CHECK(channel in ('kakao','slack','email','in_app'))` — 그 외 열거형 컬럼에도 CHECK 제약 동일 적용 (⚠️ v1.6: 알림 매체 로드맵이 `web_push`/`in_app`으로 변경되어 이 CHECK 제약은 실제 DB 기준으로 아직 예전 값이다. Task 038에서 `ALTER TABLE ... DROP CONSTRAINT` + 재생성으로 `('web_push','in_app')`로 갱신 필요)
   - ✅ 금액 컬럼은 전부 `numeric(14,0)`(원 단위, 소수점 없음)로 통일
   - ✅ 모든 FK 컬럼에 covering 인덱스 추가(24개), `woodong_announcements.updated_at` 자동 갱신 트리거(`woodong_set_updated_at()`) 구현
   - **완료 조건**: 12개 `woodong_*` 테이블 생성 완료(`create_woodong_groups_domain`/`create_woodong_dues_domain`/`create_woodong_votes_domain`/`create_woodong_announcements`/`create_woodong_notifications_domain` 5개 마이그레이션), 기존 32개 테이블 변경 이력 0건, `list_tables`로 접두어 규칙 위반 객체 없음 확인, `get_advisors`는 RLS 비활성 경고(Task 003에서 해소 예정) 외 이상 없음
@@ -368,7 +368,7 @@
 
 ### Phase 6: 모임 알림(앱 내) 및 투표 관리 (PRD 우선순위 4, 5)
 
-> **1차 범위**: 앱 내 알림만 구현. 외부 채널(카카오톡 알림톡/Slack/이메일)과 실시간 pg_cron 스케줄러는 **2차 확장**. 회비 리마인드와 투표 마감은 **조회 시점 lazy 처리**로 대체한다.
+> **1차 범위**: 앱 내 알림만 구현. 외부 채널(웹 푸시)과 실시간 pg_cron 스케줄러는 **2차 확장**(v1.6, 카카오톡 알림톡/Slack/이메일은 로드맵에서 완전히 제외). 회비 리마인드와 투표 마감은 **조회 시점 lazy 처리**로 대체한다.
 > **의존성**: Phase 4·5(공지/회비 데이터), Phase 0(알림 테이블·컬럼 보호 트리거).
 
 - **Task 025: 공지사항(`woodong_announcements`) CRUD 및 알림 팬아웃**
@@ -386,8 +386,8 @@
   - **완료 조건**: 읽음/클릭 상태가 정확히 갱신되고 타인 알림 조회·조작이 차단됨
 
 - **Task 027: 알림 채널 설정 (마이페이지)**
-  - `woodong_notification_preferences` 기반 채널별 on/off UI(`kakao`/`slack`/`email`/`in_app`) — **1차에서 실제 발송은 `in_app`만**, 나머지는 설정만 저장하고 "2차 지원 예정" 안내 표기
-  - 채널별 `destination` 입력(카카오: 전화번호, Slack: webhook/멤버 ID, 이메일: 오버라이드 주소) 저장 — 2차 발송에 사용
+  - `woodong_notification_preferences` 기반 채널별 on/off UI(`web_push`/`in_app`) — **1차에서 실제 발송은 `in_app`만**, `web_push`는 설정만 저장하고 "2차 지원 예정" 안내 표기
+  - `web_push`는 사용자가 브라우저 알림을 허용하면 Push 구독 정보(endpoint/keys)가 자동으로 `destination`에 JSON으로 저장됨(카카오/Slack/이메일처럼 사용자가 직접 입력하는 방식이 아님, v1.6) — 2차 발송에 사용
   - 본인 레코드만 SELECT/UPDATE(RLS), `UNIQUE(user_id, channel)` 준수
   - 비활성화된 채널로는 발송되지 않고 활성 채널로만 발송되는 로직 검증
   - **완료 조건**: 설정 저장/복원 정상 동작, `in_app` 비활성 사용자에게 앱 내 알림이 생성되지 않음
@@ -491,11 +491,13 @@
   - Supabase Cron(pg_cron) 도입으로 회비 리마인드·투표 마감/집계·정산 발행 알림을 **lazy 처리에서 실시간 발송으로 전환**
   - 기존 lazy 로직과의 중복 발송 방지 전략 수립 및 전환 절차 정의
 
-- **Task 038: 외부 알림 채널 연동**
-  - 카카오톡 알림톡: 비즈니스 계정 신청, 발신 프로필 등록, **템플릿 사전 검수(영업일 수일 소요)**, **발송대행사(솔라피/알리고/NHN Cloud 등) 계약** — 리드타임 확보를 위해 조기 착수
-  - Slack Webhook/API, 이메일(Resend) 연동
+- **Task 038: 웹 푸시(Web Push) 알림 연동** (v1.6 — 카카오톡 알림톡/Slack/이메일 대체)
+  - **선행 작업**: Task 002에서 이미 적용된 `woodong_notification_preferences.channel`의 `CHECK(channel in ('kakao','slack','email','in_app'))` 제약을 `CHECK(channel in ('web_push','in_app'))`로 마이그레이션(기존 `woodong_notifications.channel`도 동일하게 갱신). 기존에 `kakao`/`slack`/`email`로 저장된 행이 있다면 `in_app`으로 백필하거나 삭제하는 정리 전략 필요
+  - VAPID 키 발급, Service Worker 등록, `web-push` 라이브러리로 서버 발송 로직 구현
+  - 브라우저 알림 권한 요청 UX 설계 — 사용자가 허용하면 Push 구독 정보를 `woodong_notification_preferences.destination`에 JSON으로 저장
+  - iOS Safari는 홈 화면에 추가(PWA 설치)한 경우에만 웹 푸시가 동작하므로, iOS 사용자에게 "홈 화면에 추가" 온보딩 안내 UI 제공
   - **재시도/폴백 정책**(PRD 4.4): 최대 3회, 지수 백오프(1분 → 5분 → 15분), 최종 실패 시 앱 내 알림으로 폴백하고 `woodong_notifications.status`에 `pending`/`sent`/`failed`/`fallback_sent` 기록
-  - 착수 전 예상 발송량 기준 **비용 시뮬레이션** 및 채널별 발송 우선순위 정책(앱내 우선, 외부채널 옵트인) 결정
+  - 만료·무효화된 Push 구독 정리 로직 구현(웹 푸시는 발송 건당 과금이 없어 별도 비용 시뮬레이션은 불필요)
 
 - **Task 039: Naver 스파이크 및 Apple 로그인 검토**
   - **Naver: 1~2일 스파이크(PoC)** — Custom OAuth 설정 또는 Route Handler + `auth.admin` API 자체 콜백 구현의 적합성 검증(네이버가 표준 OIDC discovery를 제공하지 않아 불확실). **스파이크 결과에 따라 구현 여부 결정**
@@ -528,24 +530,24 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 
 ## 리스크 및 결정 필요 사항 (PRD 9장 연계)
 
-| 리스크                                                                         | 상태                                                                                  | 로드맵 반영 위치                                     |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Supabase 프로젝트 공유(무료 슬롯 부족)                                         | 해결 — `woodong_` 접두어 격리 + 기존 테이블 무변경                                    | Task 001, 002 / 잔여: 용량·커넥션 모니터링(Task 034) |
-| Naver OAuth 네이티브 미지원                                                    | 1차 제외 확정, 2차 스파이크 후 결정                                                   | Task 016(제외 명시), Task 039(스파이크)              |
-| 계정 자동 연결(끌 수 없는 플랫폼 기본 동작)                                    | 결정 완료 — 자동 연결 수용 + 사후 고지                                                | Task 016 / 이메일 알림은 Task 040                    |
-| **Kakao Biz App 미등록 시 이메일 미제공**                                      | 착수 시점 결정 필요 — "Allow users without an email" 활성화 및 Biz App 등록 일정 확인 | Task 001(옵션 결정), Task 016(예외 플로우)           |
-| 카카오톡 알림톡 리드타임(템플릿 검수 + 대행사 계약)                            | 1차 제외, 2차에서 조기 착수                                                           | Task 038                                             |
-| Storage 서버 사이드 변환 Pro 플랜 전용                                         | 1차는 클라이언트 리사이즈로 대체                                                      | Task 004 / 전환은 Task 040                           |
-| Free 플랜 7일 미사용 시 프로젝트 일시정지                                      | 운영 루틴으로 대응                                                                    | Task 001, Task 034                                   |
-| 개인정보보호법(PIPA) 대응                                                      | 출시 전 처리방침·동의 절차 결정 필요(법률 자문 권장)                                  | Task 034                                             |
-| 금융 정보 취급 법적 고지                                                       | 이용약관 문구 결정 필요, PG 연동은 MVP 명시적 제외                                    | Task 034                                             |
-| **총무 단일 실패점**                                                           | 결정 완료 — 마지막 총무 역할 변경/탈퇴 차단을 1차에 포함                              | Task 003(트리거), Task 021(UI 이중 방어)             |
-| 초대 코드 유출                                                                 | 설계 완료 — 만료·최대 사용 횟수 필수화 + 재발급 시 기존 코드 무효화                   | Task 020                                             |
-| 정산 데이터 정확성(수동 입력 의존)                                             | 2차 발행 전 "검토 단계" 도입 여부 결정 필요                                           | Task 036                                             |
-| 정산 데이터 이관 부재(총무 교체)                                               | 1차 제외, 2차 CSV 내보내기                                                            | Task 040                                             |
-| 알림 발송 비용(건당 과금)                                                      | 2차 착수 전 비용 시뮬레이션 및 채널 우선순위 정책 필요                                | Task 038                                             |
-| 스타터킷 데모 페이지(`/avatars`, `/charts`, `/about`, `/tech-stack`) 존치 여부 | 개발 착수 전 결정 필요                                                                | Task 032                                             |
-| 1차 MVP 공수 초과(163~212h vs 4주 160h)                                        | 해결 — 3.4-b·스케줄러·Naver/Apple을 2차로 이동해 범위 축소                            | Phase 8 격리                                         |
+| 리스크                                                                             | 상태                                                                                  | 로드맵 반영 위치                                     |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Supabase 프로젝트 공유(무료 슬롯 부족)                                             | 해결 — `woodong_` 접두어 격리 + 기존 테이블 무변경                                    | Task 001, 002 / 잔여: 용량·커넥션 모니터링(Task 034) |
+| Naver OAuth 네이티브 미지원                                                        | 1차 제외 확정, 2차 스파이크 후 결정                                                   | Task 016(제외 명시), Task 039(스파이크)              |
+| 계정 자동 연결(끌 수 없는 플랫폼 기본 동작)                                        | 결정 완료 — 자동 연결 수용 + 사후 고지                                                | Task 016 / 이메일 알림은 Task 040                    |
+| **Kakao Biz App 미등록 시 이메일 미제공**                                          | 착수 시점 결정 필요 — "Allow users without an email" 활성화 및 Biz App 등록 일정 확인 | Task 001(옵션 결정), Task 016(예외 플로우)           |
+| 웹 푸시 iOS 지원 제약(홈 화면 추가 필요) (v1.6, 카카오톡 알림톡/Slack/이메일 대체) | 1차 제외, 2차 도입 시 iOS 온보딩 UI로 대응                                            | Task 038                                             |
+| Storage 서버 사이드 변환 Pro 플랜 전용                                             | 1차는 클라이언트 리사이즈로 대체                                                      | Task 004 / 전환은 Task 040                           |
+| Free 플랜 7일 미사용 시 프로젝트 일시정지                                          | 운영 루틴으로 대응                                                                    | Task 001, Task 034                                   |
+| 개인정보보호법(PIPA) 대응                                                          | 출시 전 처리방침·동의 절차 결정 필요(법률 자문 권장)                                  | Task 034                                             |
+| 금융 정보 취급 법적 고지                                                           | 이용약관 문구 결정 필요, PG 연동은 MVP 명시적 제외                                    | Task 034                                             |
+| **총무 단일 실패점**                                                               | 결정 완료 — 마지막 총무 역할 변경/탈퇴 차단을 1차에 포함                              | Task 003(트리거), Task 021(UI 이중 방어)             |
+| 초대 코드 유출                                                                     | 설계 완료 — 만료·최대 사용 횟수 필수화 + 재발급 시 기존 코드 무효화                   | Task 020                                             |
+| 정산 데이터 정확성(수동 입력 의존)                                                 | 2차 발행 전 "검토 단계" 도입 여부 결정 필요                                           | Task 036                                             |
+| 정산 데이터 이관 부재(총무 교체)                                                   | 1차 제외, 2차 CSV 내보내기                                                            | Task 040                                             |
+| 알림 발송 비용 (v1.6 갱신 — 웹 푸시는 무료)                                        | 리스크 해소, 별도 비용 시뮬레이션 불필요                                              | Task 038                                             |
+| 스타터킷 데모 페이지(`/avatars`, `/charts`, `/about`, `/tech-stack`) 존치 여부     | 개발 착수 전 결정 필요                                                                | Task 032                                             |
+| 1차 MVP 공수 초과(163~212h vs 4주 160h)                                            | 해결 — 3.4-b·스케줄러·Naver/Apple을 2차로 이동해 범위 축소                            | Phase 8 격리                                         |
 
 ---
 
