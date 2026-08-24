@@ -2,8 +2,16 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
+import { DuesDashboard } from "@/components/dues/dues-dashboard";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import {
+  calcDuePaidAmount,
+  getDummyActiveMembers,
+  getDummyDueCycles,
+  getDummyDuesForCycle,
+} from "@/lib/woodong/dummy";
+import type { Due } from "@/lib/woodong/dues";
 
 async function DuesContent({
   params,
@@ -21,12 +29,30 @@ async function DuesContent({
   const locale = await getLocale();
   const dict = getDictionary(locale);
 
+  const cycles = getDummyDueCycles(groupId);
+  const members = getDummyActiveMembers(groupId);
+
+  const duesByCycle: Record<string, Due[]> = {};
+  const paidAmounts: Record<string, number> = {};
+  for (const cycle of cycles) {
+    const dues = getDummyDuesForCycle(cycle.id);
+    duesByCycle[cycle.id] = dues;
+    for (const due of dues) {
+      paidAmounts[due.id] = calcDuePaidAmount(due);
+    }
+  }
+
   return (
-    <div className="flex w-full flex-1 flex-col gap-4 p-8">
-      <h1 className="text-2xl font-bold">{dict.dues.pageTitle}</h1>
-      <p className="text-sm text-muted-foreground">
-        {dict.common.groupIdLabel}: {groupId}
-      </p>
+    <div className="mx-auto w-full max-w-3xl flex-1 p-6 sm:p-8">
+      <DuesDashboard
+        groupId={groupId}
+        initialCycles={cycles}
+        initialDuesByCycle={duesByCycle}
+        initialPaidAmounts={paidAmounts}
+        members={members}
+        labels={dict.dues}
+        commonLabels={dict.common}
+      />
     </div>
   );
 }

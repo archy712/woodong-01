@@ -18,6 +18,10 @@ export const en: Dictionary = {
     required: "Required",
     or: "or",
     groupIdLabel: "Group ID",
+    // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+    memberCountSuffix: "명 참여 중",
+    demoModeNotice: "데모 화면이라 실제로 저장되지는 않아요.",
+    viewAllLink: "전체 보기",
   },
   nav: {
     brandTagline: "Our Club",
@@ -195,6 +199,15 @@ export const en: Dictionary = {
     createButton: "Create Group",
     detailTitle: "Group Details",
     detailNotFound: "Group not found, or you don't have access to it.",
+    // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+    viewButton: "모임 보기",
+    dashboard: {
+      announcementsTitle: "최근 공지",
+      duesTitle: "회비 납부 현황",
+      votesTitle: "진행 중인 투표",
+      noOpenVotes: "진행 중인 투표가 없어요.",
+      unpaidCountLabel: "명 미납",
+    },
     create: {
       title: "Create a Group",
       description:
@@ -219,6 +232,12 @@ export const en: Dictionary = {
       deleteButton: "Delete Group",
       deleteConfirmMessage:
         "Deleting this group will also delete its dues, settlement, and vote data. This action cannot be undone.",
+      // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+      deleteDialogTitle: "정말 이 모임을 삭제할까요?",
+      saveSuccessToast:
+        "모임 정보를 저장했어요. (데모 화면이라 실제로 저장되지는 않아요)",
+      deleteSuccessToast:
+        "모임을 삭제했어요. (데모 화면이라 실제로 삭제되지는 않아요)",
     },
     invite: {
       title: "Invite Members",
@@ -227,6 +246,14 @@ export const en: Dictionary = {
       copyLinkButton: "Copy Link",
       codeLabel: "Invite Code",
       expiresAtLabel: "Expires At",
+      // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+      maxUsesLabel: "최대 사용 횟수",
+      usedCountLabel: "회 사용됨",
+      emptyState: "발급된 초대 링크가 없어요.",
+      activeLabel: "사용 가능",
+      inactiveLabel: "만료/무효화됨",
+      issueSuccessToast:
+        "초대 링크를 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     members: {
       title: "Members",
@@ -241,6 +268,11 @@ export const en: Dictionary = {
       joinButton: "Join",
       alreadyMemberMessage:
         "You're already a member of this group. Taking you to the group page.",
+      // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+      previewNotice: "아래 모임의 초대를 받았어요. 참여하면 멤버로 등록돼요.",
+      expiredMessage: "이 초대 링크는 만료되었거나 더 이상 사용할 수 없어요.",
+      joinSuccessToast:
+        "참여했어요! (데모 화면이라 실제로 멤버로 등록되지는 않아요)",
     },
     announcements: {
       pageTitle: "Announcements",
@@ -248,6 +280,10 @@ export const en: Dictionary = {
       titleLabel: "Title",
       contentLabel: "Content",
       submitButton: "Send",
+      // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+      writeButton: "공지 작성",
+      submitSuccessToast:
+        "공지를 발송했어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
   },
   dues: {
@@ -258,6 +294,11 @@ export const en: Dictionary = {
       partial: "Partially Paid",
       unpaid: "Unpaid",
     },
+    // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+    type: {
+      regular: "정기",
+      extra: "번개/특별",
+    },
     create: {
       title: "Create a Dues Item",
       titleLabel: "Item Name",
@@ -265,15 +306,42 @@ export const en: Dictionary = {
       periodLabel: "Period",
       reminderIntervalLabel: "Reminder Interval (days)",
       submitButton: "Create Dues Item",
+      // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+      dueDateLabel: "납부 기한",
+      dueTypeLabel: "회비 유형",
+      createTriggerButton: "새 회비 항목",
+      successToast:
+        "회비 항목을 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     markPaidButton: "Mark as Paid",
     reminderToastMessage:
       "You haven't paid your dues yet — a friendly reminder from Woodong!",
+    // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+    incomeOnlyNotice:
+      "회비는 수입만 집계돼요. 지출·잔액 관리는 추후 업데이트에서 지원할 예정이에요.",
+    memberProgressTitle: "멤버별 납부 현황",
+    unpaidHighlightTitle: "아직 납부하지 않은 멤버",
+    emptyState: "등록된 회비 항목이 없어요.",
+    recordPayment: {
+      title: "납부 상태 변경",
+      statusLabel: "납부 상태",
+      amountLabel: "납부 금액",
+      paidAtLabel: "납부 확인일",
+      memoLabel: "비고 (선택)",
+      submitButton: "저장",
+      successToast:
+        "납부 상태를 변경했어요. (데모 화면이라 실제로 저장되지는 않아요)",
+    },
   },
   votes: {
     pageTitle: "Votes",
     detailTitle: "Vote Details",
     voteIdLabel: "Vote ID",
+    // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+    type: {
+      multipleChoice: "객관식",
+      yesNo: "찬반",
+    },
     create: {
       title: "Create a Vote",
       titleLabel: "Vote Title",
@@ -283,6 +351,12 @@ export const en: Dictionary = {
       allowMultipleLabel: "Allow Multiple Choices",
       anonymousLabel: "Anonymous Vote",
       submitButton: "Create Vote",
+      // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+      voteTypeLabel: "투표 형식",
+      optionPlaceholder: "선택지를 입력해주세요",
+      removeOptionButton: "삭제",
+      successToast:
+        "투표를 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     voteButton: "Vote",
     statusOpen: "Open",
@@ -293,16 +367,36 @@ export const en: Dictionary = {
     resultsTitle: "Vote Results",
     minOptionsError: "Please enter at least 2 options.",
     pastDeadlineError: "Please set a closing time in the future.",
+    // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+    emptyState: "진행 중인 투표가 없어요.",
+    alreadyVotedNotice: "이미 참여한 투표예요.",
+    notVotedYetNotice: "아직 참여하지 않았어요. 지금 투표해보세요!",
+    anonymousResultsNotice: "익명 투표라 참여자 수만 표시돼요.",
+    realNameResultsNotice: "참여자 이름이 함께 표시돼요.",
+    voterNamesLabel: "참여자",
+    responseCountSuffix: "표",
+    submitVoteSuccessToast:
+      "투표했어요! (데모 화면이라 실제로 저장되지는 않아요)",
+    notFound: "투표를 찾을 수 없거나 접근 권한이 없어요.",
   },
   notifications: {
     pageTitle: "Notification Center",
     markAllReadButton: "Mark All as Read",
+    // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+    unreadLabel: "안읽음",
+    readLabel: "읽음",
+    emptyState: "아직 알림이 없어요. 새 소식이 오면 바로 알려드릴게요!",
     channelSettings: {
       title: "Notification Channel Settings",
       inApp: "In-app",
       kakao: "KakaoTalk",
       slack: "Slack",
       email: "Email",
+      // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+      comingSoonNotice:
+        "카카오톡·슬랙·이메일 발송은 다음 업데이트에서 지원할 예정이에요. 지금은 앱 내 알림만 실제로 전송돼요.",
+      saveSuccessToast:
+        "알림 설정을 저장했어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     types: {
       announcement: "Announcement",
@@ -314,6 +408,14 @@ export const en: Dictionary = {
   },
   me: {
     pageTitle: "My Page",
+    // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+    profileSectionTitle: "프로필",
+    editProfileButton: "프로필 수정하기",
+    linkedAccountsSectionTitle: "연동된 계정",
+    linkedAccountsNotice:
+      "Google·카카오 소셜 로그인 연동 관리는 다음 업데이트에서 지원할 예정이에요.",
+    connectedLabel: "연동됨",
+    notConnectedLabel: "연동 안 됨",
   },
   auth: {
     socialAccountLinkedToast: "Linked to your existing account.",

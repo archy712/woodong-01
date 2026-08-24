@@ -18,6 +18,10 @@ export const ja: Dictionary = {
     required: "必須",
     or: "または",
     groupIdLabel: "グループID",
+    // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+    memberCountSuffix: "명 참여 중",
+    demoModeNotice: "데모 화면이라 실제로 저장되지는 않아요.",
+    viewAllLink: "전체 보기",
   },
   nav: {
     brandTagline: "私たちのサークル",
@@ -196,6 +200,15 @@ export const ja: Dictionary = {
     createButton: "グループを作成",
     detailTitle: "グループ詳細",
     detailNotFound: "グループが見つからないか、アクセス権限がありません。",
+    // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+    viewButton: "모임 보기",
+    dashboard: {
+      announcementsTitle: "최근 공지",
+      duesTitle: "회비 납부 현황",
+      votesTitle: "진행 중인 투표",
+      noOpenVotes: "진행 중인 투표가 없어요.",
+      unpaidCountLabel: "명 미납",
+    },
     create: {
       title: "グループを作成",
       description:
@@ -220,6 +233,12 @@ export const ja: Dictionary = {
       deleteButton: "グループを削除",
       deleteConfirmMessage:
         "グループを削除すると、会費・精算・投票のデータも一緒に削除されます。この操作は元に戻せません。",
+      // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+      deleteDialogTitle: "정말 이 모임을 삭제할까요?",
+      saveSuccessToast:
+        "모임 정보를 저장했어요. (데모 화면이라 실제로 저장되지는 않아요)",
+      deleteSuccessToast:
+        "모임을 삭제했어요. (데모 화면이라 실제로 삭제되지는 않아요)",
     },
     invite: {
       title: "メンバー招待",
@@ -228,6 +247,14 @@ export const ja: Dictionary = {
       copyLinkButton: "リンクをコピー",
       codeLabel: "招待コード",
       expiresAtLabel: "有効期限",
+      // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+      maxUsesLabel: "최대 사용 횟수",
+      usedCountLabel: "회 사용됨",
+      emptyState: "발급된 초대 링크가 없어요.",
+      activeLabel: "사용 가능",
+      inactiveLabel: "만료/무효화됨",
+      issueSuccessToast:
+        "초대 링크를 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     members: {
       title: "メンバー一覧",
@@ -242,6 +269,11 @@ export const ja: Dictionary = {
       joinButton: "参加する",
       alreadyMemberMessage:
         "すでに参加しているグループです。グループページへ移動します。",
+      // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+      previewNotice: "아래 모임의 초대를 받았어요. 참여하면 멤버로 등록돼요.",
+      expiredMessage: "이 초대 링크는 만료되었거나 더 이상 사용할 수 없어요.",
+      joinSuccessToast:
+        "참여했어요! (데모 화면이라 실제로 멤버로 등록되지는 않아요)",
     },
     announcements: {
       pageTitle: "お知らせ",
@@ -249,6 +281,10 @@ export const ja: Dictionary = {
       titleLabel: "タイトル",
       contentLabel: "内容",
       submitButton: "送信する",
+      // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+      writeButton: "공지 작성",
+      submitSuccessToast:
+        "공지를 발송했어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
   },
   dues: {
@@ -259,6 +295,11 @@ export const ja: Dictionary = {
       partial: "一部納付",
       unpaid: "未納",
     },
+    // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+    type: {
+      regular: "정기",
+      extra: "번개/특별",
+    },
     create: {
       title: "会費項目を作成",
       titleLabel: "項目名",
@@ -266,15 +307,42 @@ export const ja: Dictionary = {
       periodLabel: "対象期間",
       reminderIntervalLabel: "リマインド周期（日）",
       submitButton: "会費項目を作成",
+      // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+      dueDateLabel: "납부 기한",
+      dueTypeLabel: "회비 유형",
+      createTriggerButton: "새 회비 항목",
+      successToast:
+        "회비 항목을 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     markPaidButton: "納付済みにする",
     reminderToastMessage:
       "まだ会費が未納のようです。Woodongがそっとお知らせします！",
+    // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+    incomeOnlyNotice:
+      "회비는 수입만 집계돼요. 지출·잔액 관리는 추후 업데이트에서 지원할 예정이에요.",
+    memberProgressTitle: "멤버별 납부 현황",
+    unpaidHighlightTitle: "아직 납부하지 않은 멤버",
+    emptyState: "등록된 회비 항목이 없어요.",
+    recordPayment: {
+      title: "납부 상태 변경",
+      statusLabel: "납부 상태",
+      amountLabel: "납부 금액",
+      paidAtLabel: "납부 확인일",
+      memoLabel: "비고 (선택)",
+      submitButton: "저장",
+      successToast:
+        "납부 상태를 변경했어요. (데모 화면이라 실제로 저장되지는 않아요)",
+    },
   },
   votes: {
     pageTitle: "投票一覧",
     detailTitle: "投票詳細",
     voteIdLabel: "投票ID",
+    // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+    type: {
+      multipleChoice: "객관식",
+      yesNo: "찬반",
+    },
     create: {
       title: "投票を作成",
       titleLabel: "投票タイトル",
@@ -284,6 +352,12 @@ export const ja: Dictionary = {
       allowMultipleLabel: "複数選択を許可",
       anonymousLabel: "匿名投票",
       submitButton: "投票を作成",
+      // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+      voteTypeLabel: "투표 형식",
+      optionPlaceholder: "선택지를 입력해주세요",
+      removeOptionButton: "삭제",
+      successToast:
+        "투표를 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     voteButton: "投票する",
     statusOpen: "進行中",
@@ -294,16 +368,36 @@ export const ja: Dictionary = {
     resultsTitle: "投票結果",
     minOptionsError: "選択肢は2つ以上入力してください。",
     pastDeadlineError: "締切日時は現在より後に設定してください。",
+    // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+    emptyState: "진행 중인 투표가 없어요.",
+    alreadyVotedNotice: "이미 참여한 투표예요.",
+    notVotedYetNotice: "아직 참여하지 않았어요. 지금 투표해보세요!",
+    anonymousResultsNotice: "익명 투표라 참여자 수만 표시돼요.",
+    realNameResultsNotice: "참여자 이름이 함께 표시돼요.",
+    voterNamesLabel: "참여자",
+    responseCountSuffix: "표",
+    submitVoteSuccessToast:
+      "투표했어요! (데모 화면이라 실제로 저장되지는 않아요)",
+    notFound: "투표를 찾을 수 없거나 접근 권한이 없어요.",
   },
   notifications: {
     pageTitle: "通知センター",
     markAllReadButton: "すべて既読にする",
+    // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+    unreadLabel: "안읽음",
+    readLabel: "읽음",
+    emptyState: "아직 알림이 없어요. 새 소식이 오면 바로 알려드릴게요!",
     channelSettings: {
       title: "通知チャンネル設定",
       inApp: "アプリ内通知",
       kakao: "カカオトーク",
       slack: "Slack",
       email: "メール",
+      // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+      comingSoonNotice:
+        "카카오톡·슬랙·이메일 발송은 다음 업데이트에서 지원할 예정이에요. 지금은 앱 내 알림만 실제로 전송돼요.",
+      saveSuccessToast:
+        "알림 설정을 저장했어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     types: {
       announcement: "お知らせ",
@@ -315,6 +409,14 @@ export const ja: Dictionary = {
   },
   me: {
     pageTitle: "マイページ",
+    // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+    profileSectionTitle: "프로필",
+    editProfileButton: "프로필 수정하기",
+    linkedAccountsSectionTitle: "연동된 계정",
+    linkedAccountsNotice:
+      "Google·카카오 소셜 로그인 연동 관리는 다음 업데이트에서 지원할 예정이에요.",
+    connectedLabel: "연동됨",
+    notConnectedLabel: "연동 안 됨",
   },
   auth: {
     socialAccountLinkedToast: "既存のアカウントに連携されました。",

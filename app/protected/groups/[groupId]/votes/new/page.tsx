@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { ArrowLeftIcon } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
+import { CreateVoteForm } from "@/components/votes/create-vote-form";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 
@@ -22,11 +25,17 @@ async function NewVoteContent({
   const dict = getDictionary(locale);
 
   return (
-    <div className="flex w-full flex-1 flex-col gap-4 p-8">
-      <h1 className="text-2xl font-bold">{dict.votes.create.title}</h1>
-      <p className="text-sm text-muted-foreground">
-        {dict.common.groupIdLabel}: {groupId}
-      </p>
+    <div className="flex w-full flex-1 flex-col gap-4 p-6 sm:p-8">
+      <div className="mx-auto w-full max-w-xl">
+        <Link
+          href={`/protected/groups/${groupId}/votes`}
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeftIcon className="size-4" />
+          {dict.votes.pageTitle}
+        </Link>
+        <CreateVoteForm groupId={groupId} labels={dict.votes} />
+      </div>
     </div>
   );
 }

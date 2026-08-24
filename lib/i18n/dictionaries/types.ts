@@ -16,6 +16,9 @@ export interface Dictionary {
     required: string;
     or: string;
     groupIdLabel: string;
+    memberCountSuffix: string;
+    demoModeNotice: string;
+    viewAllLink: string;
   };
   nav: {
     brandTagline: string;
@@ -93,6 +96,14 @@ export interface Dictionary {
     createButton: string;
     detailTitle: string;
     detailNotFound: string;
+    viewButton: string;
+    dashboard: {
+      announcementsTitle: string;
+      duesTitle: string;
+      votesTitle: string;
+      noOpenVotes: string;
+      unpaidCountLabel: string;
+    };
     create: {
       title: string;
       description: string;
@@ -115,6 +126,9 @@ export interface Dictionary {
       dangerZoneTitle: string;
       deleteButton: string;
       deleteConfirmMessage: string;
+      deleteDialogTitle: string;
+      saveSuccessToast: string;
+      deleteSuccessToast: string;
     };
     invite: {
       title: string;
@@ -123,6 +137,12 @@ export interface Dictionary {
       copyLinkButton: string;
       codeLabel: string;
       expiresAtLabel: string;
+      maxUsesLabel: string;
+      usedCountLabel: string;
+      emptyState: string;
+      activeLabel: string;
+      inactiveLabel: string;
+      issueSuccessToast: string;
     };
     members: {
       title: string;
@@ -136,6 +156,9 @@ export interface Dictionary {
       codeLabel: string;
       joinButton: string;
       alreadyMemberMessage: string;
+      previewNotice: string;
+      expiredMessage: string;
+      joinSuccessToast: string;
     };
     announcements: {
       pageTitle: string;
@@ -143,6 +166,8 @@ export interface Dictionary {
       titleLabel: string;
       contentLabel: string;
       submitButton: string;
+      writeButton: string;
+      submitSuccessToast: string;
     };
   };
   dues: {
@@ -153,30 +178,59 @@ export interface Dictionary {
       partial: string;
       unpaid: string;
     };
+    type: {
+      regular: string;
+      extra: string;
+    };
     create: {
       title: string;
       titleLabel: string;
       amountLabel: string;
       periodLabel: string;
+      dueDateLabel: string;
+      dueTypeLabel: string;
       reminderIntervalLabel: string;
       submitButton: string;
+      createTriggerButton: string;
+      successToast: string;
     };
     markPaidButton: string;
     reminderToastMessage: string;
+    incomeOnlyNotice: string;
+    memberProgressTitle: string;
+    unpaidHighlightTitle: string;
+    emptyState: string;
+    recordPayment: {
+      title: string;
+      statusLabel: string;
+      amountLabel: string;
+      paidAtLabel: string;
+      memoLabel: string;
+      submitButton: string;
+      successToast: string;
+    };
   };
   votes: {
     pageTitle: string;
     detailTitle: string;
     voteIdLabel: string;
+    type: {
+      multipleChoice: string;
+      yesNo: string;
+    };
     create: {
       title: string;
       titleLabel: string;
+      voteTypeLabel: string;
       optionsLabel: string;
+      optionPlaceholder: string;
       addOptionButton: string;
+      removeOptionButton: string;
       closesAtLabel: string;
       allowMultipleLabel: string;
       anonymousLabel: string;
       submitButton: string;
+      successToast: string;
     };
     voteButton: string;
     statusOpen: string;
@@ -186,16 +240,30 @@ export interface Dictionary {
     resultsTitle: string;
     minOptionsError: string;
     pastDeadlineError: string;
+    emptyState: string;
+    alreadyVotedNotice: string;
+    notVotedYetNotice: string;
+    anonymousResultsNotice: string;
+    realNameResultsNotice: string;
+    voterNamesLabel: string;
+    responseCountSuffix: string;
+    submitVoteSuccessToast: string;
+    notFound: string;
   };
   notifications: {
     pageTitle: string;
     markAllReadButton: string;
+    unreadLabel: string;
+    readLabel: string;
+    emptyState: string;
     channelSettings: {
       title: string;
       inApp: string;
       kakao: string;
       slack: string;
       email: string;
+      comingSoonNotice: string;
+      saveSuccessToast: string;
     };
     types: {
       announcement: string;
@@ -207,6 +275,12 @@ export interface Dictionary {
   };
   me: {
     pageTitle: string;
+    profileSectionTitle: string;
+    editProfileButton: string;
+    linkedAccountsSectionTitle: string;
+    linkedAccountsNotice: string;
+    connectedLabel: string;
+    notConnectedLabel: string;
   };
   auth: {
     socialAccountLinkedToast: string;

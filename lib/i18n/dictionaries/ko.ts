@@ -18,6 +18,9 @@ export const ko: Dictionary = {
     required: "필수",
     or: "또는",
     groupIdLabel: "모임 ID",
+    memberCountSuffix: "명 참여 중",
+    demoModeNotice: "데모 화면이라 실제로 저장되지는 않아요.",
+    viewAllLink: "전체 보기",
   },
   nav: {
     brandTagline: "우리동호회",
@@ -195,6 +198,14 @@ export const ko: Dictionary = {
     createButton: "모임 만들기",
     detailTitle: "모임 상세",
     detailNotFound: "모임을 찾을 수 없거나 접근 권한이 없어요.",
+    viewButton: "모임 보기",
+    dashboard: {
+      announcementsTitle: "최근 공지",
+      duesTitle: "회비 납부 현황",
+      votesTitle: "진행 중인 투표",
+      noOpenVotes: "진행 중인 투표가 없어요.",
+      unpaidCountLabel: "명 미납",
+    },
     create: {
       title: "모임 만들기",
       description:
@@ -219,6 +230,11 @@ export const ko: Dictionary = {
       deleteButton: "모임 삭제",
       deleteConfirmMessage:
         "모임을 삭제하면 회비, 정산, 투표 데이터가 함께 삭제돼요. 이 작업은 되돌릴 수 없어요.",
+      deleteDialogTitle: "정말 이 모임을 삭제할까요?",
+      saveSuccessToast:
+        "모임 정보를 저장했어요. (데모 화면이라 실제로 저장되지는 않아요)",
+      deleteSuccessToast:
+        "모임을 삭제했어요. (데모 화면이라 실제로 삭제되지는 않아요)",
     },
     invite: {
       title: "멤버 초대",
@@ -227,6 +243,13 @@ export const ko: Dictionary = {
       copyLinkButton: "링크 복사",
       codeLabel: "초대 코드",
       expiresAtLabel: "만료일",
+      maxUsesLabel: "최대 사용 횟수",
+      usedCountLabel: "회 사용됨",
+      emptyState: "발급된 초대 링크가 없어요.",
+      activeLabel: "사용 가능",
+      inactiveLabel: "만료/무효화됨",
+      issueSuccessToast:
+        "초대 링크를 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     members: {
       title: "멤버 목록",
@@ -241,6 +264,10 @@ export const ko: Dictionary = {
       joinButton: "참여하기",
       alreadyMemberMessage:
         "이미 참여 중인 모임이에요. 모임 페이지로 이동할게요.",
+      previewNotice: "아래 모임의 초대를 받았어요. 참여하면 멤버로 등록돼요.",
+      expiredMessage: "이 초대 링크는 만료되었거나 더 이상 사용할 수 없어요.",
+      joinSuccessToast:
+        "참여했어요! (데모 화면이라 실제로 멤버로 등록되지는 않아요)",
     },
     announcements: {
       pageTitle: "공지사항",
@@ -248,41 +275,77 @@ export const ko: Dictionary = {
       titleLabel: "제목",
       contentLabel: "내용",
       submitButton: "발송하기",
+      writeButton: "공지 작성",
+      submitSuccessToast:
+        "공지를 발송했어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
   },
   dues: {
     pageTitle: "회비 현황",
-    summaryLabel: "이번 달 납부율",
+    summaryLabel: "전체 납부율",
     status: {
       paid: "납부완료",
       partial: "부분납부",
       unpaid: "미납",
+    },
+    type: {
+      regular: "정기",
+      extra: "번개/특별",
     },
     create: {
       title: "회비 항목 만들기",
       titleLabel: "항목 이름",
       amountLabel: "금액",
       periodLabel: "대상 기간",
+      dueDateLabel: "납부 기한",
+      dueTypeLabel: "회비 유형",
       reminderIntervalLabel: "리마인드 주기 (일)",
       submitButton: "회비 항목 만들기",
+      createTriggerButton: "새 회비 항목",
+      successToast:
+        "회비 항목을 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     markPaidButton: "납부완료로 변경",
     reminderToastMessage:
       "아직 회비 납부 전이시네요. 우동이 살짝 알려드릴게요!",
+    incomeOnlyNotice:
+      "회비는 수입만 집계돼요. 지출·잔액 관리는 추후 업데이트에서 지원할 예정이에요.",
+    memberProgressTitle: "멤버별 납부 현황",
+    unpaidHighlightTitle: "아직 납부하지 않은 멤버",
+    emptyState: "등록된 회비 항목이 없어요.",
+    recordPayment: {
+      title: "납부 상태 변경",
+      statusLabel: "납부 상태",
+      amountLabel: "납부 금액",
+      paidAtLabel: "납부 확인일",
+      memoLabel: "비고 (선택)",
+      submitButton: "저장",
+      successToast:
+        "납부 상태를 변경했어요. (데모 화면이라 실제로 저장되지는 않아요)",
+    },
   },
   votes: {
     pageTitle: "투표 목록",
     detailTitle: "투표 상세",
     voteIdLabel: "투표 ID",
+    type: {
+      multipleChoice: "객관식",
+      yesNo: "찬반",
+    },
     create: {
       title: "투표 만들기",
       titleLabel: "투표 제목",
+      voteTypeLabel: "투표 형식",
       optionsLabel: "선택지",
+      optionPlaceholder: "선택지를 입력해주세요",
       addOptionButton: "선택지 추가",
+      removeOptionButton: "삭제",
       closesAtLabel: "마감 일시",
       allowMultipleLabel: "복수 선택 허용",
       anonymousLabel: "익명 투표",
       submitButton: "투표 만들기",
+      successToast:
+        "투표를 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     voteButton: "투표하기",
     statusOpen: "진행중",
@@ -293,16 +356,33 @@ export const ko: Dictionary = {
     resultsTitle: "투표 결과",
     minOptionsError: "선택지는 2개 이상 입력해주세요.",
     pastDeadlineError: "마감일시는 지금 이후로 설정해주세요.",
+    emptyState: "진행 중인 투표가 없어요.",
+    alreadyVotedNotice: "이미 참여한 투표예요.",
+    notVotedYetNotice: "아직 참여하지 않았어요. 지금 투표해보세요!",
+    anonymousResultsNotice: "익명 투표라 참여자 수만 표시돼요.",
+    realNameResultsNotice: "참여자 이름이 함께 표시돼요.",
+    voterNamesLabel: "참여자",
+    responseCountSuffix: "표",
+    submitVoteSuccessToast:
+      "투표했어요! (데모 화면이라 실제로 저장되지는 않아요)",
+    notFound: "투표를 찾을 수 없거나 접근 권한이 없어요.",
   },
   notifications: {
     pageTitle: "알림센터",
     markAllReadButton: "모두 읽음으로 표시",
+    unreadLabel: "안읽음",
+    readLabel: "읽음",
+    emptyState: "아직 알림이 없어요. 새 소식이 오면 바로 알려드릴게요!",
     channelSettings: {
       title: "알림 채널 설정",
       inApp: "앱 내 알림",
       kakao: "카카오톡",
       slack: "슬랙",
       email: "이메일",
+      comingSoonNotice:
+        "카카오톡·슬랙·이메일 발송은 다음 업데이트에서 지원할 예정이에요. 지금은 앱 내 알림만 실제로 전송돼요.",
+      saveSuccessToast:
+        "알림 설정을 저장했어요. (데모 화면이라 실제로 저장되지는 않아요)",
     },
     types: {
       announcement: "공지",
@@ -314,6 +394,13 @@ export const ko: Dictionary = {
   },
   me: {
     pageTitle: "마이페이지",
+    profileSectionTitle: "프로필",
+    editProfileButton: "프로필 수정하기",
+    linkedAccountsSectionTitle: "연동된 계정",
+    linkedAccountsNotice:
+      "Google·카카오 소셜 로그인 연동 관리는 다음 업데이트에서 지원할 예정이에요.",
+    connectedLabel: "연동됨",
+    notConnectedLabel: "연동 안 됨",
   },
   auth: {
     socialAccountLinkedToast: "기존 계정에 연결됐어요.",
