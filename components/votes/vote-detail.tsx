@@ -1,26 +1,31 @@
-"use client";
-
-import { useState } from "react";
-
 import type { Vote, VoteOption, VoteResult } from "@/lib/woodong/votes";
 import { VoteParticipation } from "@/components/votes/vote-participation";
 import { VoteResultsChart } from "@/components/votes/vote-results-chart";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
+/**
+ * 투표 상세 본문 (Task 029에서 실데이터 연동).
+ *
+ * 결과를 로컬 state로 들지 않는 **서버 컴포넌트**다. 참여 후 갱신은 `router.refresh()`가
+ * 서버에서 다시 집계해 오므로(익명 집계는 `woodong_get_vote_results()` RPC만 알고 있다)
+ * 클라이언트가 표를 더해 둘 이유가 없다.
+ */
 export function VoteDetail({
   vote,
   options,
-  initialResults,
-  hasVotedInitially,
+  results,
+  hasVoted,
+  isClosed,
   labels,
 }: {
   vote: Vote;
   options: VoteOption[];
-  initialResults: VoteResult[];
-  hasVotedInitially: boolean;
+  results: VoteResult[];
+  hasVoted: boolean;
+  /** 마감 여부는 쿼리 계층에서 계산해 받는다(렌더 중 `Date.now()`는 순수성 규칙 위반). */
+  isClosed: boolean;
   labels: Dictionary["votes"];
 }) {
-  const [results, setResults] = useState(initialResults);
   const totalResponses = results.reduce((sum, r) => sum + r.response_count, 0);
 
   return (
@@ -62,16 +67,15 @@ export function VoteDetail({
         </div>
       </div>
 
-      {vote.status === "open" && (
+      {isClosed ? (
+        <p className="text-sm text-muted-foreground">{labels.closedNotice}</p>
+      ) : (
         <VoteParticipation
           voteId={vote.id}
           options={options}
           allowMultiple={vote.allow_multiple}
-          isAnonymous={vote.is_anonymous}
-          hasVotedInitially={hasVotedInitially}
-          initialResults={results}
+          hasVoted={hasVoted}
           labels={labels}
-          onResultsChange={setResults}
         />
       )}
     </div>

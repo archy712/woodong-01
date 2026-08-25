@@ -2606,6 +2606,23 @@ export type Database = {
           cycle_title: string;
         }[];
       };
+      woodong_create_vote: {
+        Args: {
+          p_allow_multiple: boolean;
+          p_closes_at: string;
+          p_group_id: string;
+          p_is_anonymous: boolean;
+          p_notification_body?: string;
+          p_notification_title?: string;
+          p_options: string[];
+          p_title: string;
+          p_vote_type: string;
+        };
+        Returns: {
+          notified_count: number;
+          vote_id: string;
+        }[];
+      };
       woodong_created_group: { Args: { p_group_id: string }; Returns: boolean };
       woodong_get_invite_preview: {
         Args: { p_code: string };

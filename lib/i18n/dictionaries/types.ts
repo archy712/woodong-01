@@ -305,6 +305,10 @@ export interface Dictionary {
       anonymousLabel: string;
       submitButton: string;
       successToast: string;
+      /** 생성 알림 팬아웃 건수 뒤에 붙는 문구(Task 029). */
+      notifiedCountSuffix: string;
+      /** 알림 대상이 0명일 때의 안내(Task 029). */
+      notifiedNoneNotice: string;
     };
     voteButton: string;
     statusOpen: string;
@@ -323,6 +327,14 @@ export interface Dictionary {
     responseCountSuffix: string;
     submitVoteSuccessToast: string;
     notFound: string;
+    /** "새 투표 시작" 알림 제목(Task 029). 뒤에 투표 제목이 붙는다. */
+    notificationTitle: string;
+    /** "새 투표 시작" 알림 본문(Task 029). */
+    notificationBody: string;
+    /** 총무가 아닌 사용자가 투표 생성 화면에 들어왔을 때의 안내(Task 029). */
+    adminOnlyNotice: string;
+    /** 마감 시각이 지난 투표에서 참여 위젯 대신 보여주는 안내(Task 029). */
+    closedNotice: string;
   };
   notifications: {
     pageTitle: string;

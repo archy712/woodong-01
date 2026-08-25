@@ -1,63 +1,52 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2Icon, Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 
-import { createDemoAction } from "@/lib/woodong/dummy/demo-action";
-import {
-  submitVoteResponseSchema,
-  type VoteOption,
-  type VoteResult,
-} from "@/lib/woodong/votes";
+import { submitVoteResponseAction } from "@/lib/woodong/actions/votes";
+import { submitVoteResponseSchema, type VoteOption } from "@/lib/woodong/votes";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
-const demoSubmitVoteAction = createDemoAction<{
-  voteId: string;
-  optionIds: string[];
-}>();
-
-/** 투표 참여 위젯. "나"는 데모 전용 가상 참여자 이름이다(실 사용자 이름 대신 사용). */
-const DEMO_VOTER_NAME = "나";
-
+/**
+ * 투표 참여 위젯 (Task 029에서 실데이터 연동).
+ *
+ * 집계는 로컬에서 더하지 않고 `router.refresh()`로 서버에서 다시 받아온다. 익명 투표에서
+ * 클라이언트가 결과를 직접 계산하면 "내가 무엇을 골랐는지"가 화면 상태에 남아, 익명성을
+ * 지키는 유일한 경로(`woodong_get_vote_results()` RPC)를 우회하게 된다.
+ *
+ * 중복 참여와 마감 후 참여는 DB 트리거가 최종적으로 막는다. 여기서 버튼을 감추는 것은
+ * 편의일 뿐이고, 실패하면 서버가 돌려준 문구를 그대로 보여준다.
+ */
 export function VoteParticipation({
   voteId,
   options,
   allowMultiple,
-  isAnonymous,
-  hasVotedInitially,
-  initialResults,
+  hasVoted,
   labels,
-  onResultsChange,
 }: {
   voteId: string;
   options: VoteOption[];
   allowMultiple: boolean;
-  isAnonymous: boolean;
-  hasVotedInitially: boolean;
-  initialResults: VoteResult[];
+  hasVoted: boolean;
   labels: Dictionary["votes"];
-  onResultsChange: (results: VoteResult[]) => void;
 }) {
+  const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
-  const [hasVoted, setHasVoted] = useState(hasVotedInitially);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function toggleOption(optionId: string) {
-    if (allowMultiple) {
-      setSelected((prev) =>
-        prev.includes(optionId)
-          ? prev.filter((id) => id !== optionId)
-          : [...prev, optionId],
-      );
-    } else {
-      setSelected([optionId]);
-    }
+    setSelected((prev) =>
+      prev.includes(optionId)
+        ? prev.filter((id) => id !== optionId)
+        : [...prev, optionId],
+    );
   }
 
   function handleSubmit() {
@@ -72,24 +61,21 @@ export function VoteParticipation({
     setError(null);
 
     startTransition(async () => {
-      const result = await demoSubmitVoteAction(parsed.data);
-      if (!result.success) return;
+      const result = await submitVoteResponseAction(parsed.data);
 
-      onResultsChange(
-        initialResults.map((r) =>
-          selected.includes(r.option_id)
-            ? {
-                ...r,
-                response_count: r.response_count + 1,
-                voter_names: isAnonymous
-                  ? r.voter_names
-                  : [...r.voter_names, DEMO_VOTER_NAME],
-              }
-            : r,
-        ),
-      );
-      setHasVoted(true);
+      if (!result.success) {
+        setError(result.fieldErrors?.optionIds?.[0] ?? null);
+        if (result.formError) {
+          toast.error(result.formError);
+        }
+        // 마감·중복처럼 서버 상태가 화면과 어긋나서 실패한 경우가 대부분이라, 실패해도
+        // 최신 상태를 다시 받아온다.
+        router.refresh();
+        return;
+      }
+
       toast.success(labels.submitVoteSuccessToast);
+      router.refresh();
     });
   }
 

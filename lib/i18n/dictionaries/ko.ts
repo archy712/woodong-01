@@ -426,8 +426,9 @@ export const ko: Dictionary = {
       allowMultipleLabel: "복수 선택 허용",
       anonymousLabel: "익명 투표",
       submitButton: "투표 만들기",
-      successToast:
-        "투표를 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
+      successToast: "투표를 만들었어요.",
+      notifiedCountSuffix: "명에게 알림을 보냈어요.",
+      notifiedNoneNotice: "알림을 받을 다른 멤버가 아직 없어요.",
     },
     voteButton: "투표하기",
     statusOpen: "진행중",
@@ -445,9 +446,12 @@ export const ko: Dictionary = {
     realNameResultsNotice: "참여자 이름이 함께 표시돼요.",
     voterNamesLabel: "참여자",
     responseCountSuffix: "표",
-    submitVoteSuccessToast:
-      "투표했어요! (데모 화면이라 실제로 저장되지는 않아요)",
+    submitVoteSuccessToast: "투표했어요!",
     notFound: "투표를 찾을 수 없거나 접근 권한이 없어요.",
+    notificationTitle: "새 투표가 시작됐어요",
+    notificationBody: "마감 전에 투표에 참여해주세요.",
+    adminOnlyNotice: "투표는 총무만 만들 수 있어요.",
+    closedNotice: "마감된 투표라 더 이상 참여할 수 없어요.",
   },
   notifications: {
     pageTitle: "알림센터",

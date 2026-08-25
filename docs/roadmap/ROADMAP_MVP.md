@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (31/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (32/44 Tasks 완료)
 
 ---
 
@@ -497,12 +497,24 @@
   - ✅ `database.types.ts` 재생성(신규 함수 4줄만 반영), 테스트 계정 2개·모임·회비 항목·청구·납부·알림 정리 완료(`woodong_*` 전부 0행)
   - **완료 조건**: ✅ 주기 미도래 시 미생성, ✅ 주기 도래 시 1건만 생성, ✅ 동시 8요청에서도 중복 생성 0건, ✅ `get_advisors`(security) **ERROR 0건**(신규 WARN 1건은 `authenticated`에게 의도적으로 연 DEFINER RPC로 Task 003/020/021/025와 동일 패턴이며 `anon`에는 REVOKE됨), ✅ `npm run check-all` 통과
 
-- **Task 029: 투표 생성 및 참여 구현**
-  - 투표 생성 폼: 제목, **선택지 2개 이상**, 마감일시(`closes_at`), `vote_type`(`multiple_choice`/`yes_no`), `allow_multiple`, `is_anonymous`
-  - 생성 시 `woodong_votes` + `woodong_vote_options` 생성 및 **멤버 전원에게 "새 투표 시작" 알림(`type='vote_start'`)** 기록
-  - 유효성 검사: 선택지 1개 이하 또는 마감일시가 과거이면 에러 표시 후 생성 차단
-  - 참여: `allow_multiple = false`면 1개 선택 + `UNIQUE(vote_id, user_id)`로 중복 차단, `allow_multiple = true`면 선택 수만큼 응답 생성 + `UNIQUE(vote_id, user_id, option_id)`로 동일 선택지 중복만 차단(Task 003의 `BEFORE INSERT` 트리거로 분기 검증)
-  - **완료 조건**: 단일/복수 선택 투표가 각각 명세대로 동작, 중복 투표 차단 확인
+- **Task 029: 투표 생성 및 참여 구현** ✅ - 완료
+  - ✅ 마이그레이션 `create_woodong_create_vote_and_closed_guard`:
+    - `woodong_create_vote(...)` `SECURITY DEFINER` RPC — 공지(Task 025)와 같은 이유다. ① `woodong_notifications`에 INSERT 정책이 없어 클라이언트가 남에게 알림을 만들 수 없고, ② **투표·선택지·알림이 한 트랜잭션**이어야 "선택지가 하나도 없는 투표"나 "아무도 모르는 투표"가 남지 않는다. 총무 판정은 DEFINER가 RLS를 우회하므로 함수 안에서 `woodong_is_group_admin()`으로 직접 한다. 제목/선택지/마감일시 검증도 REST 직접 호출 대비 함수 안에서 한 번 더 하고, **빈 선택지는 버린 뒤 개수를 센다**(공백만 채워 2개를 만드는 우회 차단)
+    - ⚠️ **(로드맵에 없던 추가) `woodong_prevent_closed_vote_response` BEFORE INSERT 트리거** — RLS INSERT 정책은 "본인 + 멤버"만 보고, Task 003의 중복 방지 트리거는 같은 사람이 두 번 넣는 것만 본다. 즉 **마감된 투표에 응답을 밀어 넣는 경로가 열려 있었다**. `status='closed'`뿐 아니라 **`closes_at` 경과**도 함께 보는데, 1차 MVP의 마감이 조회 시점 lazy 전환(Task 030)이라 "시각은 지났는데 status는 아직 open"인 구간이 반드시 존재하기 때문이다. 트리거 이름을 `woodong_a_...`로 둬서 중복 방지 트리거보다 먼저 돌게 했다(같은 BEFORE INSERT는 이름 순 실행 — 마감이 이유일 때 중복 메시지가 나오면 안 된다)
+  - ✅ 조회 전용 모듈 `lib/woodong/queries/votes.ts`(`listVotes`/`listOpenVotes`/`getVoteDetail`)와 Server Action `lib/woodong/actions/votes.ts`(`createVoteAction`/`submitVoteResponseAction`) 신설. 목록·상세·생성 폼의 더미를 실데이터로 교체
+  - ✅ **집계는 `woodong_vote_responses`를 직접 세지 않는다** — 그 테이블은 본인 응답만 SELECT할 수 있어(익명성, PRD 4.2) 클라이언트가 셀 수 있는 숫자는 0 아니면 1이다. 총 응답 수·선택지별 집계는 Task 003의 `woodong_get_vote_results()` RPC만 알고 있고, 목록 카드의 "N표"도 이 RPC 경유다(투표당 1회 호출이라 `VOTES_PAGE_SIZE=50` 상한 + 병렬 호출, 규모가 커지면 집계 전용 RPC로 바꿔야 한다고 주석에 남김)
+  - ✅ 참여는 **RPC를 쓰지 않는다** — 본인 응답 INSERT는 이미 정상 권한이라 권한 상승이 필요 없다. 복수 선택은 **한 문장으로** 넣는다(선택지마다 나눠 넣으면 중간 실패 시 일부만 반영되고, 사용자는 재시도조차 못 한다 — 이미 들어간 것 때문에 중복으로 막힌다)
+  - ✅ 결과 표시는 로컬 state로 더하지 않고 `router.refresh()`로 서버에서 다시 받는다. 익명 투표에서 클라이언트가 표를 더하면 "내가 무엇을 골랐는지"가 화면 상태에 남아, 익명성을 지키는 유일한 경로(RPC)를 우회하게 된다. 이 과정에서 `VoteDetail`은 Client → **Server Component**로 전환
+  - ✅ 찬반(`yes_no`)을 고르면 폼이 선택지를 **찬성/반대 2개로 고정**(추가/삭제 버튼 숨김)하고 서버도 `yes_no`는 정확히 2개만 허용한다 — 찬반인데 선택지가 5개면 형식과 내용이 어긋난다
+  - ✅ `datetime-local` 값은 타임존이 없어 그대로 보내면 DB가 UTC로 읽는다. Action에서 `new Date(...).toISOString()`으로 변환해 넘기고, 실제로 `21:00 KST → 12:00 UTC`로 저장되는 것을 확인
+  - ✅ 총무가 아니면 목록의 "투표 만들기" 버튼을 렌더링하지 않고, `/votes/new`에 직접 들어와도 폼 대신 안내를 보여준다. 비멤버에게는 회비·공지와 같은 "모임을 찾을 수 없거나 접근 권한이 없어요"
+  - ✅ i18n: 데모 문구가 남아 있던 `create.successToast`/`submitVoteSuccessToast`를 실제 문구로 교체하고 신규 키 6종 추가(알림 제목/본문, 팬아웃 건수, 총무 전용 안내, 마감 안내 — en/ja/zh 스텁 관례 유지)
+  - ✅ Playwright 실계정 E2E(계정 2개): **빈 폼 제출은 요청 0건** + 4개 필드 검증 문구 → **과거 마감일시는 "마감 일시는 현재 이후여야 합니다"로 차단** → 단일선택 투표 생성(선택지 2개, 순서 보존, 알림 1건 = 작성자 제외) → 복수선택+익명 투표 생성(선택지 3개) → 찬반 투표 생성(찬성|반대 자동 고정) → 일반회원 화면에 "투표 만들기" 버튼 없음 → **단일선택 참여 1표(100%)** 후 "이미 참여한 투표예요" → **복수선택 2개 동시 참여 → 2표(각 50%)**, 익명이라 이름 미노출 / 실명 투표는 "참여자: 테스트멤버" 노출
+  - ✅ **UI 우회 REST 7종 전부 차단**: 단일선택 중복 참여 `P0001`("이미 이 투표에 참여했습니다"), 복수선택 동일 선택지 재투표 `P0001`("이미 동일한 선택지에"), 남의 `user_id`로 응답 `403 42501`, 일반회원의 생성 RPC 호출 `403 42501`("투표는 총무만 만들 수 있습니다"), `woodong_votes` 직접 INSERT `403 42501`, **마감 후 참여 `403 42501`**(status는 아직 `open`인 상태에서 `closes_at` 경과만으로 차단됨을 확인), 응답 테이블 필터 없이 조회해도 **본인 3건만**(다른 사용자 id 0건 — 익명성 유지)
+  - ✅ **한 문장 다중 INSERT도 트리거가 잡는다**: 단일선택 투표에 선택지 2개를 한 statement로 넣는 우회를 SQL로 시도해 `P0001`로 거부되고 0행이 남는 것을 확인(plpgsql이 같은 명령 안에서 앞선 행을 본다). Action 쪽에서도 단일선택에 2개 이상이 오면 필드 에러로 먼저 거른다
+  - ✅ 360px 가로 스크롤 0건·터치 타겟 위반 0건, `database.types.ts` 재생성, 테스트 계정 2개·모임·투표 3건·선택지·응답·알림 정리 완료
+  - ⚠️ **(관찰, Task 030으로 이관)** 실명 투표 결과의 `voter_names`는 `profiles.name`이 비어 있으면 배열에서 **아예 빠진다**(`array_remove(..., null)`). 그러면 "3표"인데 이름은 1개만 보이는 화면이 나올 수 있다. 결과 화면은 Task 030 범위라 그쪽에서 멤버 목록과 같은 `unnamedMemberLabel` 폴백(Task 021의 `member-display.ts`)을 적용하는 편이 맞다
+  - **완료 조건**: ✅ 단일/복수 선택 투표가 각각 명세대로 동작, ✅ 중복 투표 차단 확인(UI·REST·한 문장 다중 INSERT 전부), ✅ `get_advisors`(security) **ERROR 0건**(신규 WARN 1건은 `authenticated`에게 의도적으로 연 DEFINER RPC, 트리거 함수는 EXECUTE 전량 회수라 WARN 없음), ✅ `npm run check-all` 통과
 
 - **Task 030: 투표 lazy 마감·집계·결과 알림 구현**
   - > **Task 003에서 확인된 선행 제약**: `woodong_votes` UPDATE는 관리자 전용 정책뿐이라 lazy 마감(아무 멤버나 조회 시 `status`를 `closed`로 전환)이 RLS를 통과하지 못한다. lazy/수동 조기마감 공용 `SECURITY DEFINER` 함수를 새로 만들어야 한다.

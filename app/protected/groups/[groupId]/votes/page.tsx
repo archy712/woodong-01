@@ -16,21 +16,20 @@ import {
 } from "@/components/ui/empty";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { getDummyVotesForGroup } from "@/lib/woodong/dummy";
+import { getGroupDetail } from "@/lib/woodong/queries/groups";
+import { listVotes, type VoteListItem } from "@/lib/woodong/queries/votes";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
-import type { DummyVoteBundle } from "@/lib/woodong/dummy/votes";
 
 function VoteCard({
-  bundle,
+  item,
   groupId,
   dict,
 }: {
-  bundle: DummyVoteBundle;
+  item: VoteListItem;
   groupId: string;
   dict: Dictionary;
 }) {
-  const { vote, results } = bundle;
-  const totalResponses = results.reduce((sum, r) => sum + r.response_count, 0);
+  const { vote, totalResponses } = item;
 
   return (
     <Link href={`/protected/groups/${groupId}/votes/${vote.id}`}>
@@ -82,23 +81,41 @@ async function VotesContent({
   const locale = await getLocale();
   const dict = getDictionary(locale);
 
-  const bundles = getDummyVotesForGroup(groupId);
-  const openVotes = bundles.filter((b) => b.vote.status === "open");
-  const closedVotes = bundles.filter((b) => b.vote.status === "closed");
+  // 비멤버는 RLS 때문에 어차피 빈 목록을 보게 되지만, "투표가 없는 모임"과 구분되지 않는다.
+  // 회비·공지 화면과 같은 안내를 먼저 보여주고 조회 자체를 하지 않는다.
+  const detail = await getGroupDetail(supabase, groupId, data.claims.sub);
+
+  if (!detail) {
+    return (
+      <div className="flex w-full flex-1 flex-col gap-4 p-6 sm:p-8">
+        <h1 className="text-2xl font-bold">{dict.votes.pageTitle}</h1>
+        <p className="text-sm text-muted-foreground">
+          {dict.groups.detailNotFound}
+        </p>
+      </div>
+    );
+  }
+
+  const items = await listVotes(supabase, groupId);
+  const openVotes = items.filter((item) => item.vote.status === "open");
+  const closedVotes = items.filter((item) => item.vote.status === "closed");
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">{dict.votes.pageTitle}</h1>
-        <Button asChild size="sm">
-          <Link href={`/protected/groups/${groupId}/votes/new`}>
-            <PlusIcon />
-            {dict.votes.create.title}
-          </Link>
-        </Button>
+        {/* 쓰기는 RLS가 막지만, 반드시 실패할 버튼을 보여주지 않는다(공지와 같은 규약). */}
+        {detail.role === "admin" && (
+          <Button asChild size="sm">
+            <Link href={`/protected/groups/${groupId}/votes/new`}>
+              <PlusIcon />
+              {dict.votes.create.title}
+            </Link>
+          </Button>
+        )}
       </div>
 
-      {bundles.length === 0 ? (
+      {items.length === 0 ? (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -116,10 +133,10 @@ async function VotesContent({
             </h2>
             {openVotes.length > 0 ? (
               <div className="flex flex-col gap-3">
-                {openVotes.map((bundle) => (
+                {openVotes.map((item) => (
                   <VoteCard
-                    key={bundle.vote.id}
-                    bundle={bundle}
+                    key={item.vote.id}
+                    item={item}
                     groupId={groupId}
                     dict={dict}
                   />
@@ -138,10 +155,10 @@ async function VotesContent({
                 {dict.votes.statusClosed}
               </h2>
               <div className="flex flex-col gap-3">
-                {closedVotes.map((bundle) => (
+                {closedVotes.map((item) => (
                   <VoteCard
-                    key={bundle.vote.id}
-                    bundle={bundle}
+                    key={item.vote.id}
+                    item={item}
                     groupId={groupId}
                     dict={dict}
                   />

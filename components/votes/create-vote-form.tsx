@@ -1,10 +1,11 @@
 "use client";
 
 import { useFieldArray } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { Loader2Icon, PlusIcon, XIcon } from "lucide-react";
 
 import { useServerActionForm } from "@/hooks/use-server-action-form";
-import { createDemoAction } from "@/lib/woodong/dummy/demo-action";
+import { createVoteAction } from "@/lib/woodong/actions/votes";
 import { createVoteSchema, type CreateVoteInput } from "@/lib/woodong/votes";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,14 +32,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
-const demoCreateVoteAction = createDemoAction<CreateVoteInput>();
+/** 찬반 투표로 바꿨을 때 채워 넣는 기본 선택지. 서버도 찬반은 선택지 2개만 허용한다. */
+const YES_NO_OPTIONS = [{ label: "찬성" }, { label: "반대" }];
 
 /**
- * 투표 생성 폼. 실제 `createVoteAction`(`woodong_votes`+`woodong_vote_options` 생성 및
- * "새 투표 시작" 알림 팬아웃)은 Task 029 몫이라, 이번 Task에서는 클라이언트 검증까지만
- * 동작시키고 제출은 데모 액션으로 대체한다. 선택지는 `useFieldArray`로 2개 이상 동적 관리한다.
+ * 투표 생성 폼 (Task 029에서 실데이터 연동).
+ *
+ * 제출은 `createVoteAction` → `woodong_create_vote()` RPC 한 번으로 투표·선택지·알림 팬아웃이
+ * 한 트랜잭션에서 처리된다. 선택지는 `useFieldArray`로 2개 이상 동적 관리한다.
+ *
+ * 찬반(`yes_no`)을 고르면 선택지를 찬성/반대 2개로 고정한다 — 찬반인데 선택지가 5개면
+ * 형식과 내용이 어긋나고, 서버도 그 조합을 거부한다.
  */
 export function CreateVoteForm({
   groupId,
@@ -57,17 +64,36 @@ export function CreateVoteForm({
     closesAt: "",
   };
 
+  const router = useRouter();
+
   const { form, onSubmit, isPending } = useServerActionForm({
     schema: createVoteSchema,
     defaultValues,
-    action: demoCreateVoteAction,
-    successMessage: labels.create.successToast,
+    action: (input) =>
+      createVoteAction({
+        ...input,
+        notificationTitle: labels.notificationTitle,
+        notificationBody: labels.notificationBody,
+      }),
+    // 성공 토스트는 서버가 실제로 만든 알림 건수를 그대로 쓴다(클라이언트가 멤버 수로
+    // 흉내 내면 작성자·비활성 멤버가 빠진 서버 계산과 어긋난다 — 공지와 같은 규약).
+    onSuccess: ({ voteId, notifiedCount }) => {
+      toast.success(
+        notifiedCount > 0
+          ? `${labels.create.successToast} ${notifiedCount}${labels.create.notifiedCountSuffix}`
+          : `${labels.create.successToast} ${labels.create.notifiedNoneNotice}`,
+      );
+      router.push(`/protected/groups/${groupId}/votes/${voteId}`);
+    },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "options",
   });
+
+  const voteType = form.watch("voteType");
+  const isYesNo = voteType === "yes_no";
 
   return (
     <Card>
@@ -98,7 +124,15 @@ export function CreateVoteForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{labels.create.voteTypeLabel}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      if (value === "yes_no") {
+                        form.setValue("options", YES_NO_OPTIONS);
+                      }
+                    }}
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger className="w-full">
                         <SelectValue />
@@ -139,7 +173,7 @@ export function CreateVoteForm({
                           variant="ghost"
                           size="icon"
                           aria-label={labels.create.removeOptionButton}
-                          disabled={fields.length <= 2}
+                          disabled={isYesNo || fields.length <= 2}
                           onClick={() => remove(index)}
                         >
                           <XIcon />
@@ -150,16 +184,18 @@ export function CreateVoteForm({
                   )}
                 />
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-fit"
-                onClick={() => append({ label: "" })}
-              >
-                <PlusIcon />
-                {labels.create.addOptionButton}
-              </Button>
+              {!isYesNo && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-fit"
+                  onClick={() => append({ label: "" })}
+                >
+                  <PlusIcon />
+                  {labels.create.addOptionButton}
+                </Button>
+              )}
             </div>
 
             <FormField

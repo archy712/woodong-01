@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VoteDetail } from "@/components/votes/vote-detail";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { getDummyVoteById } from "@/lib/woodong/dummy";
+import { getVoteDetail } from "@/lib/woodong/queries/votes";
 
 async function VoteDetailContent({
   params,
@@ -25,9 +25,9 @@ async function VoteDetailContent({
   const locale = await getLocale();
   const dict = getDictionary(locale);
 
-  const bundle = getDummyVoteById(voteId);
+  const detail = await getVoteDetail(supabase, voteId, data.claims.sub);
 
-  if (!bundle) {
+  if (!detail) {
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6 sm:p-8">
         <h1 className="text-2xl font-bold">{dict.votes.detailTitle}</h1>
@@ -36,7 +36,7 @@ async function VoteDetailContent({
     );
   }
 
-  const { vote, options, results, hasCurrentUserVoted } = bundle;
+  const { vote, options, results, hasVoted, isClosed } = detail;
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
@@ -59,8 +59,9 @@ async function VoteDetailContent({
           <VoteDetail
             vote={vote}
             options={options}
-            initialResults={results}
-            hasVotedInitially={hasCurrentUserVoted}
+            results={results}
+            hasVoted={hasVoted}
+            isClosed={isClosed}
             labels={dict.votes}
           />
         </CardContent>
