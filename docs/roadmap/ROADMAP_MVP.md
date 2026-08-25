@@ -8,8 +8,8 @@
 - **사용자 노출명**: 우동 (Woodong)
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
-**📅 최종 업데이트**: 2026-08-24
-**📊 진행 상황**: Phase 0·1·2 완료, Phase 3 진행 중 (16/44 Tasks 완료)
+**📅 최종 업데이트**: 2026-08-25
+**📊 진행 상황**: Phase 0·1·2 완료, Phase 3 진행 중 (17/44 Tasks 완료)
 
 ---
 
@@ -262,12 +262,15 @@
   - ✅ Playwright 실계정 검증: (1) Kakao 신규 가입 → `/protected` 복귀 및 세션 발급(`email_verified: true`, 이름/이메일 수신 확인), 최초 가입은 자동 연결로 오판하지 않음(identity 간격 0.006초), (2) 동일 이메일 이메일계정 선생성 후 Kakao 로그인 → **단일 user에 email+kakao identity 2개** 확인(간격 92초 → 연결로 정상 판정), (3) 두 토스트의 실제 렌더링 문구·액션·URL 정리 동작 확인. 테스트 계정은 검증 후 `auth.users`에서 삭제로 정리
   - **완료 조건**: ✅ Google/Kakao 로그인 성공, ✅ 동일 verified 이메일 자동 연결 시 **user id가 유지되어** 기존 모임/회비 데이터 접근이 보존됨 및 안내 토스트 노출. ⚠️ "이메일 동의를 거부한 Kakao 계정 가입"은 코드 경로와 토스트를 검증했으나, 이미 동의를 마친 계정으로는 거부 시나리오를 재현할 수 없어 **실계정 E2E는 Task 018-1에서 신규 카카오 계정으로 수행**
 
-- **Task 017: 로그인 후 원래 경로 복귀(`next` 파라미터) 구현**
-  - **3개 지점을 함께 수정**(PRD 부록 명시): `lib/supabase/proxy.ts`(리다이렉트 시 원래 경로를 `next` 쿼리 파라미터로 부착), `components/login-form.tsx`(현재 `/protected` 하드코딩 리다이렉트 제거), OAuth 콜백 라우트(`next` 파라미터 전달/복원)
-  - `next` 파라미터 오픈 리다이렉트 방지 검증(내부 경로만 허용하는 화이트리스트/동일 오리진 검사)
-  - 복귀 경로가 없을 때의 기본 목적지를 **모임 목록 페이지**로 설정
-  - 초대 링크(`/invite/[code]`) 접근 시 로그인 유도 후 초대 화면으로 복귀하는 플로우 연결
-  - **완료 조건**: 비로그인 상태로 `/protected/groups/[id]/dues` 접근 → 로그인 → 해당 경로 복귀, 외부 URL 주입 시 기본 경로로 폴백
+- **Task 017: 로그인 후 원래 경로 복귀(`next` 파라미터) 구현** ✅ - 완료
+  - ✅ 검증 로직을 `lib/auth/next-path.ts` 한 곳으로 모음(`sanitizeNextPath()` / `resolveNextPath()` / `buildLoginPath()` / `DEFAULT_AFTER_LOGIN_PATH`) — Edge(proxy)·서버 컴포넌트·클라이언트 컴포넌트가 모두 쓰므로 런타임 의존성 없는 순수 함수로 구현
+  - ✅ **3개 지점 수정**(PRD 부록): (1) `lib/supabase/proxy.ts`가 리다이렉트 시 `pathname + search`를 `next`로 부착(원래 쿼리스트링은 `url.search = ""`로 비우고 재구성), (2) `components/login-form.tsx`의 `/protected` 하드코딩 제거 후 페이지에서 검증해 내려준 `next`로 이동, (3) `app/auth/callback/route.ts`가 `resolveNextPath()`로 복원 — 기존의 임시 `startsWith("/")` 검사 대체
+  - ✅ 범위 확장 2건: 회원가입 폼(`sign-up-form.tsx`)도 동일하게 `next` 복귀 처리(초대 링크 → 가입 흐름 대응), 소셜 로그인(`social-auth-buttons.tsx`)은 `redirectTo`를 `/auth/callback?next=...`로 구성해 provider 왕복 후에도 경로가 유지되게 함. 로그인 ↔ 회원가입 상호 링크도 `next`를 이어받는다
+  - ✅ 오픈 리다이렉트 방지 규칙: `/`로 시작하지 않는 값·`//evil.com`(프로토콜 상대)·역슬래시 포함·공백/제어문자 포함 값을 거르고, `new URL(value, base)` 파싱 후 오리진이 유지됐는지로 최종 확인. 추가로 `/auth*` 경로는 **로그인 → 로그인 루프 방지**를 위해 차단. 실패 시 조용히 기본 경로로 폴백(잘못된 `next`가 URL에 남지 않음)
+  - ✅ 복귀 경로 부재/무효 시 기본 목적지를 **모임 목록(`/protected/groups`)**으로 통일(기존 `/protected`)
+  - ✅ 초대 링크 플로우 연결: `/invite/[code]`는 공개 라우트지만 참여는 로그인이 필요하므로, 비로그인 사용자에게는 `JoinInviteButton` 대신 `buildLoginPath("/invite/{code}")` 링크 버튼을 노출(신규 사전 키 `groups.invitePage.loginToJoinButton`, ko 확정 문구 + en/ja/zh 스텁)
+  - ✅ Playwright 실계정 검증: (1) 비로그인으로 `/protected/groups/g-1/dues` 접근 → `?next=%2Fprotected%2Fgroups%2Fg-1%2Fdues`로 이동 → 회원가입 링크가 `next` 승계 → 가입 직후 해당 회비 페이지로 복귀, (2) `/invite/RUN-8F3K2Q` → "로그인하고 참여하기" → 로그인 → 초대 화면 복귀 및 "참여하기" 버튼으로 전환, (3) `?next=https://evil.example.com/pwn` 주입 후 로그인 → `/protected/groups`로 폴백, (4) Google 버튼 클릭 시 Supabase authorize의 `redirect_to`가 `/auth/callback?next=%2Fprotected%2Fnotifications%3Ftab%3Dunread`로 생성됨을 확인(소셜 왕복 완주 E2E는 Task 018-1). 쿼리스트링 보존·`//evil.com`·역슬래시·`/auth` 루프 차단은 curl로 추가 확인. 테스트 계정은 검증 후 `auth.users`에서 삭제로 정리
+  - **완료 조건**: ✅ 비로그인 상태로 `/protected/groups/[id]/dues` 접근 → 로그인 → 해당 경로 복귀, ✅ 외부 URL 주입 시 기본 경로로 폴백, ✅ `npm run check-all` 통과
 
 - **Task 018: 마이페이지 연동 계정 관리 및 프로필**
   - `getUserIdentities()` 기준 연결된 provider 목록 표시
