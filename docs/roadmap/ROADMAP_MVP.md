@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2·3 완료, Phase 4 진행 중 (20/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3 완료, Phase 4 진행 중 (21/44 Tasks 완료)
 
 ---
 
@@ -316,15 +316,26 @@
   - ✅ Playwright 실계정 검증(계정 2개): 생성(빈 이름 검증 포함) → 상세 이동("1명 참여 중" = 총무 자동 등록) → 수정 + 커버 업로드(DB 경로·리사이즈된 .jpg 확인, 상세에서 서명 URL 이미지 렌더링 확인) → **비멤버 접근 시 "모임을 찾을 수 없거나 접근 권한이 없어요"** → 일반회원으로 추가 후 설정 화면이 총무 전용 안내로 표시 → **UI를 우회한 REST PATCH/DELETE도 RLS가 0행으로 차단**(데이터 무변경 확인) → 총무로 삭제 → 목록 빈 상태 + `woodong_groups`/`woodong_group_members`/`storage.objects` 전부 0건. 테스트 계정 2개는 이메일 정확 일치로 삭제해 정리
   - **완료 조건**: ✅ 생성 → 상세 이동 → 수정 → 삭제 전 구간 동작, ✅ 비멤버의 조회/수정이 RLS로 차단됨, ✅ `npm run check-all` 통과
 
-- **Task 020: 초대 코드 발급·참여·무효화 구현**
+- **Task 020: 초대 코드 발급·참여·무효화 구현** ✅ - 완료
   - > **Task 003에서 확인된 선행 제약**: `woodong_group_members` INSERT 정책은 "자신이 만든 그룹의 admin 자기등록"만 허용하도록 잠겨 있어, 초대로 합류하는 `member` 행 INSERT는 클라이언트에서 직접 불가능하다. `woodong_increment_invite_used_count()`를 호출하고 멤버십을 INSERT하는 통합 `SECURITY DEFINER` RPC(예: `woodong_redeem_group_invite(p_code text)`)를 신규로 만들어야 한다. 또한 `woodong_group_invites` SELECT가 관리자 전용이라 `/invite/[code]` 공개 미리보기 페이지가 모임 이름 등을 직접 조회할 수 없으므로, 최소 정보만 반환하는 별도 `SECURITY DEFINER` 함수도 필요하다.
-  - 초대 코드/링크 생성: `expires_at`, `max_uses` 설정 필수화(코드 유출 대비, PRD 9장), 복사 UI 제공
-  - 참여 처리: `is_active = true AND revoked_at IS NULL AND expires_at > now() AND (max_uses IS NULL OR used_count < max_uses)` 조건 검증 후 `일반회원`으로 등록
-  - `used_count` 원자적 증가 RPC 호출(동시성 이슈 방지, Task 003에서 `woodong_increment_invite_used_count()`로 구현 완료)
-  - **이미 멤버인 사용자 재접속 시** `UNIQUE(group_id, user_id)` 제약으로 중복 멤버십 생성 없이 모임 상세로 바로 이동
-  - **재발급 시 이전 초대는 `is_active = false` + `revoked_at` 기록**으로 무효화
-  - 만료/무효 코드 입력 시 "유효하지 않은 초대 코드입니다" 에러 표시
-  - **완료 조건**: 정상 참여/중복 참여/만료/무효화/사용 횟수 초과 5개 케이스가 모두 명세대로 동작
+  - ✅ 위 제약대로 **`SECURITY DEFINER` RPC 2종 신규 구현**(`set search_path = ''`, 기존 우동 함수와 동일 권한 구성):
+    - `woodong_get_invite_preview(p_code text)` — 모임 이름/설명/유형/멤버 수 + 초대 상태만 반환. `/invite/[code]`가 PRD 6.2의 **공개 페이지**라 `anon`에도 EXECUTE를 부여했다(회비·투표·멤버 명단 등 모임 내부 데이터는 일절 싣지 않는다)
+    - `woodong_redeem_group_invite(p_code text)` — 유효성 검증 + `used_count` 증가 + 멤버십 등록을 **한 트랜잭션**으로 처리. `authenticated`만 EXECUTE(비로그인 호출은 `401 permission denied`로 확인)
+  - ✅ 실패를 exception이 아니라 **status 문자열**(`joined`/`already_member`/`not_found`/`expired`/`revoked`/`exhausted`/`unauthenticated`)로 반환 — 호출부가 사유별 한국어 문구를 고를 수 있어야 하고, "만료"와 "무효화"와 "소진"을 한 덩어리로 뭉개면 사용자가 다음 행동(총무에게 새 링크 요청)을 알 수 없기 때문
+  - ✅ `used_count` 원자적 증가: 유효성 재검증과 증가를 **UPDATE 한 문장**(`where ... and used_count < max_uses`)으로 묶어 동시 참여 경합에서도 초과 사용이 불가능하다(Task 003의 `woodong_increment_invite_used_count()`는 invite id 기반이라 코드 조회·멤버십 등록과 트랜잭션을 공유할 수 없어 이 통합 RPC로 대체했고, 기존 함수는 그대로 남겨 뒀다)
+  - ✅ 발급 폼은 `expires_at`/`max_uses` **필수**(zod: 만료는 현재 이후, 최대 사용 횟수는 1 이상), 다이얼로그를 열 때 7일 뒤·20회를 기본값으로 채운다. ⚠️ 기본값을 렌더 중 `new Date()`로 계산하면 Client Component도 SSR되므로 hydration 불일치가 나서, **다이얼로그 open 시점**에만 계산하도록 했다
+  - ✅ 코드는 `crypto.getRandomValues()` 기반 `ABCD-EFGH` 형식(`lib/woodong/invite-code.ts`). 헷갈리는 글자(`0`/`O`/`I`/`L`)를 뺀 **정확히 32자** 알파벳을 써서 `% 32`의 modulo bias를 없앴고(32^8 ≈ 1.1조), `UNIQUE(code)` 충돌 시에만 최대 5회 재시도한다. 조회는 대문자+trim 정규화라 소문자로 공유된 링크도 열린다(앱·DB 양쪽에서 정규화)
+  - ✅ **재발급 시 기존 코드 무효화**(PRD 3.2 AC): 새 초대를 만들면 같은 모임의 다른 활성 초대를 `is_active = false` + `revoked_at`으로 내린다. ⚠️ **새 초대를 먼저 INSERT하고 옛 초대를 나중에** 내린다(순서를 뒤집으면 INSERT 실패 시 쓸 수 있는 링크가 하나도 없는 상태로 남는다). 총무가 직접 무효화하는 버튼(확인 다이얼로그)도 추가
+  - ✅ 이미 멤버인 사용자 재접속: RPC가 **INSERT를 시도하기 전에** `already_member`로 빠져나가 모임 상세로 보낸다. `UNIQUE(group_id, user_id)` 위반을 `mapSupabaseError()`가 "이미 존재하는 데이터입니다"로 바꿔 보여주면 안 되기 때문이며, `used_count`도 올리지 않는다(재접속이 초대 사용 횟수를 갉아먹지 않는다)
+  - ✅ 탈퇴(`status='left'`) 후 재참여는 `on conflict do update`로 재활성화하되 **role을 항상 `member`로 되돌린다** — 공개 초대 링크를 타고 들어온 사람이 예전 총무 권한을 되찾는 경로가 있으면 안 된다
+  - ✅ 참여 버튼은 모임 id가 아니라 **코드만** 서버로 넘긴다(클라이언트가 모임 id를 정하면 "코드는 A 모임 것인데 B 모임으로 가입" 위조가 가능). 이동 경로도 액션이 돌려준 `groupId`를 쓴다
+  - ✅ 설정 화면의 초대 섹션에 **총무 게이팅 추가** — 기존에는 정보 수정/위험 구역만 `isAdmin` 분기였고 초대 카드는 누구에게나 렌더링돼 일반회원에게 빈 목록과 반드시 실패하는 버튼이 보였다
+  - ⚠️ **(과정에서 수정한 자체 버그 2건)** (1) `returns table (status text, group_id uuid)`의 OUT 파라미터가 plpgsql 안에서 동명 컬럼과 충돌해 `42702`로 실패 — 내부 쿼리를 테이블 별칭으로 한정하고 `on conflict`는 제약 조건 이름(`on conflict on constraint ...`)으로 지정해 해소. (2) 초대 화면이 유효성을 멤버 판정보다 먼저 봐서, **이미 멤버인 사람이 만료된 옛 링크를 누르면 에러 화면**이 떴다(멀쩡한 멤버가 쫓겨난 줄 안다) — RPC와 같은 순서(멤버 판정 우선)로 맞췄다
+  - ⚠️ **(스키마 보정)** `woodong_group_invites`에 `created_at`이 없어 목록 정렬 기준이 없었다. `not null default now()` 컬럼과 `(group_id, created_at desc)` 인덱스를 추가(`add_woodong_group_invites_created_at`)
+  - ✅ 더미 정리: `DUMMY_GROUP_INVITES`/`getDummyGroupInvites`/`findDummyInviteByCode`/`isDummyInviteUsable`이 전부 미사용이 되어 삭제, `inviteId()` 헬퍼도 제거(섹션 코드 3은 재사용 금지 주석만 남김). i18n은 `groups.invite`에 7개, `groups.invitePage`에 5개 키를 추가하고 데모 문구("데모 화면이라 실제로 저장되지는 않아요")를 실제 동작 문구로 교체(ko 확정 + en/ja/zh 스텁 + `Dictionary` 타입)
+  - ✅ SQL 레벨 시나리오 22건 전수 통과(임시 검증 함수로 미리보기 4종·참여 실패 4종·정상 참여·중복 참여·탈퇴 후 재참여·max_uses 경계·정규화 등을 자동 검증 후 함수 삭제)
+  - ✅ Playwright 실계정 E2E(계정 4개): 발급(기본값·재발급 라벨 전환) → 비로그인 미리보기(모임 이름 노출 + `?next=` 로그인 링크) → 가입 후 복귀 → 참여(2명→3명) → 재방문 시 "이미 이 모임의 멤버예요" → 재발급으로 옛 코드 자동 무효화 → 수동 무효화 → `max_uses` 소진 → 만료. **UI를 우회한 REST 호출도 전부 차단**: 일반회원의 초대 목록 SELECT는 0행, INSERT는 `403 42501`, 본인 role의 admin 승격 PATCH는 0행(무변경), `anon`의 redeem RPC는 `401`. 폼 검증(과거 만료일/0회)은 요청 자체를 보내지 않음(초대 행 수 불변 확인). 테스트 계정 4개와 모임은 이메일 정확 일치로 삭제해 정리(`woodong_*` 전부 0행 복귀)
+  - **완료 조건**: ✅ 정상 참여/중복 참여/만료/무효화/사용 횟수 초과 5개 케이스 전부 명세대로 동작, ✅ `get_advisors`(security) **ERROR 0건**(신규 WARN 2건은 Task 003과 동일하게 의도적으로 열어 둔 RPC), ✅ `npm run check-all` 통과
 
 - **Task 021: 멤버 역할 관리 및 마지막 총무 보호**
   - 총무의 멤버 역할 변경(`admin` ↔ `member`) 및 멤버 제외(`status='left'`) 기능
