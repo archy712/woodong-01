@@ -48,18 +48,25 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
+  // 로그인 없이 열람 가능한 경로. 새 공개 페이지를 추가하면 여기에도 등록해야 한다.
+  // Task 032에서 실제 라우트와 대조해 정리했다: `/about`은 스타터킷 소개 페이지라 삭제했고,
+  // `/login`은 이 앱에 존재한 적 없는 스타터킷 잔재였다(로그인은 `/auth/login`).
+  const PUBLIC_PATH_PREFIXES = [
+    "/auth", // 로그인·회원가입·비밀번호 재설정·이메일 확인
+    "/invite", // 초대 코드 진입(로그인 유도는 페이지 안에서 처리)
+    "/gallery", // 이하 개발자/QA용 데모 페이지 (PRD 3.8)
+    "/icons",
+    "/avatars",
+    "/charts",
+    "/tech-stack",
+  ];
+
   if (
     request.nextUrl.pathname !== "/" &&
     !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth") &&
-    !request.nextUrl.pathname.startsWith("/gallery") &&
-    !request.nextUrl.pathname.startsWith("/icons") &&
-    !request.nextUrl.pathname.startsWith("/avatars") &&
-    !request.nextUrl.pathname.startsWith("/charts") &&
-    !request.nextUrl.pathname.startsWith("/about") &&
-    !request.nextUrl.pathname.startsWith("/tech-stack") &&
-    !request.nextUrl.pathname.startsWith("/invite")
+    !PUBLIC_PATH_PREFIXES.some((prefix) =>
+      request.nextUrl.pathname.startsWith(prefix),
+    )
   ) {
     // no user, potentially respond by redirecting the user to the login page
     // 로그인 후 원래 보려던 경로로 복귀시키기 위해 현재 경로를 `next`로 넘긴다(Task 017).

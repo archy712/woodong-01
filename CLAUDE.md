@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-Next.js 16 (App Router) + Supabase Auth 스타터 킷입니다. `@supabase/ssr`로 쿠키 기반 세션을 Client Component, Server Component, Route Handler, `proxy.ts` 전반에서 공유합니다. shadcn/ui 컴포넌트·아이콘·아바타·차트 갤러리(`/gallery`, `/icons`, `/avatars`, `/charts`)와 소개/기술 스택 페이지(`/about`, `/tech-stack`), 4개 언어(ko/en/ja/zh) 다국어 지원을 포함합니다.
+Next.js 16 (App Router) + Supabase Auth 스타터 킷입니다. `@supabase/ssr`로 쿠키 기반 세션을 Client Component, Server Component, Route Handler, `proxy.ts` 전반에서 공유합니다. shadcn/ui 컴포넌트·아이콘·아바타·차트 갤러리(`/gallery`, `/icons`, `/avatars`, `/charts`)와 기술 스택 소개 페이지(`/tech-stack`), 4개 언어(ko/en/ja/zh) 다국어 지원을 포함합니다.
 
 ## 명령어
 
@@ -45,7 +45,7 @@ npm run check-all     # typecheck + lint + format:check 순차 실행
 ### 인증 라우팅 흐름
 
 1. 루트의 `proxy.ts`가 모든 요청(정적 파일 제외)에서 `updateSession()`을 호출합니다.
-2. `updateSession()`(`lib/supabase/proxy.ts`)은 `/`, `/login*`, `/auth/*`와 로그인 없이 열람 가능한 공개 페이지(`/gallery`, `/icons`, `/avatars`, `/charts`, `/about`, `/tech-stack`)를 제외한 경로에서 세션이 없으면 `/auth/login`으로 리다이렉트합니다. 새 공개 페이지를 추가하면 이 allow-list에도 등록해야 합니다.
+2. `updateSession()`(`lib/supabase/proxy.ts`)은 `/`와 `PUBLIC_PATH_PREFIXES` 상수에 나열된 공개 경로(`/auth`, `/invite`, `/gallery`, `/icons`, `/avatars`, `/charts`, `/tech-stack`)를 제외한 경로에서 세션이 없으면 `/auth/login`으로 리다이렉트합니다(원래 경로는 `next` 쿼리로 보존). 새 공개 페이지를 추가하면 이 배열에도 등록해야 합니다.
 3. `app/auth/*`에 로그인/회원가입/비밀번호 재설정/이메일 확인(`confirm/route.ts`) 페이지가 있고, `app/protected/*`가 인증이 필요한 영역입니다. 개별 서버 컴포넌트(`app/protected/page.tsx` 등)도 `getClaims()`로 재확인 후 `redirect("/auth/login")` 하는 이중 방어 패턴을 씁니다.
 4. 로그인/회원가입 폼(`components/*-form.tsx`)은 Server Action이 아니라 **Client Component에서 `supabase.auth.*`를 직접 호출**하는 패턴입니다(`login-form.tsx`, `profile-form.tsx` 참고).
 
@@ -57,7 +57,7 @@ npm run check-all     # typecheck + lint + format:check 순차 실행
 
 - `middleware.ts`가 아니라 **`proxy.ts`**를 사용합니다(Next 16에서 이름이 바뀜, `export function proxy`).
 - `next.config.ts`에 `cacheComponents: true`가 설정되어 있어 Cache Components(`"use cache"` 지시어 기반 캐싱) 모델이 활성화되어 있습니다. 데이터 페칭 코드를 작성할 때 이 캐싱 모델을 염두에 두세요.
-- `cookies()`, `headers()`, `params`, `searchParams` 등 request-time API는 전부 비동기이며 동기 접근은 지원되지 않습니다. 또한 `cacheComponents: true`(Partial Prerendering)에서는 이런 API를 쓰는 컴포넌트를 **반드시 `<Suspense>`로 감싸야** 합니다. 감싸지 않으면 dev 오버레이가 `blocking-route` 계열 에러를 띄웁니다. 이 저장소는 페이지를 얇은 `export default function Page()`(내부는 `<Suspense fallback={null}><XxxContent /></Suspense>`)와, 실제 로직을 담은 `async function XxxContent()`로 나누는 패턴을 씁니다(`app/page.tsx`, `app/about/page.tsx`, `app/gallery/page.tsx` 등 참고). `getLocale()` 호출(아래 다국어 지원 참고)과 `AuthButton`이 대표적인 예입니다.
+- `cookies()`, `headers()`, `params`, `searchParams` 등 request-time API는 전부 비동기이며 동기 접근은 지원되지 않습니다. 또한 `cacheComponents: true`(Partial Prerendering)에서는 이런 API를 쓰는 컴포넌트를 **반드시 `<Suspense>`로 감싸야** 합니다. 감싸지 않으면 dev 오버레이가 `blocking-route` 계열 에러를 띄웁니다. 이 저장소는 페이지를 얇은 `export default function Page()`(내부는 `<Suspense fallback={null}><XxxContent /></Suspense>`)와, 실제 로직을 담은 `async function XxxContent()`로 나누는 패턴을 씁니다(`app/page.tsx`, `app/tech-stack/page.tsx`, `app/gallery/page.tsx` 등 참고). `getLocale()` 호출(아래 다국어 지원 참고)과 `AuthButton`이 대표적인 예입니다.
 
 ### 다국어 지원 (i18n)
 
@@ -66,11 +66,11 @@ npm run check-all     # typecheck + lint + format:check 순차 실행
 - `lib/i18n/get-locale.ts`의 `getLocale()`이 쿠키(`locale`)를 우선 확인하고, 없으면 `Accept-Language` 헤더로 브라우저/시스템 기본 언어를 판별합니다(지원 언어 `ko`/`en`/`ja`/`zh`, 기본값 `ko`). `cookies()`/`headers()`를 쓰므로 반드시 Suspense 경계 안에서 호출해야 합니다.
 - `lib/i18n/dictionaries/{ko,en,ja,zh}.ts`가 번역 문자열을 담고 `getDictionary(locale)`로 조회합니다. 새 문자열을 추가하면 `lib/i18n/dictionaries/types.ts`의 `Dictionary` 타입과 4개 언어 파일을 모두 갱신해야 합니다.
 - 언어 변경은 `lib/i18n/actions.ts`의 Server Action `setLocaleCookie()`가 쿠키를 갱신하고, `components/language-switcher.tsx`(Client Component)가 이를 호출한 뒤 `router.refresh()`로 서버 컴포넌트를 다시 렌더링합니다.
-- 현재 `/`, `/about`, `/gallery`, `/icons`, `/avatars`, `/charts`, `/tech-stack`의 헤더와 핵심 문구만 번역되어 있고, 각 갤러리 내부의 세부 데모 콘텐츠는 한국어로 남아 있습니다.
+- 현재 `/`, `/gallery`, `/icons`, `/avatars`, `/charts`, `/tech-stack`과 우동 서비스 화면의 문구가 번역되어 있고, 각 갤러리 내부의 세부 데모 콘텐츠는 한국어로 남아 있습니다.
 
 ### 갤러리 페이지
 
-`/gallery`(shadcn/ui 공식+확장 컴포넌트), `/icons`(lucide-react 전체 아이콘 검색), `/avatars`, `/charts`(recharts 기반)는 모두 로그인 없이 접근 가능한 데모 페이지입니다. `/about`(스타터킷 소개), `/tech-stack`(기술 스택 소개)도 같은 패턴의 마케팅성 페이지입니다.
+`/gallery`(shadcn/ui 공식+확장 컴포넌트), `/icons`(lucide-react 전체 아이콘 검색), `/avatars`, `/charts`(recharts 기반)는 모두 로그인 없이 접근 가능한 개발자/QA용 데모 페이지이고, `/tech-stack`(기술 스택 소개)도 같은 패턴의 공개 페이지입니다. 스타터킷 자기소개 페이지였던 `/about`은 Task 032에서 제거했습니다.
 
 - 아이콘 갤러리는 `components/icons/icon-categories.ts`의 `categorizeIconName()`으로 ~1,700개 아이콘을 화살표/사용자/파일 등 카테고리로 분류합니다. lucide-react가 런타임 카테고리 메타데이터를 제공하지 않아 자체 구현한 것으로, PascalCase 아이콘 이름을 단어 단위로 쪼갠 뒤 정확히 일치하는 키워드만 매칭합니다(부분 문자열 매칭이 아님 — 예: `Search`가 `ear`를 포함한다고 오분류되는 걸 방지).
 - 아이콘·아바타·차트 갤러리는 상단에 카테고리별 칩 내비게이션(앵커 스크롤)을 공통 UI 패턴으로 씁니다. `components/gallery/section.tsx`의 `GallerySection`은 선택적 `id` prop을 받아 `scroll-mt-20`과 함께 앵커 대상이 될 수 있습니다.
@@ -83,7 +83,7 @@ npm run check-all     # typecheck + lint + format:check 순차 실행
 
 ### 컴포넌트 조직
 
-`src/` 없이 `components/` 루트에 페이지별 컴포넌트를 평평하게 배치합니다. `components/ui/`는 대부분 shadcn/ui가 생성한 프리미티브(추가는 `npx shadcn@latest add`)이지만, `date-range-picker.tsx`·`file-dropzone.tsx`·`kanban-board.tsx`·`rich-text-editor.tsx`처럼 shadcn 공식 레지스트리에 없어 직접 구현해 같은 위치에 둔 확장 컴포넌트도 섞여 있습니다. `components/tutorial/`은 스타터킷 온보딩 전용, `components/gallery/`·`components/icons/`·`components/avatars/`·`components/charts/`는 각 갤러리 페이지 전용 컴포넌트입니다. 파일명은 전부 kebab-case, 컴포넌트명은 PascalCase입니다.
+`src/` 없이 `components/` 루트에 페이지별 컴포넌트를 평평하게 배치합니다. `components/ui/`는 대부분 shadcn/ui가 생성한 프리미티브(추가는 `npx shadcn@latest add`)이지만, `date-range-picker.tsx`·`file-dropzone.tsx`·`kanban-board.tsx`·`rich-text-editor.tsx`처럼 shadcn 공식 레지스트리에 없어 직접 구현해 같은 위치에 둔 확장 컴포넌트도 섞여 있습니다. `components/gallery/`·`components/icons/`·`components/avatars/`·`components/charts/`는 각 갤러리 페이지 전용 컴포넌트이고, 우동 도메인 화면은 `components/groups/`·`components/dues/`·`components/votes/`·`components/announcements/`·`components/notifications/`·`components/me/`에 모여 있습니다. 파일명은 전부 kebab-case, 컴포넌트명은 PascalCase입니다.
 
 ## Claude Code 커스텀 설정
 

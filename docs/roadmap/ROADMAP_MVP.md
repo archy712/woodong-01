@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-26
-**📊 진행 상황**: Phase 0·1·2·3·4·5·6 완료, Phase 7 진행 중 (35/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3·4·5·6 완료, Phase 7 진행 중 (36/44 Tasks 완료)
 
 ---
 
@@ -574,12 +574,21 @@
   - ⚠️ **LCP 목표 미달 — 보호 페이지 4.2~5.9s, 랜딩 2.8s(목표 4G 2.5s)**. 원인은 코드가 아니라 측정 환경이다: 관측 LCP는 랜딩 114ms·보호 페이지 546~~867ms이고, 3~~6초는 Lighthouse Lantern이 **4G RTT를 시뮬레이션**해 환산한 값이다. 남은 임계 경로는 ① 렌더 블로킹 CSS 2개(25.9KB + 1KB, 시뮬레이션 기준 450ms + 153ms)와 ② 보호 페이지의 **서버 → Supabase 왕복**(개발 노트북에서 원격 리전으로 나가는 지연이라 프로덕션의 Vercel 엣지 ↔ 같은 리전 Supabase와 다르다). **실제 목표 달성 여부는 Task 033의 프로덕션 배포 후 실측으로 판정**한다
   - **완료 조건**: ✅ 주요 5개 화면 **Lighthouse 접근성 100/100**(기준선 충족), ✅ INP 목표(200ms) 달성 — 실측 56ms, ✅ CLS 전 화면 0.1 이하(최대 0.057), ⚠️ **LCP 목표는 로컬 시뮬레이션 기준 미달 → Task 033 프로덕션 실측으로 이월**, ✅ 측정 픽스처·테스트 계정 정리 완료, ✅ `npm run check-all` + `npm run build` 통과
 
-- **Task 032: 스타터킷 잔재 정리 및 라우팅 최종 정합성 확인**
-  - **`/avatars`, `/charts`, `/about`, `/tech-stack` 4개 데모 페이지의 존치 여부 결정 및 반영**(PRD 부록 — 방치 시 미완성 스타터킷 잔재로 노출될 위험). `/icons`, `/gallery`는 PRD 3.8/6.2에 따라 **재사용 확정**
-  - `lib/supabase/proxy.ts` allow-list 최종 정리(공개 페이지만 남기고 결정에 따라 제거)
-  - 튜토리얼 컴포넌트(`components/tutorial/`) 및 미사용 자산 정리
-  - `npm run check-all`(typecheck + lint + format:check) 통과
-  - **완료 조건**: 결정 사항이 코드와 allow-list에 반영되고 미사용 라우트 0건, `check-all` 통과
+- **Task 032: 스타터킷 잔재 정리 및 라우팅 최종 정합성 확인** ✅ - 완료
+  - ✅ **4개 데모 페이지 존치 결정: `/about`만 제거, `/tech-stack`·`/avatars`·`/charts`는 유지.** 판단 기준은 "우동 사용자에게 보여도 말이 되는가"였다
+    - `/about`은 **문자 그대로 "next.js 스타터킷3 소개"**였다(`heroTitle: "next.js starter-kit v3"`). 게다가 푸터 주석이 "스타터킷 소개(/about) 링크는 노출하지 않는다"고 명시해 **어디서도 링크되지 않는 도달 불가 라우트**였다 — 존치 이유가 없어 제거
+    - `/tech-stack`은 PRD 3.1이 랜딩 요구사항으로 명시한 "사용 기술 스택 소개"에 해당하고 랜딩·푸터 양쪽에서 링크된다 → 유지
+    - `/avatars`, `/charts`는 PRD 3.8이 재사용 확정한 `/icons`·`/gallery`와 같은 개발자/QA용 내부 문서 성격이고 이미 푸터에 나란히 노출 중 → 유지. **푸터 링크 5개는 변경 없음**
+  - ✅ **유지하기로 한 `/tech-stack`의 문구를 우동 기준으로 교정** — 존치 결정만으로는 "스타터킷 잔재" 문제가 남는다. 실제로 이 페이지는 **자기 자신을 스타터킷이라고 소개하고 있었고**(4개 언어 `techStack.description` + `PLANNED_TECH_STACK.description`), 내용도 **Phase 3~6에서 실제로 쓴 스택과 어긋나 있었다**
+    - `Supabase Auth`가 "Google OAuth 지원"으로만 적혀 있었다 → 실제 구현(Task 016)은 **Google + Kakao**
+    - **`백엔드 & 인증` 카테고리에 데이터베이스 항목이 아예 없었다** — 우동은 12개 `woodong_*` 테이블과 RLS가 핵심인데 Supabase Auth만 적혀 있었다. `Supabase Postgres`(RLS 격리)와 `Supabase Storage`(모임 대표 이미지 + 서명 URL) 항목 추가
+  - ✅ **`lib/supabase/proxy.ts` allow-list 정리** — 6줄짜리 `!pathname.startsWith(...)` 체인을 `PUBLIC_PATH_PREFIXES` 배열 + `some()`으로 바꾸고 실제 라우트와 대조했다. 여기서 **`/about` 외에 `/login`도 잔재로 드러났다**: allow-list에 있지만 이 앱에 `app/login`은 존재한 적이 없다(로그인은 `/auth/login`이고 이미 `/auth` 접두어로 통과한다). 공개 경로가 상수 하나에 모이면서 "새 공개 페이지 추가 시 등록" 규약의 위치도 명확해졌다
+  - ✅ **`/protected` 루트는 삭제가 아니라 리다이렉트로 처리** — 내용은 `getClaims()` 결과를 `JSON.stringify`로 덤프하고 `FetchDataSteps` 튜토리얼을 띄우는 순수 스타터킷 화면이었고 링크도 0건이었다. 다만 세그먼트를 통째로 지우면 북마크·구 링크가 404가 되므로 `redirect(DEFAULT_AFTER_LOGIN_PATH)`로 모임 목록에 넘긴다(로그인 직후 경로와 같은 상수를 재사용해 두 경로가 갈라지지 않게 했다)
+  - ✅ **미사용 자산 제거**: `components/tutorial/` 3파일, **`lib/woodong/dummy/` 8파일 1,075줄**(Phase 1~~2 스캐폴딩 — Phase 3~~6에서 실데이터로 전환한 뒤 참조 0건으로 남아 있었다), 소비자가 없던 배럴 `lib/woodong/index.ts`
+  - ✅ **사전(dictionary) 정리** — `about` 블록 전체 + `demoModeNotice`(삭제한 더미 스캐폴딩용 문구)를 4개 언어와 `types.ts`에서 제거. 이 과정에서 **`headerTitle` 키 6종이 어느 컴포넌트에서도 읽히지 않는 죽은 데이터**임을 확인해 함께 제거했다(`about`/`gallery`/`icons`/`avatars`/`charts`/`techStack` — 과거 헤더가 페이지 제목을 표시하던 시절의 잔재)
+  - ✅ **라우팅 정합성 실측**(프로덕션 빌드 + `next start`, 비로그인 세션): `/`·`/tech-stack`·`/avatars`·`/charts`·`/gallery`·`/icons`·`/invite/[code]` **200**, `/protected*` 전부 `next` 쿼리를 보존한 채 `/auth/login`으로 **307**. 제거한 `/about`은 존재하지 않는 `/nope`와 **완전히 동일하게 동작**함을 확인(비로그인은 로그인 리다이렉트, 로그인 상태면 404) — 잔재가 남아 응답하는 경우가 없다
+  - ⚠️ **`.next` 캐시 때문에 typecheck가 한 번 실패했다** — `app/about/page.tsx`를 지운 뒤 `tsc`가 `.next/types/validator.ts`의 `Cannot find module '../../app/about/page.js'`로 죽었다. 코드 문제가 아니라 Next가 생성해 둔 라우트 타입이 stale한 것이라, **라우트를 삭제할 때는 `rm -rf .next` 후 재빌드**해야 한다
+  - **완료 조건**: ✅ 존치 결정이 코드와 allow-list에 반영, ✅ 미사용 라우트 0건(`next build` 라우트 목록에서 `/about` 소멸, 나머지 31개 라우트 전부 도달 가능), ✅ `npm run check-all` 통과(0 errors — 남은 6건은 shadcn 벤더 컴포넌트의 기존 warning), ✅ `npm run build` 통과, ✅ `CLAUDE.md`의 `/about`·`components/tutorial/`·allow-list 서술 갱신
 
 - **Task 033: 전체 사용자 플로우 E2E 회귀 테스트 및 배포**
   - **## 테스트 체크리스트**
@@ -682,7 +691,7 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 | 정산 데이터 정확성(수동 입력 의존)                                                 | 2차 발행 전 "검토 단계" 도입 여부 결정 필요                                           | Task 036                                             |
 | 정산 데이터 이관 부재(총무 교체)                                                   | 1차 제외, 2차 CSV 내보내기                                                            | Task 040                                             |
 | 알림 발송 비용 (v1.6 갱신 — 웹 푸시는 무료)                                        | 리스크 해소, 별도 비용 시뮬레이션 불필요                                              | Task 038                                             |
-| 스타터킷 데모 페이지(`/avatars`, `/charts`, `/about`, `/tech-stack`) 존치 여부     | 개발 착수 전 결정 필요                                                                | Task 032                                             |
+| 스타터킷 데모 페이지(`/avatars`, `/charts`, `/about`, `/tech-stack`) 존치 여부     | 결정 완료 — `/about`만 제거, 나머지 3개는 유지(`/tech-stack` 문구는 우동 기준 교정)   | Task 032                                             |
 | 1차 MVP 공수 초과(163~212h vs 4주 160h)                                            | 해결 — 3.4-b·스케줄러·Naver/Apple을 2차로 이동해 범위 축소                            | Phase 8 격리                                         |
 
 ---

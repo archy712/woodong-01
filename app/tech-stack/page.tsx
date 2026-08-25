@@ -32,7 +32,16 @@ const TECH_STACK = [
       {
         name: "Supabase Auth",
         description:
-          "@supabase/ssr 기반 쿠키 세션 인증, 이메일/비밀번호 + Google OAuth 지원",
+          "@supabase/ssr 기반 쿠키 세션 인증, 이메일/비밀번호 + Google · Kakao 소셜 로그인",
+      },
+      {
+        name: "Supabase Postgres",
+        description:
+          "모임 · 회비 · 투표 · 알림 데이터를 RLS(행 수준 보안) 정책으로 격리해 저장",
+      },
+      {
+        name: "Supabase Storage",
+        description: "모임 대표 이미지 업로드와 서명 URL 기반 열람",
       },
       {
         name: "Zod + React Hook Form",
@@ -87,8 +96,7 @@ const TECH_STACK = [
 // 아직 프로젝트에 도입되지 않았지만 향후 준비할 예정인 기술 스택입니다.
 const PLANNED_TECH_STACK = {
   category: "배포 & CI/CD",
-  description:
-    "아직 이 스타터킷에 포함되어 있지 않지만, 앞으로 도입할 예정입니다.",
+  description: "아직 우동에 도입하지 않았지만, 앞으로 준비할 예정입니다.",
   items: [
     {
       name: "GitHub Actions",
