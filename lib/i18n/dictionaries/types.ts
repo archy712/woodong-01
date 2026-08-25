@@ -287,6 +287,7 @@ export interface Dictionary {
     editProfileButton: string;
     linkedAccountsSectionTitle: string;
     linkedAccountsNotice: string;
+    linkedAccountsLoadError: string;
     connectedLabel: string;
     notConnectedLabel: string;
     emailProviderLabel: string;
@@ -351,6 +352,13 @@ export interface Dictionary {
     invalidInviteCode: string;
     genericError: string;
     lastAdminGuard: string;
+    authInvalidCredentials: string;
+    authEmailTaken: string;
+    authWeakPassword: string;
+    authSamePassword: string;
+    authRateLimit: string;
+    authIdentityAlreadyLinked: string;
+    authLastIdentityGuard: string;
   };
   emptyStates: {
     noGroups: string;

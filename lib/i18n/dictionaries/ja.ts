@@ -423,6 +423,8 @@ export const ja: Dictionary = {
     linkedAccountsSectionTitle: "연동된 계정",
     linkedAccountsNotice:
       "연동한 계정 중 아무거나로 로그인하면 같은 모임 정보를 볼 수 있어요.",
+    linkedAccountsLoadError:
+      "연동 정보를 불러오지 못했어요. 잠시 후 새로고침해 주세요.",
     connectedLabel: "연동됨",
     notConnectedLabel: "연동 안 됨",
     emailProviderLabel: "이메일",
@@ -492,6 +494,18 @@ export const ja: Dictionary = {
       "一時的なエラーが発生しました。しばらくしてから再試行してください。",
     lastAdminGuard:
       "最後の幹事は役割の変更やグループの退会ができません。先に他のメンバーを幹事に指定してください。",
+    // TODO(i18n): Task 018-1の新規キーは韓国語の仮文言、翻訳が必要
+    authInvalidCredentials: "이메일 또는 비밀번호가 올바르지 않아요.",
+    authEmailTaken: "이미 가입된 이메일이에요. 로그인해 주세요.",
+    authWeakPassword:
+      "비밀번호가 너무 짧거나 단순해요. 6자 이상으로 다시 설정해 주세요.",
+    authSamePassword:
+      "지금 쓰고 있는 비밀번호와 같아요. 다른 비밀번호를 입력해 주세요.",
+    authRateLimit: "요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.",
+    authIdentityAlreadyLinked:
+      "이미 다른 우동 계정에 연결된 소셜 계정이에요. 다른 계정으로 시도해 주세요.",
+    authLastIdentityGuard:
+      "마지막 로그인 수단은 해제할 수 없어요. 다른 계정을 먼저 연동해 주세요.",
   },
   emptyStates: {
     noGroups: "まだ参加しているグループがありません。Woodongにお任せください！",

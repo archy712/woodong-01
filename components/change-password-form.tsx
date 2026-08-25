@@ -6,18 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { mapAuthErrorMessage } from "@/lib/auth/auth-error-message";
 import { useState } from "react";
 
 export function ChangePasswordForm({
   className,
   auth,
   email,
-  genericError,
+  errors,
   ...props
 }: {
   auth: Dictionary["auth"];
   email: string;
-  genericError: string;
+  errors: Dictionary["errors"];
 } & React.ComponentPropsWithoutRef<"div">) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -61,7 +62,7 @@ export function ChangePasswordForm({
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : genericError);
+      setError(mapAuthErrorMessage(err, errors));
     } finally {
       setIsLoading(false);
     }

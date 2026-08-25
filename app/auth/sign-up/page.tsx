@@ -38,7 +38,7 @@ async function PageContent({
     <SignUpForm
       auth={dict.auth}
       or={dict.common.or}
-      genericError={dict.errors.genericError}
+      errors={dict.errors}
       next={next}
     />
   );

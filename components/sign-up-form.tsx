@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { SocialAuthButtons } from "@/components/social-auth-buttons";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { mapAuthErrorMessage } from "@/lib/auth/auth-error-message";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -23,13 +24,13 @@ export function SignUpForm({
   className,
   auth,
   or,
-  genericError,
+  errors,
   next,
   ...props
 }: {
   auth: Dictionary["auth"];
   or: string;
-  genericError: string;
+  errors: Dictionary["errors"];
   /** 가입 성공 후 복귀할 내부 경로. 페이지에서 `resolveNextPath()`로 검증해 내려준다. */
   next: string;
 } & React.ComponentPropsWithoutRef<"div">) {
@@ -60,7 +61,7 @@ export function SignUpForm({
       router.push(next);
       router.refresh();
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : genericError);
+      setError(mapAuthErrorMessage(error, errors));
     } finally {
       setIsLoading(false);
     }
@@ -135,11 +136,7 @@ export function SignUpForm({
             <span className="text-xs text-muted-foreground">{or}</span>
             <Separator className="flex-1" />
           </div>
-          <SocialAuthButtons
-            auth={auth}
-            genericError={genericError}
-            next={next}
-          />
+          <SocialAuthButtons auth={auth} errors={errors} next={next} />
         </CardContent>
       </Card>
     </div>

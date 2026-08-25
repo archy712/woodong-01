@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GoogleIcon, KakaoIcon } from "@/components/auth/provider-icons";
 import { Button } from "@/components/ui/button";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { mapAuthErrorMessage } from "@/lib/auth/auth-error-message";
 import { useState } from "react";
 
 type SocialProvider = "google" | "kakao";
@@ -16,11 +17,11 @@ type SocialProvider = "google" | "kakao";
 
 export function SocialAuthButtons({
   auth,
-  genericError,
+  errors,
   next,
 }: {
   auth: Dictionary["auth"];
-  genericError: string;
+  errors: Dictionary["errors"];
   /** 소셜 로그인 성공 후 복귀할 내부 경로. 콜백 라우트에서 다시 검증한다(Task 017). */
   next: string;
 }) {
@@ -46,7 +47,7 @@ export function SocialAuthButtons({
     });
 
     if (error) {
-      setError(error.message || genericError);
+      setError(mapAuthErrorMessage(error, errors));
       setPendingProvider(null);
     }
     // 성공하면 브라우저가 provider 인가 화면으로 이동하므로 추가 상태 갱신이 필요 없다.
