@@ -4,10 +4,7 @@ import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { ChangePasswordForm } from "@/components/change-password-form";
-import {
-  LinkedAccounts,
-  type LinkedIdentity,
-} from "@/components/me/linked-accounts";
+import { LinkedAccounts } from "@/components/me/linked-accounts";
 import { NotificationChannelSettings } from "@/components/notifications/notification-channel-settings";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -53,22 +50,20 @@ async function MeContent() {
       ? woodongProfile.avatar_key
       : DEFAULT_AVATAR_KEY;
 
-  // 연동된 로그인 수단은 `getUserIdentities()`가 유일한 출처다(Task 018).
-  // 클라이언트로는 화면에 필요한 최소 필드만 내려보낸다.
-  const { data: identitiesData } = await supabase.auth.getUserIdentities();
-  const identities: LinkedIdentity[] = (identitiesData?.identities ?? []).map(
-    (identity) => ({
-      identityId: identity.identity_id,
-      provider: identity.provider,
-      email:
-        identity.identity_data?.email ??
-        (identity.provider === "email" ? (data.claims.email ?? null) : null),
-    }),
-  );
+  // 연동된 로그인 수단은 JWT의 `app_metadata.providers`에서 읽는다(Task 018-1).
+  //
+  // 처음에는 `getUserIdentities()`를 썼지만, 이 API는 내부적으로 `getUser()`를 호출하고
+  // 서버 컴포넌트에서는 세션 갱신 시점에 "Auth session missing!"으로 실패하는 경우가 있다.
+  // 실패하면 실제로는 연동된 provider가 전부 "연동 안 됨"으로 표시돼 사용자를 오도한다.
+  // 이 저장소가 `getUser()` 대신 `getClaims()`를 쓰는 관례와 같은 이유이며, 클레임은 이미
+  // 서명 검증을 마친 값이라 추가 네트워크 호출도 필요 없다.
+  // 해제에 필요한 identity_id는 실제 해제 시점에 브라우저 클라이언트가 조회한다.
+  const appMetadata = data.claims.app_metadata;
+  const providers =
+    appMetadata?.providers ??
+    (appMetadata?.provider ? [appMetadata.provider] : []);
 
-  const hasEmailIdentity = identities.some(
-    (identity) => identity.provider === "email",
-  );
+  const hasEmailIdentity = providers.includes("email");
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
@@ -114,7 +109,7 @@ async function MeContent() {
             <ChangePasswordForm
               auth={dict.auth}
               email={data.claims.email ?? ""}
-              genericError={dict.errors.genericError}
+              errors={dict.errors}
             />
           </CardContent>
         </Card>
@@ -142,9 +137,10 @@ async function MeContent() {
         </CardHeader>
         <CardContent>
           <LinkedAccounts
-            identities={identities}
+            providers={providers}
+            email={data.claims.email ?? null}
             labels={dict.me}
-            genericError={dict.errors.genericError}
+            errors={dict.errors}
             // Kakao 이메일 동의를 거부한 계정은 이메일 로그인 수단을 붙일 수 없다(PRD 3.6.2).
             noEmailNotice={
               data.claims.email ? null : dict.auth.kakaoNoEmailNotice
