@@ -47,11 +47,19 @@ weekly_log_comment_mentions, weekly_log_comments, weekly_log_reactions, weekly_l
 
 | 옵션                                         | 결정                         | 근거                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | -------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Kakao provider의 "이메일 없이 가입 허용"** | **활성화 (Task 016에서)**    | 전역 설정이 아니라 **provider별 설정**(Supabase Auth 내부적으로 `EmailOptional`, 각 OAuth provider 설정 화면에 개별 존재). Kakao Biz App 미등록 시 `account_email`을 못 받으므로(PRD 3.6.1), Task 016에서 Kakao provider를 활성화할 때 해당 provider의 상세 설정에서 함께 켜야 함. `Sign In / Providers` 메인 화면(User Signups 섹션)에는 없음.                                                                                                         |
+| **Kakao provider의 "이메일 없이 가입 허용"** | **활성화 완료 (2026-08-25)** | 전역 설정이 아니라 **provider별 설정**(Supabase Auth 내부적으로 `EmailOptional`). `Sign In / Providers` 메인 화면의 `User Signups` 섹션에는 없고, 같은 페이지 아래 **Auth Providers 목록 → Kakao 아코디언 안**의 "Allow users without an email" 토글이다. ⚠️ 이 옵션은 **KOE205를 해결하지 못한다**(아래 비즈 앱 항목 참고) — 사용자가 **선택 동의**인 이메일 제공을 거부했을 때 가입을 허용하는 용도로만 필요하다.                                     |
 | **Manual Linking (베타)**                    | **활성화 완료 (2026-08-23)** | `Sign In / Providers` → `User Signups` 섹션의 **"Allow manual linking"** 토글. Supabase Auth는 계정 탈취 방지를 위해 `linkIdentity()`/`unlinkIdentity()` API를 기본 비활성화(`GOTRUE_SECURITY_MANUAL_LINKING_ENABLED=false`)해 두는데, 이 옵션 없이는 마이페이지 "연동된 계정" 관리(Task 018)에서 사용자가 임의로 다른 provider를 추가 연동할 수 없다. 특히 Kakao 이메일 미제공 계정(아래 참고)이 나중에 이메일 계정과 수동으로 연동하려면 반드시 필요. |
-| **OAuth Provider**                           | **Google, Kakao만 설정**     | PRD 우선순위: Google/Kakao는 1차 필수, Naver는 1차 완전 제외(2차 스파이크 후 결정, Task 039), Facebook 보류. Provider별 Client ID/Secret 및 리다이렉트 URL, "이메일 없이 가입 허용"은 Task 016에서 함께 등록.                                                                                                                                                                                                                                           |
+| **OAuth Provider**                           | **Google, Kakao 등록 완료**  | PRD 우선순위: Google/Kakao는 1차 필수, Naver는 1차 완전 제외(2차 스파이크 후 결정, Task 039), Facebook 보류. Task 016에서 provider별 Client ID/Secret과 콜백 URL(`https://<project-ref>.supabase.co/auth/v1/callback`) 등록 완료.                                                                                                                                                                                                                       |
 
-- **Kakao Biz App 미등록 전제 확정 (2026-08-23)**: Biz App(사업자 정보) 등록 여부/일정을 별도로 확인하지 않고, **"이메일 없는 Kakao 계정" 플로우(PRD 3.6.2)를 1차 MVP의 기본 경로로 확정**한다. Task 016에서 Kakao provider의 "이메일 없이 가입 허용"(`EmailOptional`)을 기본으로 켜고 구현하며, 추후 Biz App이 등록되어 이메일을 받을 수 있게 되더라도 기존에 이메일 없이 가입한 계정은 마이페이지 수동 연동 안내로 계속 지원한다.
+- ~~**Kakao Biz App 미등록 전제 확정 (2026-08-23)**~~ → **철회. 개인 개발자 비즈 앱으로 전환 (2026-08-25, Task 016)**
+
+  Task 016 구현 중 **Supabase 내장 Kakao provider로는 비즈 앱 없이 로그인이 아예 불가능**하다는 사실이 확인되어 전제를 뒤집었다.
+
+  - **원인**: GoTrue의 `internal/api/provider/kakao.go`가 기본 scope에 `account_email`을 **하드코딩**한다. 클라이언트의 `options.scopes`는 이 기본값을 교체하지 않고 **덧붙이기만** 하므로(`internal/api/external.go`) 제거 경로가 없다. 반면 `account_email`은 비즈 앱이어야 카카오 동의항목에 등록할 수 있어, 미등록 앱은 인가 단계에서 **KOE205**("설정하지 않은 동의 항목: account_email")로 실패한다.
+  - **대시보드의 "이메일 없이 가입 허용"(`EmailOptional`)으로는 해결되지 않는다.** 이 옵션은 사용자 생성 시점에만 적용되는데 KOE205는 그 이전 단계에서 발생한다. Supabase 공식 문서의 "account_email을 빼고 EmailOptional을 켜면 된다"는 안내는 현재 내장 provider 기준으로 **사실과 다르다**(upstream: supabase/auth#2574, PR #2579 미머지, #2397은 "custom provider를 쓰라"며 클로즈).
+  - **선택한 해결책**: 카카오 **개인 개발자 비즈 앱** 전환(사업자등록번호 불필요, 소유자 휴대폰 본인인증만 필요). `카카오계정(이메일)`을 **선택 동의** 항목으로 등록했다. 코드 변경 없이 내장 `provider: "kakao"` 경로를 그대로 쓰며, 이메일을 정상 수신한다(실계정 검증 시 `email_verified: true` 확인).
+  - **대안으로 검토했으나 채택하지 않음**: Custom OIDC provider(`custom:kakao`, issuer `https://kauth.kakao.com`) — 비즈 앱 없이도 scope를 직접 지정할 수 있지만, 카카오 사용자가 **항상 이메일 없는 별도 계정**이 되어 자동 계정 연결이 무력화된다. 비즈 앱 전환이 막히는 환경(해외 번호 등)에서는 이 경로로 폴백할 수 있다.
+  - **"이메일 없는 Kakao 계정" 경로는 여전히 유효하다**: 이메일이 **선택 동의**이므로 사용자가 거부하면 이메일 없이 가입된다. 따라서 `EmailOptional` 활성화와 마이페이지 수동 연동 안내(PRD 3.6.2)는 예외 경로로 계속 유지한다.
 
 ## 4. Free 플랜 제약 및 운영 방침
 
@@ -70,5 +78,5 @@ weekly_log_comment_mentions, weekly_log_comments, weekly_log_reactions, weekly_l
 ## 완료 조건 체크
 
 - [x] 공유 프로젝트 현황 스냅샷 문서화 완료 (§1)
-- [x] Auth 옵션 3종 결정 기록 및 적용 완료 (§3) — Manual Linking 활성화 완료, Kakao "이메일 없이 가입 허용"은 Task 016에서 적용 예정
+- [x] Auth 옵션 3종 결정 기록 및 적용 완료 (§3) — Manual Linking 활성화 완료, Kakao "이메일 없이 가입 허용" 및 Google/Kakao provider 등록 완료(2026-08-25, Task 016)
 - [x] 서버 전용 환경 변수(`SUPABASE_SERVICE_ROLE_KEY`) 등록 완료 (§5, `.env.local`) — Vercel 등록은 Task 033에서 재확인

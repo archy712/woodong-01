@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-24
-**📊 진행 상황**: Phase 0·1·2 완료, Phase 3 진행 중 (15/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2 완료, Phase 3 진행 중 (16/44 Tasks 완료)
 
 ---
 
@@ -251,12 +251,16 @@
   - 커스텀 SMTP(Resend 등) 연동 후 이메일 기반 가입 확인/비밀번호 재설정 재도입 여부는 별도 결정 사항으로 남겨둠(2차 확장 후보)
   - **완료 조건**: ✅ 가입 → 즉시 로그인 상태로 보호 페이지 접근 확인. ✅ 로그인 상태에서 비밀번호 변경 → 로그아웃 → 새 비밀번호로 재로그인까지 실계정 기준으로 정상 동작 확인
 
-- **Task 016: Google / Kakao 소셜 로그인 연동 및 계정 연결 정책 구현**
-  - Supabase Auth에 Google, Kakao provider 설정 및 리다이렉트 URL 구성
-  - **계정 자동 연결 수용 정책 구현**(PRD 3.6.2): verified 이메일 기준 자동 identity 연결은 플랫폼 기본 동작이므로 그대로 수용하고, **사후 고지 토스트**("기존 [이메일] 계정에 연결되었습니다")를 노출 — 연결 여부는 `getUserIdentities()`로 로그인 전/후 identity 개수를 비교해 판별
-  - **Kakao 이메일 미제공 예외 처리**: Biz App 미등록 시 `account_email`을 받지 못하므로, "Allow users without an email" 전제 하에 이메일 없는 신규 계정으로 정상 가입 처리하고 마이페이지 수동 연동 안내를 노출
-  - 자동 연결 시 이메일 알림 발송은 **2차 확장**으로 분류(1차는 인앱 토스트만)
-  - **완료 조건**: Google/Kakao 로그인 성공, 동일 verified 이메일 자동 연결 시 기존 모임/회비 데이터 접근 유지 및 안내 토스트 노출, 이메일 없는 Kakao 계정이 에러 없이 가입 완료
+- **Task 016: Google / Kakao 소셜 로그인 연동 및 계정 연결 정책 구현** ✅ - 완료
+  - ✅ Supabase Auth에 Google, Kakao provider 설정 및 리다이렉트 URL 구성 — 콜백은 `https://<project-ref>.supabase.co/auth/v1/callback`, 앱 복귀 경로는 `{origin}/auth/callback`
+  - ⚠️ **(계획 변경) Kakao 비즈 앱 전환이 불가피함을 확인**: 로드맵/PRD가 전제하던 "Biz App 미등록 + 이메일 없는 계정"은 **Supabase 내장 Kakao provider로는 로그인 자체가 불가능**했다. GoTrue `internal/api/provider/kakao.go`가 기본 scope에 `account_email`을 하드코딩하고 `options.scopes`는 이를 **교체가 아니라 덧붙이기만** 해서 제거할 수 없는데, 해당 동의항목은 비즈 앱에서만 등록 가능해 인가 단계에서 **KOE205**로 실패한다. 대시보드의 "Allow users without an email"은 사용자 생성 시점 옵션이라 이 단계를 구제하지 못한다(Supabase 공식 문서의 반대 안내는 현재 사실과 다름 — upstream supabase/auth#2574, #2579 미머지). → **개인 개발자 비즈 앱**(사업자등록번호 불필요, 소유자 본인인증만 필요)으로 전환하고 `카카오계정(이메일)`을 **선택 동의**로 등록해 해결. 상세 경위와 대안(Custom OIDC `custom:kakao`) 비교는 `docs/ops/SUPABASE_SHARED_PROJECT.md` §3에 기록
+  - ✅ `components/social-auth-buttons.tsx` 신규 구현(Google/Kakao 버튼 + 진행 상태·에러 UI 공유) — 기존 `components/google-auth-button.tsx`는 중복 로직이라 삭제하고 로그인/회원가입 폼을 이 컴포넌트로 통합, `googleConnecting` 사전 키는 provider 중립적인 `socialConnecting`으로 리네임(4개 언어 + `Dictionary` 타입)
+  - ✅ **계정 자동 연결 수용 정책 구현**(PRD 3.6.2): verified 이메일 기준 자동 연결은 플랫폼 기본 동작이므로 수용하고 **사후 고지 토스트**를 노출. 판별은 로그인 전/후 비교(로그아웃 상태에선 "이전" 스냅샷을 얻을 수 없음) 대신 **`exchangeCodeForSession()` 응답의 identity 목록에서 "계정은 이전에 생성됐는데 identity는 방금 생성됨"** 조합으로 수행(`app/auth/callback/route.ts`) — identity 2개 이상 + 최신 identity가 60초 이내 생성 + 계정 생성 시각과 5초 초과 차이
+  - ✅ 콜백이 `?linked=1` / `?no_email=1`을 붙이고, `components/auth/oauth-result-toast.tsx`(+ 루트 레이아웃의 서버 래퍼 `oauth-result-toast-slot.tsx`)가 이를 읽어 토스트를 1회 노출한 뒤 `router.replace()`로 파라미터를 제거. 연결된 이메일은 URL로 실어 나르지 않고 세션(`getClaims()`)에서 직접 읽어 토스트 설명에 표시
+  - ✅ **Kakao 이메일 미제공 예외 처리**: 이메일이 **선택 동의**라 사용자가 거부하면 여전히 이메일 없이 가입되므로, "Allow users without an email" 전제를 유지하고 `no_email` 토스트("계정 연동하기" 액션 → 마이페이지)와 마이페이지 안내 문구(`app/protected/me/page.tsx`, `data.claims.email` 부재 시)를 배치
+  - ✅ 자동 연결 시 이메일 알림 발송은 **2차 확장**으로 분류(1차는 인앱 토스트만)
+  - ✅ Playwright 실계정 검증: (1) Kakao 신규 가입 → `/protected` 복귀 및 세션 발급(`email_verified: true`, 이름/이메일 수신 확인), 최초 가입은 자동 연결로 오판하지 않음(identity 간격 0.006초), (2) 동일 이메일 이메일계정 선생성 후 Kakao 로그인 → **단일 user에 email+kakao identity 2개** 확인(간격 92초 → 연결로 정상 판정), (3) 두 토스트의 실제 렌더링 문구·액션·URL 정리 동작 확인. 테스트 계정은 검증 후 `auth.users`에서 삭제로 정리
+  - **완료 조건**: ✅ Google/Kakao 로그인 성공, ✅ 동일 verified 이메일 자동 연결 시 **user id가 유지되어** 기존 모임/회비 데이터 접근이 보존됨 및 안내 토스트 노출. ⚠️ "이메일 동의를 거부한 Kakao 계정 가입"은 코드 경로와 토스트를 검증했으나, 이미 동의를 마친 계정으로는 거부 시나리오를 재현할 수 없어 **실계정 E2E는 Task 018-1에서 신규 카카오 계정으로 수행**
 
 - **Task 017: 로그인 후 원래 경로 복귀(`next` 파라미터) 구현**
   - **3개 지점을 함께 수정**(PRD 부록 명시): `lib/supabase/proxy.ts`(리다이렉트 시 원래 경로를 `next` 쿼리 파라미터로 부착), `components/login-form.tsx`(현재 `/protected` 하드코딩 리다이렉트 제거), OAuth 콜백 라우트(`next` 파라미터 전달/복원)
