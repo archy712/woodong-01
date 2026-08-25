@@ -295,7 +295,7 @@ export interface Dictionary {
     manualLinkCta: string;
     loginWithGoogle: string;
     loginWithKakao: string;
-    googleConnecting: string;
+    socialConnecting: string;
     login: {
       title: string;
       description: string;

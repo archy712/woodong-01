@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { GoogleAuthButton } from "@/components/google-auth-button";
+import { SocialAuthButtons } from "@/components/social-auth-buttons";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -110,10 +110,7 @@ export function LoginForm({
             <span className="text-xs text-muted-foreground">{or}</span>
             <Separator className="flex-1" />
           </div>
-          <GoogleAuthButton
-            label={auth.loginWithGoogle}
-            connectingLabel={auth.googleConnecting}
-          />
+          <SocialAuthButtons auth={auth} genericError={genericError} />
         </CardContent>
       </Card>
     </div>

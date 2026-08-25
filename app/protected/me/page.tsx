@@ -133,6 +133,12 @@ async function MeContent() {
             </span>
             <Badge variant="outline">{dict.me.notConnectedLabel}</Badge>
           </div>
+          {/* Kakao 비즈 앱 미등록 계정은 이메일 없이 가입되므로 수동 연동을 안내한다(PRD 3.6.2). */}
+          {!data.claims.email && (
+            <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+              {dict.auth.kakaoNoEmailNotice}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground">
             {dict.me.linkedAccountsNotice}
           </p>

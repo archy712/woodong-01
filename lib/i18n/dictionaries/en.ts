@@ -432,7 +432,7 @@ export const en: Dictionary = {
     manualLinkCta: "Link Account",
     loginWithGoogle: "Continue with Google",
     loginWithKakao: "Continue with Kakao",
-    googleConnecting: "Connecting...",
+    socialConnecting: "Connecting...",
     login: {
       title: "Login",
       description: "Sign in with your email to see your groups.",

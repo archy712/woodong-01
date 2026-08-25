@@ -417,7 +417,7 @@ export const ko: Dictionary = {
     manualLinkCta: "계정 연동하기",
     loginWithGoogle: "Google로 계속하기",
     loginWithKakao: "카카오로 계속하기",
-    googleConnecting: "연결하는 중...",
+    socialConnecting: "연결하는 중...",
     login: {
       title: "로그인",
       description: "이메일로 로그인해 모임을 확인하세요.",

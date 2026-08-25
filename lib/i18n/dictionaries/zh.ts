@@ -421,7 +421,7 @@ export const zh: Dictionary = {
     manualLinkCta: "关联账户",
     loginWithGoogle: "使用 Google 继续",
     loginWithKakao: "使用 Kakao 继续",
-    googleConnecting: "连接中...",
+    socialConnecting: "连接中...",
     login: {
       title: "登录",
       description: "使用邮箱登录以查看你的小组。",

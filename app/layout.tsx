@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { AppFooter } from "@/components/app-footer";
 import { AppHeader } from "@/components/app-header";
+import { OAuthResultToastSlot } from "@/components/auth/oauth-result-toast-slot";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -54,6 +55,9 @@ export default function RootLayout({
             </div>
           </TooltipProvider>
           <Toaster />
+          <Suspense fallback={null}>
+            <OAuthResultToastSlot />
+          </Suspense>
         </ThemeProvider>
       </body>
     </html>

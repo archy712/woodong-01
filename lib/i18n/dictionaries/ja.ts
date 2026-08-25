@@ -432,7 +432,7 @@ export const ja: Dictionary = {
     manualLinkCta: "アカウントを連携する",
     loginWithGoogle: "Googleで続ける",
     loginWithKakao: "カカオで続ける",
-    googleConnecting: "接続中...",
+    socialConnecting: "接続中...",
     login: {
       title: "ログイン",
       description: "メールでログインしてグループを確認しましょう。",
