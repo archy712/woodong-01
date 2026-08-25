@@ -33,7 +33,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // 기본 로케일(ko)을 정적 셸에 박아 둔다. 다른 언어는 헤더의 `HtmlLangSync`가 고친다 —
+    // 여기서 `getLocale()`을 부르면 문서 전체가 동적이 된다(Task 031 주석 참고).
+    <html lang="ko" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"

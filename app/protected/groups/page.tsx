@@ -24,6 +24,7 @@ import {
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { listMyGroups } from "@/lib/woodong/queries/groups";
+import { CardListSkeleton } from "@/components/page-skeletons";
 
 async function GroupsContent() {
   const supabase = await createClient();
@@ -116,7 +117,9 @@ async function GroupsContent() {
 
 export default function GroupsPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={<CardListSkeleton rows={3} withAction maxWidth="max-w-3xl" />}
+    >
       <GroupsContent />
     </Suspense>
   );

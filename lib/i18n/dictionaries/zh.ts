@@ -31,6 +31,12 @@ export const zh: Dictionary = {
     logoutLabel: "退出登录",
     signInLabel: "登录",
     signUpLabel: "注册",
+    theme: {
+      label: "切换主题",
+      light: "浅色",
+      dark: "深色",
+      system: "跟随系统",
+    },
     groupTabs: {
       home: "首页",
       announcements: "公告",

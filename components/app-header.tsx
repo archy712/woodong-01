@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { AuthButton } from "@/components/auth-button";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { HeaderAuthNav } from "@/components/header-auth-nav";
+import { HtmlLangSync } from "@/components/html-lang-sync";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -30,8 +31,9 @@ export async function AppHeader() {
               unreadBadgeLabel={dict.notifications.unreadBadgeLabel}
             />
           </Suspense>
+          <HtmlLangSync locale={locale} />
           <LanguageSwitcher locale={locale} />
-          <ThemeSwitcher />
+          <ThemeSwitcher labels={dict.nav.theme} />
           {!hasEnvVars ? (
             <EnvVarWarning />
           ) : (

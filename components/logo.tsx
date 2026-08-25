@@ -101,7 +101,12 @@ export function Logo({
                 taglineText
               )}
             </span>
-            <span className="text-[10px] font-medium tracking-wide text-muted-foreground/70">
+            {/*
+              10px 워드마크라 `/70` 투명도를 얹으면 WCAG AA 대비(4.5:1)에 미달한다
+              (Task 031에서 Lighthouse `color-contrast` 실패로 잡힘). 시각적 위계는
+              이미 크기(10px)와 굵기로 충분히 잡히므로 투명도는 걷어낸다.
+            */}
+            <span className="text-[10px] font-medium tracking-wide text-muted-foreground">
               Woodong
             </span>
           </span>

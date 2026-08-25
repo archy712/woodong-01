@@ -31,6 +31,12 @@ export const en: Dictionary = {
     logoutLabel: "Log out",
     signInLabel: "Sign in",
     signUpLabel: "Sign up",
+    theme: {
+      label: "Change theme",
+      light: "Light",
+      dark: "Dark",
+      system: "System",
+    },
     groupTabs: {
       home: "Home",
       announcements: "Announcements",

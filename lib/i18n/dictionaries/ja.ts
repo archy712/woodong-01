@@ -31,6 +31,12 @@ export const ja: Dictionary = {
     logoutLabel: "ログアウト",
     signInLabel: "ログイン",
     signUpLabel: "新規登録",
+    theme: {
+      label: "テーマ変更",
+      light: "ライト",
+      dark: "ダーク",
+      system: "システム",
+    },
     groupTabs: {
       home: "ホーム",
       announcements: "お知らせ",

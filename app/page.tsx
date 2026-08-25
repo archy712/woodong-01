@@ -70,14 +70,14 @@ async function HomeContent() {
           {dict.home.hero.subtitle}
         </p>
         {isLoggedIn ? (
-          <Button asChild size="lg" className="rounded-full px-8">
+          <Button asChild size="lg" className="min-h-11 rounded-full px-8">
             <Link href="/protected/groups">
               {dict.home.hero.ctaLoggedIn}
               <ArrowRightIcon />
             </Link>
           </Button>
         ) : (
-          <Button asChild size="lg" className="rounded-full px-8">
+          <Button asChild size="lg" className="min-h-11 rounded-full px-8">
             <Link href="/auth/sign-up">{dict.home.hero.cta}</Link>
           </Button>
         )}
@@ -123,9 +123,13 @@ async function HomeContent() {
             </Badge>
           ))}
         </div>
+        {/*
+          모바일 터치 타겟 44px 확보(Task 031) — 글자 높이만으로는 20px이라 손가락으로
+          정확히 누르기 어렵다. 폭이 아니라 `min-h`로만 키워 문구 길이에 영향을 주지 않는다.
+        */}
         <Link
           href="/tech-stack"
-          className="inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
+          className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
         >
           {dict.home.techStackPreview.cta}
           <ArrowRightIcon className="size-4" />

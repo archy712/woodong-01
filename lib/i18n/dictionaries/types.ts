@@ -28,6 +28,13 @@ export interface Dictionary {
     logoutLabel: string;
     signInLabel: string;
     signUpLabel: string;
+    /** 테마 전환 드롭다운(Task 031 — 아이콘만 있는 트리거의 접근 가능한 이름). */
+    theme: {
+      label: string;
+      light: string;
+      dark: string;
+      system: string;
+    };
     groupTabs: {
       home: string;
       announcements: string;

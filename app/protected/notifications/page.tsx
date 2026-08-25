@@ -7,6 +7,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { processDueReminders } from "@/lib/woodong/due-reminders";
 import { listMyNotifications } from "@/lib/woodong/queries/notifications";
+import { CardListSkeleton } from "@/components/page-skeletons";
 
 async function NotificationsContent() {
   const supabase = await createClient();
@@ -46,7 +47,7 @@ async function NotificationsContent() {
 
 export default function NotificationsPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<CardListSkeleton rows={4} />}>
       <NotificationsContent />
     </Suspense>
   );

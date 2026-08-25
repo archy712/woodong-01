@@ -28,6 +28,7 @@ import { getLatestDueCycleSummary } from "@/lib/woodong/queries/dues";
 import { getGroupDetail } from "@/lib/woodong/queries/groups";
 import { listOpenVotes } from "@/lib/woodong/queries/votes";
 import { processExpiredVotes } from "@/lib/woodong/vote-closing";
+import { GroupDashboardSkeleton } from "@/components/page-skeletons";
 
 async function GroupDetailContent({
   params,
@@ -168,7 +169,15 @@ async function GroupDetailContent({
                   {latestDues.summary.paidRate}%
                 </span>
               </div>
-              <Progress value={latestDues.summary.paidRate} />
+              {/*
+                `role="progressbar"`에는 접근 가능한 이름이 있어야 한다 — 없으면 스크린리더가
+                "진행률 표시줄 67%"라고만 읽어서 무엇의 67%인지 알 수 없다
+                (Task 031에서 Lighthouse `aria-progressbar-name` 실패로 잡힘).
+              */}
+              <Progress
+                value={latestDues.summary.paidRate}
+                aria-label={dict.dues.summaryLabel}
+              />
               <span className="text-sm text-muted-foreground">
                 {/* 분모는 모임 인원이 아니라 **이 항목의 청구 인원**이다 — 항목 생성 뒤 가입한
                     멤버는 소급 청구되지 않으므로(Task 022 정책) 둘이 다를 수 있다. */}
@@ -250,7 +259,7 @@ export default function GroupDetailPage({
   params: Promise<{ groupId: string }>;
 }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<GroupDashboardSkeleton />}>
       <GroupDetailContent params={params} />
     </Suspense>
   );

@@ -11,6 +11,7 @@ import { getLocale } from "@/lib/i18n/get-locale";
 import { getGroupDetail } from "@/lib/woodong/queries/groups";
 import { getVoteDetail } from "@/lib/woodong/queries/votes";
 import { processExpiredVotes } from "@/lib/woodong/vote-closing";
+import { VoteDetailSkeleton } from "@/components/page-skeletons";
 
 async function VoteDetailContent({
   params,
@@ -100,7 +101,7 @@ export default function VoteDetailPage({
   params: Promise<{ groupId: string; voteId: string }>;
 }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<VoteDetailSkeleton />}>
       <VoteDetailContent params={params} />
     </Suspense>
   );

@@ -20,6 +20,7 @@ import { getGroupDetail } from "@/lib/woodong/queries/groups";
 import { listVotes, type VoteListItem } from "@/lib/woodong/queries/votes";
 import { processExpiredVotes } from "@/lib/woodong/vote-closing";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { CardListSkeleton } from "@/components/page-skeletons";
 
 function VoteCard({
   item,
@@ -189,7 +190,7 @@ export default function VotesPage({
   params: Promise<{ groupId: string }>;
 }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<CardListSkeleton rows={3} withAction />}>
       <VotesContent params={params} />
     </Suspense>
   );

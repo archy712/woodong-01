@@ -30,6 +30,12 @@ export const ko: Dictionary = {
     logoutLabel: "로그아웃",
     signInLabel: "로그인",
     signUpLabel: "회원가입",
+    theme: {
+      label: "테마 변경",
+      light: "라이트",
+      dark: "다크",
+      system: "시스템",
+    },
     groupTabs: {
       home: "홈",
       announcements: "공지",

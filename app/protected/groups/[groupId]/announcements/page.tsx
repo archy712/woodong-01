@@ -10,6 +10,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { listAnnouncements } from "@/lib/woodong/queries/announcements";
 import { getGroupDetail } from "@/lib/woodong/queries/groups";
+import { CardListSkeleton } from "@/components/page-skeletons";
 
 async function AnnouncementsContent({
   params,
@@ -81,7 +82,7 @@ export default function AnnouncementsPage({
   params: Promise<{ groupId: string }>;
 }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<CardListSkeleton rows={3} withAction />}>
       <AnnouncementsContent params={params} />
     </Suspense>
   );

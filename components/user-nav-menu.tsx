@@ -14,7 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase/client";
 
 /**
  * 헤더 우측의 아바타+이메일 드롭다운. profiles.avatar_key는 다른 앱 전용이라
@@ -32,6 +31,10 @@ export function UserNavMenu({
   const router = useRouter();
 
   const handleLogout = async () => {
+    // 로그아웃 클릭 시점에만 Supabase 브라우저 클라이언트를 받는다 — 이 메뉴는 루트
+    // 레이아웃의 헤더에 있어서, 최상단 import는 **모든 페이지**의 초기 번들에 클라이언트를
+    // 얹는다(Task 031). 클릭은 이미 사용자를 기다리게 하는 동작이라 이때 받아도 늦지 않다.
+    const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
     await supabase.auth.signOut();
     // 헤더(AuthButton/HeaderAuthNav)는 루트 레이아웃의 서버 컴포넌트라
