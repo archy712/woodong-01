@@ -114,7 +114,18 @@ export const createGroupSchema = z.object({
     .max(50, "모임 유형은 최대 50자까지 입력 가능합니다")
     .optional()
     .or(z.literal("")),
-  defaultDueAmount: wonAmount({ min: 0 }).optional(),
+  /**
+   * 선택 항목(`woodong_groups.default_due_amount`는 nullable) — 회비 항목 생성 폼의 프리필로 쓰인다.
+   *
+   * `z.coerce.number()`가 빈 문자열을 `0`으로 바꿔 버려서, 비워 두면 `null`이 아니라 **0원**이
+   * 저장되고 있었다(`min: 0`이라 에러가 나지 않아 드러나지 않던 문제 — Task 022에서 발견해 여기로
+   * 넘긴 항목). "기본 회비 미설정"과 "기본 회비 0원"은 다른 뜻이므로 빈 값은 `undefined`로 먼저
+   * 정규화한다(Task 022의 `reminderIntervalDays`와 같은 처리).
+   */
+  defaultDueAmount: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    wonAmount({ min: 0 }).optional(),
+  ),
 });
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 

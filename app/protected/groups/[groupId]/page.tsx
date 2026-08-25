@@ -22,7 +22,9 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { formatWon } from "@/lib/woodong/dues-summary";
 import { getDummyGroupDashboard } from "@/lib/woodong/dummy";
+import { getLatestDueCycleSummary } from "@/lib/woodong/queries/dues";
 import { getGroupDetail } from "@/lib/woodong/queries/groups";
 
 async function GroupDetailContent({
@@ -42,9 +44,9 @@ async function GroupDetailContent({
   const locale = await getLocale();
   const dict = getDictionary(locale);
 
-  // 모임 자체는 Task 019에서 실제 쿼리로 교체했다. 공지/회비/투표 요약은 각 도메인 Task
-  // (024/028/029)에서 교체 예정이라 아직 더미다 — 실제 모임 id에는 더미가 없으므로
-  // 각 카드가 자연스럽게 빈 상태로 렌더링된다.
+  // 모임 자체는 Task 019, 회비 요약은 Task 024에서 실제 쿼리로 교체했다. 공지/투표 요약은 각 도메인
+  // Task(025/029)에서 교체 예정이라 아직 더미다 — 실제 모임 id에는 더미가 없으므로 두 카드가
+  // 자연스럽게 빈 상태로 렌더링된다.
   const detail = await getGroupDetail(supabase, groupId, claimsData.claims.sub);
 
   if (!detail) {
@@ -60,6 +62,7 @@ async function GroupDetailContent({
 
   const { group, memberCount, coverUrl } = detail;
   const dashboard = getDummyGroupDashboard(groupId);
+  const latestDues = await getLatestDueCycleSummary(supabase, groupId);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6 sm:p-8">
@@ -139,25 +142,36 @@ async function GroupDetailContent({
               {dict.common.viewAllLink}
             </Link>
           </div>
-          {dashboard.latestDueCycle && (
-            <CardDescription>{dashboard.latestDueCycle.title}</CardDescription>
+          {latestDues && (
+            <CardDescription>{latestDues.cycle.title}</CardDescription>
           )}
         </CardHeader>
         <CardContent>
-          {dashboard.latestDueCycle ? (
+          {latestDues ? (
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-sm">
                 <span>{dict.dues.summaryLabel}</span>
                 <span className="font-semibold">
-                  {dashboard.latestDuePaidRate}%
+                  {latestDues.summary.paidRate}%
                 </span>
               </div>
-              <Progress value={dashboard.latestDuePaidRate} />
+              <Progress value={latestDues.summary.paidRate} />
               <span className="text-sm text-muted-foreground">
-                {dashboard.unpaidMemberCount}
+                {/* 분모는 모임 인원이 아니라 **이 항목의 청구 인원**이다 — 항목 생성 뒤 가입한
+                    멤버는 소급 청구되지 않으므로(Task 022 정책) 둘이 다를 수 있다. */}
+                {latestDues.summary.countByStatus.unpaid +
+                  latestDues.summary.countByStatus.partial}
                 {dict.groups.dashboard.unpaidCountLabel} /{" "}
-                {dashboard.totalMemberCount}
-                {dict.common.memberCountSuffix}
+                {latestDues.summary.totalCount}
+                {dict.dues.chargedCountSuffix}
+              </span>
+              {/* 지출 데이터가 없으므로 잔액이 아니라 **수납액/청구액**만 보여준다(PRD 3.4-a). */}
+              <span className="text-sm text-muted-foreground">
+                {dict.dues.collectedAmountLabel}{" "}
+                <span className="font-medium text-foreground">
+                  {formatWon(latestDues.summary.collectedAmount)}
+                </span>{" "}
+                / {formatWon(latestDues.summary.chargedAmount)}
               </span>
             </div>
           ) : (

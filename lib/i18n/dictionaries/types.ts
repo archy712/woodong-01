@@ -242,6 +242,16 @@ export interface Dictionary {
     memberProgressTitle: string;
     unpaidHighlightTitle: string;
     emptyState: string;
+    headcountRateLabel: string;
+    amountRateLabel: string;
+    paidCountSuffix: string;
+    chargedCountSuffix: string;
+    collectedAmountLabel: string;
+    chargedAmountLabel: string;
+    statusFilterLabel: string;
+    filterAllLabel: string;
+    filterEmptyState: string;
+    showUnpaidOnlyButton: string;
     recordPayment: {
       title: string;
       statusLabel: string;

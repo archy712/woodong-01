@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { DuesDashboard } from "@/components/dues/dues-dashboard";
+import { DuesDashboardSkeleton } from "@/components/dues/dues-dashboard-skeleton";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getDuesOverview } from "@/lib/woodong/queries/dues";
@@ -48,6 +49,7 @@ async function DuesContent({
     <div className="mx-auto w-full max-w-3xl flex-1 p-6 sm:p-8">
       <DuesDashboard
         groupId={groupId}
+        defaultDueAmount={detail.group.default_due_amount}
         cycles={overview.cycles}
         duesByCycle={overview.duesByCycle}
         paymentsByDue={overview.paymentsByDue}
@@ -68,7 +70,7 @@ export default function DuesPage({
   params: Promise<{ groupId: string }>;
 }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<DuesDashboardSkeleton />}>
       <DuesContent params={params} />
     </Suspense>
   );

@@ -63,10 +63,22 @@ export const createDueCycleSchema = z.object({
     .trim()
     .min(1, "대상 기간을 입력해주세요")
     .max(20, "대상 기간은 최대 20자까지 입력 가능합니다"),
-  amount: wonAmount({
-    min: 1,
-    minMessage: "회비 금액은 1원 이상이어야 합니다",
-  }),
+  /**
+   * 필수 금액.
+   *
+   * 폼은 모임의 기본 회비 금액이 없으면 이 칸을 **빈 칸**(값 `undefined`)으로 시작한다(Task 024).
+   * `z.coerce.number()`에 `undefined`가 그대로 들어가면 `NaN`이 되어 zod 기본 영어 메시지
+   * ("Expected number, received nan")가 노출되므로, 빈 값을 먼저 `0`으로 정규화해 항상
+   * `minMessage`(한국어)가 나오게 한다. 빈 문자열이 `0`이 되는 건 coerce의 원래 동작과 같다.
+   */
+  amount: z.preprocess(
+    (value) =>
+      value === "" || value === null || value === undefined ? 0 : value,
+    wonAmount({
+      min: 1,
+      minMessage: "회비 금액은 1원 이상이어야 합니다",
+    }),
+  ),
   dueType: z.enum(["regular", "extra"], {
     required_error: "회비 유형을 선택해주세요",
   }),

@@ -8,14 +8,20 @@ import { toast } from "sonner";
 import { recordPaymentAction } from "@/lib/woodong/actions/dues";
 import type { Due, DueCycle, DuesStatus, Payment } from "@/lib/woodong/dues";
 import {
+  dueRemainingAmount,
+  formatWon,
+  summarizeDueCycle,
+} from "@/lib/woodong/dues-summary";
+import {
   memberAvatarEmoji,
   memberDisplayName,
 } from "@/lib/woodong/member-display";
 import type { GroupMemberRow } from "@/lib/woodong/queries/groups";
 import { CreateDueCycleDialog } from "@/components/dues/create-due-cycle-dialog";
 import {
-  DuesMemberRateChart,
+  DuesMemberProgressBar,
   DuesOverallRateGauge,
+  DuesStatusBreakdownChart,
 } from "@/components/dues/dues-paid-rate-chart";
 import { PaymentManagerDialog } from "@/components/dues/payment-manager-dialog";
 import { Button } from "@/components/ui/button";
@@ -30,6 +36,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 const STATUS_BADGE_VARIANT: Record<
@@ -40,6 +47,11 @@ const STATUS_BADGE_VARIANT: Record<
   partial: "secondary",
   unpaid: "outline",
 };
+
+/** 상태 필터 값 — `all`은 필터 없음. */
+type StatusFilter = "all" | DuesStatus;
+
+const STATUS_FILTERS: StatusFilter[] = ["all", "unpaid", "partial", "paid"];
 
 /**
  * 남은 금액을 한 번에 기록하는 "완납 처리" 버튼 (Task 023).
@@ -98,7 +110,7 @@ function MarkPaidButton({
 }
 
 /**
- * 회비 대시보드 (Task 022에서 실데이터 연동, Task 023에서 납부 기록 연결).
+ * 회비 대시보드 (Task 022에서 실데이터 연동, Task 023에서 납부 기록 연결, Task 024에서 집계·필터 강화).
  *
  * 목록은 로컬 state로 들지 않고 서버가 내려준 값을 그대로 그린다(멤버 목록·초대 관리자와 같은 규약).
  * 항목을 만들거나 납부를 기록하면 Server Action의 `revalidatePath` + `router.refresh()`로 다시
@@ -106,10 +118,12 @@ function MarkPaidButton({
  * 로컬 state로 흉내 내면 서버 계산(트리거)과 어긋나기 쉽다.
  *
  * 납부 상태는 `woodong_dues.status`를 그대로 표시한다. 이 값은 애플리케이션이 쓰는 게 아니라
- * DB 트리거가 납부 이력 합계로 다시 계산해 주는 결과값이다.
+ * DB 트리거가 납부 이력 합계로 다시 계산해 주는 결과값이다. 집계 역시 화면에서 직접 계산하지 않고
+ * `summarizeDueCycle()`(모임 홈 요약 카드와 공유)에 맡겨 두 화면의 납부율이 어긋나지 않게 한다.
  */
 export function DuesDashboard({
   groupId,
+  defaultDueAmount,
   cycles,
   duesByCycle,
   paymentsByDue,
@@ -121,6 +135,8 @@ export function DuesDashboard({
   unnamedMemberLabel,
 }: {
   groupId: string;
+  /** 모임 설정의 기본 회비 금액. 새 항목 생성 폼의 초기값으로만 쓴다. */
+  defaultDueAmount: number | null;
   cycles: DueCycle[];
   duesByCycle: Record<string, Due[]>;
   paymentsByDue: Record<string, Payment[]>;
@@ -133,6 +149,7 @@ export function DuesDashboard({
 }) {
   const router = useRouter();
   const [requestedCycleId, setRequestedCycleId] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const memberByUserId = useMemo(() => {
     const map = new Map<string, GroupMemberRow>();
@@ -146,8 +163,14 @@ export function DuesDashboard({
     ? requestedCycleId
     : (cycles[0]?.id ?? "");
 
-  function handleCycleCreated(cycleId: string) {
+  /** 다른 회비 항목으로 옮기면 필터는 푼다 — 새 항목에서 빈 목록만 보이는 상황을 만들지 않는다. */
+  function handleCycleChange(cycleId: string) {
     setRequestedCycleId(cycleId);
+    setStatusFilter("all");
+  }
+
+  function handleCycleCreated(cycleId: string) {
+    handleCycleChange(cycleId);
     router.refresh();
   }
 
@@ -157,9 +180,11 @@ export function DuesDashboard({
   const entries = selectedDues
     .map((due) => {
       const member = memberByUserId.get(due.user_id);
+      const paidAmount = paidAmounts[due.id] ?? 0;
       return {
         due,
-        paidAmount: paidAmounts[due.id] ?? 0,
+        paidAmount,
+        remaining: dueRemainingAmount(due.amount, paidAmount),
         name: member
           ? memberDisplayName(member, unnamedMemberLabel)
           : unnamedMemberLabel,
@@ -168,17 +193,12 @@ export function DuesDashboard({
     })
     .sort((a, b) => a.name.localeCompare(b.name, "ko-KR"));
 
-  const paidCount = entries.filter((e) => e.due.status === "paid").length;
-  const overallRate =
-    entries.length > 0 ? Math.round((paidCount / entries.length) * 100) : 0;
+  const summary = summarizeDueCycle(selectedDues, paidAmounts);
   const unpaidEntries = entries.filter((e) => e.due.status !== "paid");
-
-  const memberRateChartData = entries.map(({ due, paidAmount, name }) => ({
-    id: due.id,
-    name,
-    percent: due.amount > 0 ? Math.round((paidAmount / due.amount) * 100) : 0,
-    status: due.status,
-  }));
+  const visibleEntries =
+    statusFilter === "all"
+      ? entries
+      : entries.filter((e) => e.due.status === statusFilter);
 
   return (
     <div className="flex flex-col gap-6">
@@ -188,6 +208,7 @@ export function DuesDashboard({
         {isAdmin && (
           <CreateDueCycleDialog
             groupId={groupId}
+            defaultDueAmount={defaultDueAmount}
             labels={labels}
             onCreated={handleCycleCreated}
           />
@@ -205,7 +226,7 @@ export function DuesDashboard({
           </EmptyHeader>
         </Empty>
       ) : (
-        <Tabs value={selectedCycleId} onValueChange={setRequestedCycleId}>
+        <Tabs value={selectedCycleId} onValueChange={handleCycleChange}>
           <TabsList className="min-h-11 w-full justify-start overflow-x-auto">
             {cycles.map((cycle) => (
               <TabsTrigger key={cycle.id} value={cycle.id} className="min-h-11">
@@ -235,35 +256,100 @@ export function DuesDashboard({
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-                      <div className="flex w-full flex-col gap-1 text-sm">
-                        <span>
-                          {selectedCycle.amount.toLocaleString("ko-KR")}원 ·{" "}
-                          {selectedCycle.due_date}
-                        </span>
-                        <span className="font-semibold text-foreground">
-                          {overallRate}%{" "}
-                          <span className="font-normal text-muted-foreground">
-                            ({paidCount}/{entries.length})
+                    <CardContent className="flex flex-col gap-6">
+                      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-6">
+                        <div className="shrink-0">
+                          <DuesOverallRateGauge rate={summary.paidRate} />
+                          <p className="mt-1 text-center text-xs text-muted-foreground">
+                            {labels.headcountRateLabel}
+                          </p>
+                        </div>
+                        <div className="flex w-full flex-col gap-3 text-sm">
+                          <span className="text-muted-foreground">
+                            {formatWon(selectedCycle.amount)} ·{" "}
+                            {selectedCycle.due_date}
                           </span>
-                        </span>
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <span className="text-muted-foreground">
+                                {labels.amountRateLabel}
+                              </span>
+                              <span className="font-semibold">
+                                {summary.collectedRate}%
+                              </span>
+                            </div>
+                            {/* 진행률 바는 "수입만 집계"라는 원칙에 맞춰 수납액/청구액만 쓴다(잔액 개념 없음). */}
+                            <DuesMemberProgressBar
+                              dueAmount={summary.chargedAmount}
+                              paidAmount={summary.collectedAmount}
+                              status={
+                                summary.collectedRate >= 100
+                                  ? "paid"
+                                  : summary.collectedRate > 0
+                                    ? "partial"
+                                    : "unpaid"
+                              }
+                              label={labels.amountRateLabel}
+                            />
+                            <div className="flex items-baseline justify-between gap-2 text-xs text-muted-foreground">
+                              <span>
+                                {labels.collectedAmountLabel}{" "}
+                                <span className="font-semibold text-foreground">
+                                  {formatWon(summary.collectedAmount)}
+                                </span>
+                              </span>
+                              <span>
+                                {labels.chargedAmountLabel}{" "}
+                                {formatWon(summary.chargedAmount)}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {summary.countByStatus.paid}/{summary.totalCount}
+                            {labels.paidCountSuffix}
+                          </span>
+                        </div>
                       </div>
-                      <DuesOverallRateGauge rate={overallRate} />
+
+                      <DuesStatusBreakdownChart
+                        countByStatus={summary.countByStatus}
+                        labels={labels.status}
+                      />
                     </CardContent>
                   </Card>
 
                   {unpaidEntries.length > 0 && (
                     <Card className="border-dashed">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-sm">
-                          <AlertTriangleIcon className="size-4 text-destructive" />
-                          {labels.unpaidHighlightTitle} ({unpaidEntries.length})
-                        </CardTitle>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <CardTitle className="flex items-center gap-2 text-sm">
+                            <AlertTriangleIcon className="size-4 text-destructive" />
+                            {labels.unpaidHighlightTitle} (
+                            {unpaidEntries.length})
+                          </CardTitle>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setStatusFilter("unpaid")}
+                          >
+                            {labels.showUnpaidOnlyButton}
+                          </Button>
+                        </div>
                       </CardHeader>
                       <CardContent className="flex flex-wrap gap-2">
-                        {unpaidEntries.map(({ due, name }) => (
-                          <Badge key={due.id} variant="outline">
-                            {name}
+                        {unpaidEntries.map(({ due, name, remaining }) => (
+                          <Badge
+                            key={due.id}
+                            variant="outline"
+                            className="gap-1.5"
+                          >
+                            <span className="max-w-[10rem] truncate">
+                              {name}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {formatWon(remaining)}
+                            </span>
                           </Badge>
                         ))}
                       </CardContent>
@@ -272,51 +358,96 @@ export function DuesDashboard({
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">
-                        {labels.memberProgressTitle}
-                      </CardTitle>
+                      <div className="flex flex-col gap-3">
+                        <CardTitle className="text-base">
+                          {labels.memberProgressTitle}
+                        </CardTitle>
+                        <ToggleGroup
+                          type="single"
+                          variant="outline"
+                          value={statusFilter}
+                          // Radix는 선택된 항목을 다시 누르면 빈 문자열을 준다. 그때는 "전체"로 되돌린다.
+                          onValueChange={(value) =>
+                            setStatusFilter((value as StatusFilter) || "all")
+                          }
+                          aria-label={labels.statusFilterLabel}
+                          className="w-full flex-wrap justify-start"
+                        >
+                          {STATUS_FILTERS.map((filter) => (
+                            <ToggleGroupItem
+                              key={filter}
+                              value={filter}
+                              className="min-h-11 px-3"
+                            >
+                              {filter === "all"
+                                ? labels.filterAllLabel
+                                : labels.status[filter]}
+                            </ToggleGroupItem>
+                          ))}
+                        </ToggleGroup>
+                      </div>
                     </CardHeader>
-                    <CardContent className="flex flex-col gap-6">
-                      <DuesMemberRateChart
-                        members={memberRateChartData}
-                        labels={labels.status}
-                      />
-                      {entries.map(({ due, paidAmount, name, avatarKey }) => (
-                        <div key={due.id} className="flex items-center gap-3">
-                          <Avatar size="sm">
-                            <AvatarFallback>
-                              {memberAvatarEmoji(avatarKey)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex min-w-0 flex-1 items-center justify-between gap-2 text-sm">
-                            <span className="truncate font-medium">{name}</span>
-                            <Badge variant={STATUS_BADGE_VARIANT[due.status]}>
-                              {labels.status[due.status]}
-                            </Badge>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-1">
-                            {isAdmin && due.status !== "paid" && (
-                              <MarkPaidButton
-                                dueId={due.id}
-                                remaining={Math.max(due.amount - paidAmount, 0)}
-                                labels={labels}
-                                commonLabels={commonLabels}
-                                onRecorded={() => router.refresh()}
+                    <CardContent className="flex flex-col gap-5">
+                      {visibleEntries.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          {labels.filterEmptyState}
+                        </p>
+                      ) : (
+                        visibleEntries.map(
+                          ({ due, paidAmount, remaining, name, avatarKey }) => (
+                            <div key={due.id} className="flex flex-col gap-2">
+                              <div className="flex items-center gap-3">
+                                <Avatar size="sm">
+                                  <AvatarFallback>
+                                    {memberAvatarEmoji(avatarKey)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                                  {name}
+                                </span>
+                                <Badge
+                                  variant={STATUS_BADGE_VARIANT[due.status]}
+                                >
+                                  {labels.status[due.status]}
+                                </Badge>
+                              </div>
+                              <DuesMemberProgressBar
+                                dueAmount={due.amount}
+                                paidAmount={paidAmount}
+                                status={due.status}
+                                label={`${name} ${labels.summaryLabel}`}
                               />
-                            )}
-                            <PaymentManagerDialog
-                              dueId={due.id}
-                              dueAmount={due.amount}
-                              paidAmount={paidAmount}
-                              payments={paymentsByDue[due.id] ?? []}
-                              memberName={name}
-                              isAdmin={isAdmin}
-                              labels={labels.recordPayment}
-                              commonLabels={commonLabels}
-                            />
-                          </div>
-                        </div>
-                      ))}
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {formatWon(paidAmount)} /{" "}
+                                  {formatWon(due.amount)}
+                                </span>
+                                <div className="flex shrink-0 items-center gap-1">
+                                  {isAdmin && due.status !== "paid" && (
+                                    <MarkPaidButton
+                                      dueId={due.id}
+                                      remaining={remaining}
+                                      labels={labels}
+                                      commonLabels={commonLabels}
+                                      onRecorded={() => router.refresh()}
+                                    />
+                                  )}
+                                  <PaymentManagerDialog
+                                    dueId={due.id}
+                                    dueAmount={due.amount}
+                                    paidAmount={paidAmount}
+                                    payments={paymentsByDue[due.id] ?? []}
+                                    memberName={name}
+                                    isAdmin={isAdmin}
+                                    labels={labels.recordPayment}
+                                    commonLabels={commonLabels}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ),
+                        )
+                      )}
                     </CardContent>
                   </Card>
                 </>

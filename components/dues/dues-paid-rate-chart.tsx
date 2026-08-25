@@ -3,9 +3,8 @@
 import {
   Bar,
   BarChart,
-  CartesianGrid,
-  Cell,
   Label,
+  PolarAngleAxis,
   PolarRadiusAxis,
   RadialBar,
   RadialBarChart,
@@ -19,6 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { dueProgressPercent } from "@/lib/woodong/dues-summary";
 import type { DuesStatus } from "@/lib/woodong/dues";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
@@ -33,7 +33,18 @@ const STATUS_COLOR: Record<DuesStatus, string> = {
   unpaid: "hsl(var(--destructive))",
 };
 
-/** 사이클 전체 납부율을 표시하는 단일 게이지(RadialBarChart). */
+/** 스택 막대와 범례가 같은 순서로 읽히도록 고정. 완납 → 부분납부 → 미납. */
+const STATUS_ORDER: DuesStatus[] = ["paid", "partial", "unpaid"];
+
+/**
+ * 사이클 전체 납부율을 표시하는 단일 게이지(RadialBarChart).
+ *
+ * ⚠️ 값을 `endAngle`로 표현하면(shadcn 예제의 기본형) **0%일 때 차트가 통째로 사라진다** — 시작각과
+ * 끝각이 같아져 `background` 트랙까지 그려지지 않고, 화면에는 140px짜리 빈 사각형에 "0%" 글자만
+ * 남는다. 회비 항목을 막 만든 직후가 정확히 그 상태다. 그래서 차트는 항상 360°를 돌게 두고
+ * (`endAngle={-270}`), 값은 `PolarAngleAxis`의 0~100 도메인으로 매핑한다. 0%에서도 트랙 링이
+ * 남아 "게이지가 비어 있다"는 게 눈에 보인다.
+ */
 export function DuesOverallRateGauge({ rate }: { rate: number }) {
   const clamped = Number.isFinite(rate) ? Math.min(100, Math.max(0, rate)) : 0;
 
@@ -50,16 +61,17 @@ export function DuesOverallRateGauge({ rate }: { rate: number }) {
       <RadialBarChart
         data={chartData}
         startAngle={90}
-        endAngle={90 - (360 * clamped) / 100}
+        endAngle={-270}
         innerRadius="72%"
         outerRadius="100%"
       >
-        <PolarRadiusAxis
-          tick={false}
-          tickLine={false}
-          axisLine={false}
+        <PolarAngleAxis
+          type="number"
           domain={[0, 100]}
-        >
+          angleAxisId={0}
+          tick={false}
+        />
+        <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
           <Label
             content={({ viewBox }) => {
               if (viewBox && "cx" in viewBox && "cy" in viewBox) {
@@ -88,6 +100,7 @@ export function DuesOverallRateGauge({ rate }: { rate: number }) {
           dataKey="value"
           background
           cornerRadius={8}
+          angleAxisId={0}
           fill="var(--color-rate)"
         />
       </RadialBarChart>
@@ -95,88 +108,125 @@ export function DuesOverallRateGauge({ rate }: { rate: number }) {
   );
 }
 
-export interface DuesMemberRateEntry {
-  id: string;
-  name: string;
-  percent: number;
-  status: DuesStatus;
-}
-
-/** 멤버별 납부율을 상태 색상으로 구분한 가로 막대 차트. */
-export function DuesMemberRateChart({
-  members,
+/**
+ * 회비 항목 하나의 **상태 분포**를 한 줄 스택 막대로 보여준다 (Task 024).
+ *
+ * ⚠️ 이전에는 같은 자리에 "멤버별 납부율 가로 막대 차트"가 있었는데, Y축에 멤버 이름을 그리는 구조라
+ * 360px에서 라벨이 잘렸다(이름을 설정하지 않은 계정은 긴 이메일로 폴백되기 때문 — Task 022가
+ * 남긴 관찰). 게다가 바로 아래 멤버 목록이 같은 수치를 다시 보여줘 정보가 중복이었다.
+ * 그래서 차트는 **이름 라벨이 필요 없는 분포 요약**만 맡고, 멤버별 진행률은 목록의 각 행에
+ * `DuesMemberProgressBar`로 붙였다. 폭이 좁아져도 잘릴 라벨 자체가 없다.
+ */
+export function DuesStatusBreakdownChart({
+  countByStatus,
   labels,
 }: {
-  members: DuesMemberRateEntry[];
+  countByStatus: Record<DuesStatus, number>;
   labels: Dictionary["dues"]["status"];
 }) {
-  const chartData = members.map((m) => ({
-    id: m.id,
-    name: m.name,
-    percent: Number.isFinite(m.percent)
-      ? Math.min(100, Math.max(0, m.percent))
-      : 0,
-    status: m.status,
-    fill: STATUS_COLOR[m.status],
-  }));
+  const total = STATUS_ORDER.reduce(
+    (sum, status) => sum + countByStatus[status],
+    0,
+  );
 
-  if (chartData.length === 0) {
-    return null;
-  }
+  if (total === 0) return null;
 
-  const config = {
-    percent: { label: "납부율(%)" },
-  } satisfies ChartConfig;
+  const config = Object.fromEntries(
+    STATUS_ORDER.map((status) => [
+      status,
+      { label: labels[status], color: STATUS_COLOR[status] },
+    ]),
+  ) satisfies ChartConfig;
 
-  const height = Math.max(96, chartData.length * 32 + 24);
+  const chartData = [
+    {
+      name: "breakdown",
+      ...Object.fromEntries(
+        STATUS_ORDER.map((status) => [status, countByStatus[status]]),
+      ),
+    },
+  ];
 
   return (
-    <div className="flex flex-col gap-2">
-      <ChartContainer
-        config={config}
-        className="aspect-auto w-full"
-        style={{ height }}
-      >
+    <div className="flex flex-col gap-3">
+      <ChartContainer config={config} className="aspect-auto h-[44px] w-full">
         <BarChart
           data={chartData}
           layout="vertical"
-          margin={{ left: 8, right: 16, top: 4, bottom: 4 }}
+          margin={{ left: 0, right: 0, top: 4, bottom: 4 }}
         >
-          <CartesianGrid horizontal={false} />
-          <XAxis
-            type="number"
-            domain={[0, 100]}
-            tickLine={false}
-            axisLine={false}
-            tick={{ fontSize: 11 }}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            tickLine={false}
-            axisLine={false}
-            width={64}
-            tick={{ fontSize: 12 }}
-          />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <Bar dataKey="percent" radius={4} barSize={16}>
-            {chartData.map((entry) => (
-              <Cell key={entry.id} fill={entry.fill} />
-            ))}
-          </Bar>
+          <XAxis type="number" domain={[0, total]} hide />
+          <YAxis type="category" dataKey="name" hide />
+          <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+          {STATUS_ORDER.map((status) => (
+            <Bar
+              key={status}
+              dataKey={status}
+              stackId="breakdown"
+              fill={STATUS_COLOR[status]}
+              radius={4}
+              barSize={24}
+              // 애니메이션을 끈다. 폭이 바뀔 때마다(회전·리사이즈) 0에서 다시 자라느라 막대가 잠깐
+              // 사라지는데, 한 줄짜리 정적 요약에는 그 연출이 득보다 실이 크다.
+              isAnimationActive={false}
+            />
+          ))}
         </BarChart>
       </ChartContainer>
-      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-        {(Object.keys(STATUS_COLOR) as DuesStatus[]).map((key) => (
-          <span key={key} className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+        {STATUS_ORDER.map((status) => (
+          <span key={status} className="flex items-center gap-1.5">
             <span
               className="size-2 shrink-0 rounded-full"
-              style={{ backgroundColor: STATUS_COLOR[key] }}
+              style={{ backgroundColor: STATUS_COLOR[status] }}
             />
-            {labels[key]}
+            {labels[status]}
+            <span className="font-semibold text-foreground">
+              {countByStatus[status]}
+            </span>
           </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * 멤버 한 명의 납부 진행률 바.
+ *
+ * 공용 `components/ui/progress.tsx`는 인디케이터 색이 `bg-primary`로 고정이라 상태별(완납/부분납부/
+ * 미납) 색 구분을 할 수 없다. 여러 화면이 공유하는 shadcn 프리미티브를 회비 사정에 맞춰 고치는 대신
+ * 회비 전용 바를 여기에 둔다(색 정의도 차트와 한 곳에서 관리된다).
+ */
+export function DuesMemberProgressBar({
+  dueAmount,
+  paidAmount,
+  status,
+  label,
+}: {
+  dueAmount: number;
+  paidAmount: number;
+  status: DuesStatus;
+  label: string;
+}) {
+  const percent = dueProgressPercent(dueAmount, paidAmount);
+
+  return (
+    <div
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percent}
+      aria-label={label}
+      className="h-2 w-full overflow-hidden rounded-full bg-muted"
+    >
+      <div
+        className="h-full rounded-full transition-all"
+        style={{
+          width: `${percent}%`,
+          backgroundColor: STATUS_COLOR[status],
+        }}
+      />
     </div>
   );
 }

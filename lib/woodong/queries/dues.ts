@@ -8,6 +8,10 @@ import type {
   DueType,
   Payment,
 } from "@/lib/woodong/dues";
+import {
+  summarizeDueCycle,
+  type DueCycleSummary,
+} from "@/lib/woodong/dues-summary";
 
 /**
  * 회비 조회 헬퍼 (Task 022).
@@ -111,4 +115,82 @@ export async function getDuesOverview(
   }
 
   return { cycles, duesByCycle, paymentsByDue, paidAmounts };
+}
+
+/**
+ * 모임 홈의 회비 요약 카드용 — **가장 최근 회비 항목 하나**만 집계한다 (Task 024).
+ *
+ * 홈에서 `getDuesOverview()`를 그대로 쓰면 모임의 모든 항목·청구·납부 이력을 다 읽어 오는데,
+ * 정작 카드가 쓰는 건 최신 항목 한 건이다. 항목이 쌓일수록 홈이 느려지므로 대상 항목의 청구와
+ * 그 청구에 달린 이력만 좁혀서 읽는다. 집계 식은 대시보드와 **같은 `summarizeDueCycle()`**를
+ * 써서 두 화면의 납부율이 어긋나지 않게 한다.
+ *
+ * 회비 항목이 하나도 없거나 비멤버(RLS로 0행)면 `null`.
+ */
+export async function getLatestDueCycleSummary(
+  supabase: Client,
+  groupId: string,
+): Promise<{ cycle: DueCycle; summary: DueCycleSummary } | null> {
+  const { data: cycleRow, error: cycleError } = await supabase
+    .from("woodong_due_cycles")
+    .select(DUE_CYCLE_COLUMNS)
+    .eq("group_id", groupId)
+    .order("due_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (cycleError) {
+    console.error("[queries/dues] getLatestDueCycle failed:", cycleError);
+    return null;
+  }
+  if (!cycleRow) return null;
+
+  const cycle: DueCycle = {
+    ...cycleRow,
+    due_type: cycleRow.due_type as DueType,
+  };
+
+  const { data: dueRows, error: dueError } = await supabase
+    .from("woodong_dues")
+    .select(DUE_COLUMNS)
+    .eq("due_cycle_id", cycle.id);
+
+  if (dueError) {
+    console.error("[queries/dues] getLatestDueCycleDues failed:", dueError);
+    return null;
+  }
+
+  const dues: Due[] = (dueRows ?? []).map((row) => ({
+    ...row,
+    status: row.status as DuesStatus,
+  }));
+
+  if (dues.length === 0) {
+    return { cycle, summary: summarizeDueCycle([], {}) };
+  }
+
+  const { data: paymentRows, error: paymentError } = await supabase
+    .from("woodong_payments")
+    .select("due_id, amount")
+    .in(
+      "due_id",
+      dues.map((due) => due.id),
+    );
+
+  const paidAmounts: Record<string, number> = {};
+  if (paymentError) {
+    // 이력을 못 읽어도 인원 기준 납부율(트리거가 갱신한 status 기준)은 그대로 맞다.
+    console.error(
+      "[queries/dues] getLatestDueCyclePayments failed:",
+      paymentError,
+    );
+  } else {
+    for (const payment of paymentRows ?? []) {
+      paidAmounts[payment.due_id] =
+        (paidAmounts[payment.due_id] ?? 0) + payment.amount;
+    }
+  }
+
+  return { cycle, summary: summarizeDueCycle(dues, paidAmounts) };
 }

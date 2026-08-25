@@ -378,6 +378,17 @@ export const ja: Dictionary = {
     memberProgressTitle: "멤버별 납부 현황",
     unpaidHighlightTitle: "아직 납부하지 않은 멤버",
     emptyState: "등록된 회비 항목이 없어요.",
+    // TODO(i18n): Task 024 신규 키 — 2차 확장에서 번역
+    headcountRateLabel: "인원 기준",
+    amountRateLabel: "금액 기준 수납률",
+    paidCountSuffix: "명 납부완료",
+    chargedCountSuffix: "명 청구",
+    collectedAmountLabel: "수납",
+    chargedAmountLabel: "청구",
+    statusFilterLabel: "납부 상태로 거르기",
+    filterAllLabel: "전체",
+    filterEmptyState: "이 상태인 멤버가 없어요.",
+    showUnpaidOnlyButton: "미납만 보기",
     recordPayment: {
       title: "납부 관리",
       statusLabel: "납부 상태",

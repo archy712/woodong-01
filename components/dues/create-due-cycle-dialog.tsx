@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { DefaultValues } from "react-hook-form";
 import { Loader2Icon, PlusIcon } from "lucide-react";
 
 import { useServerActionForm } from "@/hooks/use-server-action-form";
@@ -45,20 +46,30 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
  */
 export function CreateDueCycleDialog({
   groupId,
+  defaultDueAmount,
   labels,
   onCreated,
 }: {
   groupId: string;
+  /**
+   * 모임 설정의 기본 회비 금액(`woodong_groups.default_due_amount`). 있으면 금액 칸을 미리 채운다.
+   * 정기 회비는 매달 같은 금액이라 총무가 매번 다시 입력할 이유가 없다 — 그러라고 모임 생성 때
+   * 받아 둔 값이다. 프리필일 뿐이므로 다른 금액을 넣으면 그대로 저장된다.
+   */
+  defaultDueAmount: number | null;
   labels: Dictionary["dues"];
   onCreated: (cycleId: string) => void;
 }) {
   const [open, setOpen] = useState(false);
 
-  const defaultValues: CreateDueCycleInput = {
+  const defaultValues: DefaultValues<CreateDueCycleInput> = {
     groupId,
     title: "",
     period: "",
-    amount: 0,
+    // 기본값이 없으면 `undefined`로 둬 금액 칸이 **빈 칸**으로 렌더되게 한다. 예전처럼 `0`을 넣으면
+    // 총무가 매번 "0"을 지우고 입력해야 하는데, 0은 어차피 zod `min(1)`에 걸리는 값이라 의미가 없다.
+    amount:
+      defaultDueAmount && defaultDueAmount > 0 ? defaultDueAmount : undefined,
     dueType: "regular",
     dueDate: "",
     reminderIntervalDays: 7,
