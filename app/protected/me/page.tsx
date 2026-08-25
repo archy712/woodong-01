@@ -16,7 +16,7 @@ import {
 } from "@/lib/woodong/avatars";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { DUMMY_NOTIFICATION_PREFERENCES } from "@/lib/woodong/dummy";
+import { listMyChannelPreferences } from "@/lib/woodong/queries/notifications";
 
 async function MeContent() {
   const supabase = await createClient();
@@ -31,8 +31,7 @@ async function MeContent() {
   const dict = getDictionary(locale);
 
   // 프로필(이름/이메일)은 이미 실제로 동작하는 Supabase 조회를 그대로 재사용한다
-  // (`app/protected/profile/page.tsx`와 동일 패턴). 알림 채널은 Task 027 몫이라
-  // 아직 더미 데이터로 렌더링한다.
+  // (`app/protected/profile/page.tsx`와 동일 패턴).
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, email, name, phone_number, bio")
@@ -49,6 +48,10 @@ async function MeContent() {
     woodongProfile && isAvatarKey(woodongProfile.avatar_key)
       ? woodongProfile.avatar_key
       : DEFAULT_AVATAR_KEY;
+
+  // 채널 설정은 저장된 행이 없는 사용자가 정상이라, 조회 결과가 비어 있어도 채널마다
+  // 기본값으로 한 줄씩 채워서 돌아온다(Task 027).
+  const channelPreferences = await listMyChannelPreferences(supabase);
 
   // 연동된 로그인 수단은 JWT의 `app_metadata.providers`에서 읽는다(Task 018-1).
   //
@@ -123,7 +126,7 @@ async function MeContent() {
         </CardHeader>
         <CardContent>
           <NotificationChannelSettings
-            initialPreferences={DUMMY_NOTIFICATION_PREFERENCES}
+            preferences={channelPreferences}
             labels={dict.notifications.channelSettings}
           />
         </CardContent>

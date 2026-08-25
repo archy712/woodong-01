@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (29/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (30/44 Tasks 완료)
 
 ---
 
@@ -112,7 +112,7 @@
   - ✅ PRD 5.8~5.9(`woodong_expenses`, `woodong_settlements`, `woodong_settlement_items`)는 **2차 확장 대상**으로 확정, 기본 방침대로 Phase 8로 미룸(이번 Task에서 미생성)
   - ✅ 제약 조건 반영: `UNIQUE(group_id, user_id)`(멤버십), `UNIQUE(code)`(초대), `UNIQUE(due_cycle_id, user_id)`(청구), `UNIQUE(user_id, channel)`(알림 설정)
   - ✅ 사용자 참조는 **`auth.users(id)`를 FK 대상**으로 설계(생성/기록자 컬럼은 `ON DELETE SET NULL`, 소유 주체 컬럼은 `ON DELETE CASCADE`로 분기)
-  - ✅ 확장성 컬럼 반영: `woodong_groups.type`(자유 값), `woodong_due_cycles.due_type`(`regular`/`extra`), `woodong_notification_preferences.channel`의 `CHECK(channel in ('kakao','slack','email','in_app'))` — 그 외 열거형 컬럼에도 CHECK 제약 동일 적용 (⚠️ v1.6: 알림 매체 로드맵이 `web_push`/`in_app`으로 변경되어 이 CHECK 제약은 실제 DB 기준으로 아직 예전 값이다. Task 038에서 `ALTER TABLE ... DROP CONSTRAINT` + 재생성으로 `('web_push','in_app')`로 갱신 필요)
+  - ✅ 확장성 컬럼 반영: `woodong_groups.type`(자유 값), `woodong_due_cycles.due_type`(`regular`/`extra`), `woodong_notification_preferences.channel`의 `CHECK(channel in ('kakao','slack','email','in_app'))` — 그 외 열거형 컬럼에도 CHECK 제약 동일 적용 (✅ v1.6 후속 완료: 알림 매체 로드맵이 `web_push`/`in_app`으로 바뀌면서 이 CHECK 제약도 **Task 027의 `update_woodong_notification_channel_check` 마이그레이션에서 `('web_push','in_app')`로 갱신**했다 — `woodong_notifications.channel`도 동일. 원래 Task 038 예정이었으나 그때까지 미루면 Task 027의 "web_push 설정 저장"이 CHECK 위반으로 불가능해 앞당겼다)
   - ✅ 금액 컬럼은 전부 `numeric(14,0)`(원 단위, 소수점 없음)로 통일
   - ✅ 모든 FK 컬럼에 covering 인덱스 추가(24개), `woodong_announcements.updated_at` 자동 갱신 트리거(`woodong_set_updated_at()`) 구현
   - **완료 조건**: 12개 `woodong_*` 테이블 생성 완료(`create_woodong_groups_domain`/`create_woodong_dues_domain`/`create_woodong_votes_domain`/`create_woodong_announcements`/`create_woodong_notifications_domain` 5개 마이그레이션), 기존 32개 테이블 변경 이력 0건, `list_tables`로 접두어 규칙 위반 객체 없음 확인, `get_advisors`는 RLS 비활성 경고(Task 003에서 해소 예정) 외 이상 없음
@@ -465,12 +465,19 @@
   - ⚠️ **(범위 밖 재관찰)** Task 024-1에서 후속 과제로 이관한 `PGRST303 "JWT issued at future"`(로그인 직후 `listMyGroups` 1회 실패)가 이번 테스트에서도 그대로 재현됐다. 알림 조회 경로에서는 발생하지 않았고 조치 위치도 그대로라, Task 033의 "에러 핸들링 및 폴백 UI" 항목에 남겨 둔다
   - **완료 조건**: ✅ 읽음/클릭 상태가 정확히 갱신되고(최초 시각 보존, 중복 클릭에도 1회만) ✅ 타인 알림 조회·조작이 UI·REST·SQL 어느 경로로도 차단됨, ✅ `get_advisors`(security) **ERROR 0건**(WARN은 전부 기존 항목, 이번 Task는 DB 객체 추가 0건), ✅ `npm run check-all` 통과
 
-- **Task 027: 알림 채널 설정 (마이페이지)**
-  - `woodong_notification_preferences` 기반 채널별 on/off UI(`web_push`/`in_app`) — **1차에서 실제 발송은 `in_app`만**, `web_push`는 설정만 저장하고 "2차 지원 예정" 안내 표기
-  - `web_push`는 사용자가 브라우저 알림을 허용하면 Push 구독 정보(endpoint/keys)가 자동으로 `destination`에 JSON으로 저장됨(카카오/Slack/이메일처럼 사용자가 직접 입력하는 방식이 아님, v1.6) — 2차 발송에 사용
-  - 본인 레코드만 SELECT/UPDATE(RLS), `UNIQUE(user_id, channel)` 준수
-  - 비활성화된 채널로는 발송되지 않고 활성 채널로만 발송되는 로직 검증
-  - **완료 조건**: 설정 저장/복원 정상 동작, `in_app` 비활성 사용자에게 앱 내 알림이 생성되지 않음
+- **Task 027: 알림 채널 설정 (마이페이지)** ✅ - 완료
+  - ✅ **(계획 변경) `channel` CHECK 제약 갱신을 Task 038에서 이번 Task로 앞당겼다.** DB는 여전히 v1.4 시절 값(`kakao`/`slack`/`email`/`in_app`)을 들고 있어서 `web_push` 설정을 저장하려는 순간 `23514`로 막힌다 — 즉 이 Task의 요구사항 자체를 이 제약 없이는 만들 수 없다. 마이그레이션 `update_woodong_notification_channel_check`로 `woodong_notification_preferences.channel`·`woodong_notifications.channel`을 **`('web_push','in_app')`**으로 좁혔고, 두 테이블 모두 **0행인 상태**에서 적용해 백필/정리 전략이 필요 없었다. 재생성한 두 제약은 Task 002의 `udong_` 오타 접두어를 `woodong_`으로 교정했다(나머지 10개 CHECK 제약은 여전히 `udong_` — 동작에는 영향이 없어 이번 범위에 넣지 않았다)
+  - ✅ 조회 `listMyChannelPreferences`(`lib/woodong/queries/notifications.ts`)는 **저장된 행이 없어도 채널마다 한 줄씩 채워서** 돌려준다. 설정을 한 번도 건드리지 않은 사용자가 정상 상태이기 때문이다
+  - ✅ **채널별 기본값을 코드 한 곳(`CHANNEL_DEFAULT_ENABLED`)에 못 박았다**: `in_app`은 **opt-out(기본 ON)** — 팬아웃 RPC가 `coalesce(p.enabled, true)`로 판정하므로 화면 기본값이 다르면 "켜져 있는데 안 온다/꺼져 있는데 온다"가 된다. `web_push`는 반대로 **opt-in(기본 OFF)** — 브라우저 권한과 Push 구독(`destination`)이 있어야 보낼 수 있어서, 켜진 것처럼 보여 주면 지킬 수 없는 약속이 된다
+  - ✅ Server Action `updateChannelPreferenceAction`은 UPDATE가 아니라 **upsert**(`onConflict: "user_id,channel"`)다 — 설정 행은 첫 토글 때 생긴다. `user_id`는 요청 본문이 아니라 **세션 클레임에서 채운다**(정책이 어차피 막지만, 남의 설정을 만들어 보라고 본문에 자리를 내주지 않는다). 이 테이블에는 `updated_at` 갱신 트리거가 없어(Task 002는 공지에만 붙였다) Action이 명시적으로 채운다
+  - ✅ 토글은 **낙관적 로컬 state**로 즉시 움직이고, 실패하면 이전 값으로 되돌린 뒤 토스트를 띄운다 — 되돌리지 않으면 화면에는 꺼져 있는데 실제로는 알림이 계속 오게 된다. 성공 후 `router.refresh()`로 서버 값을 다시 읽는다
+  - ✅ 마이페이지의 `DUMMY_NOTIFICATION_PREFERENCES`를 제거하고 실데이터로 교체. i18n은 `kakao`/`slack`/`email` 키를 삭제하고 `webPush`·채널별 설명 2종·`saveErrorToast` 신규 추가(ko 확정 문구, en/ja/zh는 관례대로 스텁+`TODO(i18n)`)
+  - ✅ Playwright 실계정 E2E(계정 2개): 설정 행 0개 상태에서 **기본값이 규칙대로**(in_app ON / web_push OFF) 렌더 → 각각 토글하면 DB에 행 2개 생성(`in_app=false`, `web_push=true`) → 새로고침 후 **저장값 그대로 복원** → 같은 채널을 껐다 켜도 **행은 계속 2개**(`UNIQUE(user_id, channel)` upsert, 건드린 채널의 `updated_at`만 갱신)
+  - ✅ **발송 연동 검증(핵심 완료 조건)**: m2가 `in_app`을 끈 상태에서 총무가 공지를 발송하면 알림 **0건**(작성자·비활성 멤버 모두 제외), 다시 켠 뒤 발송하면 **정확히 1건**(`channel='in_app'`). `web_push`가 켜져 있어도 **web_push 알림 행은 생성되지 않는다**(1차는 `in_app`만 발송)
+  - ✅ **UI 우회 REST 4종 전부 차단**: 필터 없는 설정 조회도 본인 것만(m1 세션에서 m2 행 0건), 타인 설정 UPDATE는 0행, 타인 명의 INSERT는 `403 42501`, 삭제된 채널 값(`email`) 저장은 `400 23514`(새 제약 이름으로 거부). 실제 DB 값 무변경 확인
+  - ✅ 360px 가로 스크롤 0건. 스위치 컨트롤 자체는 32×18px이지만 **행 전체(`<label>`, 60~92px 높이 × 전체 너비)가 터치 타겟**이며, 라벨 텍스트를 눌러도 저장까지 되는 것을 실측 확인(Task 013 규칙 충족 방식이 기존 UI와 동일)
+  - ⚠️ **미검증 경로**: 저장 실패 시 토글이 이전 값으로 되돌아가는 분기는 실패를 인위적으로 만들 방법이 마땅치 않아 E2E로 밟지 못했다(코드 경로는 성공/실패 공통이며 실패 시 `formError` → 토스트 + 롤백)
+  - **완료 조건**: ✅ 설정 저장/복원 정상 동작(기본값·upsert·복원 전부 실측), ✅ `in_app` 비활성 사용자에게 앱 내 알림이 생성되지 않음(0건 → 재활성화 시 1건), ✅ `get_advisors`(security) **ERROR 0건**(WARN은 전부 기존 항목), ✅ `npm run check-all` 통과
 
 - **Task 028: 회비 리마인드 lazy 처리 구현**
   - > **Task 003에서 확인된 선행 제약**: `woodong_dues`에는 클라이언트용 UPDATE 정책이 전혀 없다(상태는 트리거 전용). `last_reminded_at` 갱신도 `SECURITY DEFINER` RPC를 통해서만 가능하므로, 리마인드 생성 로직 자체를 이 RPC 안에 구현해야 한다.
@@ -573,7 +580,7 @@
   - 기존 lazy 로직과의 중복 발송 방지 전략 수립 및 전환 절차 정의
 
 - **Task 038: 웹 푸시(Web Push) 알림 연동** (v1.6 — 카카오톡 알림톡/Slack/이메일 대체)
-  - **선행 작업**: Task 002에서 이미 적용된 `woodong_notification_preferences.channel`의 `CHECK(channel in ('kakao','slack','email','in_app'))` 제약을 `CHECK(channel in ('web_push','in_app'))`로 마이그레이션(기존 `woodong_notifications.channel`도 동일하게 갱신). 기존에 `kakao`/`slack`/`email`로 저장된 행이 있다면 `in_app`으로 백필하거나 삭제하는 정리 전략 필요
+  - ~~**선행 작업**: `channel` CHECK 제약을 `('web_push','in_app')`로 마이그레이션~~ → **Task 027에서 완료**(`update_woodong_notification_channel_check`, 두 테이블 모두 0행인 상태로 적용해 백필 불필요). 마이페이지가 `web_push` 설정을 저장하려면 이 제약이 먼저 필요해 앞당겼다
   - VAPID 키 발급, Service Worker 등록, `web-push` 라이브러리로 서버 발송 로직 구현
   - 브라우저 알림 권한 요청 UX 설계 — 사용자가 허용하면 Push 구독 정보를 `woodong_notification_preferences.destination`에 JSON으로 저장
   - iOS Safari는 홈 화면에 추가(PWA 설치)한 경우에만 웹 푸시가 동작하므로, iOS 사용자에게 "홈 화면에 추가" 온보딩 안내 UI 제공

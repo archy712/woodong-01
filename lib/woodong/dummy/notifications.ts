@@ -1,7 +1,4 @@
-import type {
-  Notification,
-  NotificationPreference,
-} from "@/lib/woodong/notifications";
+import type { Notification } from "@/lib/woodong/notifications";
 import { GROUP_ID, notificationId, userId } from "./ids";
 import { RUNNING_DUE_CYCLE_AUG, HIKING_DUE_CYCLE_SEORAK } from "./dues";
 import { DUMMY_ANNOUNCEMENTS } from "./announcements";
@@ -138,40 +135,9 @@ export const DUMMY_NOTIFICATIONS: Notification[] = [
   },
 ];
 
-export const DUMMY_NOTIFICATION_PREFERENCES: NotificationPreference[] = [
-  {
-    id: "pref-in_app",
-    user_id: NOTIFICATION_VIEWER_ID,
-    channel: "in_app",
-    enabled: true,
-    destination: null,
-    updated_at: "2026-08-01T00:00:00+09:00",
-  },
-  {
-    id: "pref-kakao",
-    user_id: NOTIFICATION_VIEWER_ID,
-    channel: "kakao",
-    enabled: false,
-    destination: null,
-    updated_at: "2026-08-01T00:00:00+09:00",
-  },
-  {
-    id: "pref-slack",
-    user_id: NOTIFICATION_VIEWER_ID,
-    channel: "slack",
-    enabled: false,
-    destination: null,
-    updated_at: "2026-08-01T00:00:00+09:00",
-  },
-  {
-    id: "pref-email",
-    user_id: NOTIFICATION_VIEWER_ID,
-    channel: "email",
-    enabled: false,
-    destination: null,
-    updated_at: "2026-08-01T00:00:00+09:00",
-  },
-];
+// DUMMY_NOTIFICATION_PREFERENCES는 Task 027에서 마이페이지가 실데이터
+// (`listMyChannelPreferences`)로 전환되면서 삭제했다. 채널 목록도 v1.6에서
+// web_push/in_app으로 좁혀져 더미의 kakao/slack/email 행은 CHECK 제약에도 맞지 않는다.
 
 export function getDummyNotifications(): Notification[] {
   return [...DUMMY_NOTIFICATIONS].sort((a, b) =>

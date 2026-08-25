@@ -1,7 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/database.types";
-import type { Notification } from "@/lib/woodong/notifications";
+import {
+  CHANNEL_DEFAULT_ENABLED,
+  type Notification,
+  type NotificationChannel,
+  type NotificationPreference,
+} from "@/lib/woodong/notifications";
 
 /**
  * 알림 조회 헬퍼 (Task 026).
@@ -81,4 +86,49 @@ export async function countUnreadNotifications(
   }
 
   return count ?? 0;
+}
+
+/** 마이페이지 채널 설정이 화면에 그리는 단위 — 저장된 행이 없어도 채널마다 항상 한 줄이 나온다. */
+export type ChannelPreference = {
+  channel: NotificationChannel;
+  enabled: boolean;
+  /** `web_push`의 Push 구독 정보(JSON) 유무. 실제 구독 등록은 Task 038 몫이라 1차에서는 항상 `false`. */
+  hasDestination: boolean;
+};
+
+/** 화면에 그리는 순서. `in_app`이 1차에서 유일하게 실제 발송되는 채널이라 위에 둔다. */
+export const CHANNEL_ORDER: NotificationChannel[] = ["in_app", "web_push"];
+
+/**
+ * 로그인 사용자의 채널별 알림 설정 (Task 027).
+ *
+ * 저장된 행이 하나도 없는 사용자가 정상이므로(설정을 만든 적 없는 상태), 조회 결과를 그대로
+ * 쓰지 않고 **채널 목록을 기준으로 채워서** 돌려준다. 없는 채널의 기본값은
+ * `CHANNEL_DEFAULT_ENABLED`가 정하며, 그 값은 팬아웃 RPC의 `coalesce(p.enabled, true)`와
+ * 맞춰져 있다(어긋나면 화면에는 켜져 있는데 실제로는 안 오거나 그 반대가 된다).
+ */
+export async function listMyChannelPreferences(
+  supabase: Client,
+): Promise<ChannelPreference[]> {
+  const { data, error } = await supabase
+    .from("woodong_notification_preferences")
+    .select("id, user_id, channel, enabled, destination, updated_at");
+
+  if (error) {
+    console.error(
+      "[queries/notifications] listMyChannelPreferences failed:",
+      error,
+    );
+  }
+
+  const saved = (data ?? []) as NotificationPreference[];
+
+  return CHANNEL_ORDER.map((channel) => {
+    const row = saved.find((p) => p.channel === channel);
+    return {
+      channel,
+      enabled: row?.enabled ?? CHANNEL_DEFAULT_ENABLED[channel],
+      hasDestination: Boolean(row?.destination),
+    };
+  });
 }

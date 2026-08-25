@@ -471,14 +471,16 @@ export const zh: Dictionary = {
     channelSettings: {
       title: "通知渠道设置",
       inApp: "应用内通知",
-      kakao: "KakaoTalk",
-      slack: "Slack",
-      email: "邮箱",
-      // TODO(i18n): Task 012 新增键为韩语占位文案，待翻译
+      webPush: "网页推送",
+      // TODO(i18n): Task 012/027 新增键为韩语占位文案，待翻译
+      inAppDescription: "알림센터와 종 아이콘으로 받아요.",
+      webPushDescription:
+        "브라우저 알림으로 받아요. 2차 업데이트에서 지원할 예정이라 지금은 설정만 저장돼요.",
       comingSoonNotice:
-        "카카오톡·슬랙·이메일 발송은 다음 업데이트에서 지원할 예정이에요. 지금은 앱 내 알림만 실제로 전송돼요.",
-      saveSuccessToast:
-        "알림 설정을 저장했어요. (데모 화면이라 실제로 저장되지는 않아요)",
+        "지금은 앱 내 알림만 실제로 전송돼요. 앱 내 알림을 끄면 새 공지가 와도 알림센터에 쌓이지 않아요.",
+      saveSuccessToast: "알림 설정을 저장했어요.",
+      saveErrorToast:
+        "알림 설정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.",
     },
     types: {
       announcement: "公告",

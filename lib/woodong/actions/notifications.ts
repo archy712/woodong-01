@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRlsError, mapSupabaseError } from "@/lib/woodong/errors";
 import type { ActionResult } from "@/lib/woodong/common";
+import {
+  updateChannelPreferenceSchema,
+  type UpdateChannelPreferenceInput,
+} from "@/lib/woodong/notifications";
 
 /**
  * 알림 읽음/클릭 처리 Server Action (Task 026).
@@ -140,4 +144,63 @@ export async function markAllNotificationsReadAction(): Promise<
   revalidateNotificationPaths();
 
   return { success: true, data: { markedCount: count ?? 0 } };
+}
+
+/**
+ * 채널별 알림 수신 설정 저장 (Task 027).
+ *
+ * 설정 행은 사용자가 처음 토글할 때 생기므로 UPDATE가 아니라 **upsert**다
+ * (`UNIQUE(user_id, channel)`가 충돌 키). `user_id`는 클라이언트가 보낸 값을 쓰지 않고
+ * 세션 클레임에서 직접 채운다 — 정책(`user_id = auth.uid()`)이 어차피 막지만, 남의 설정을
+ * 만들어 보라고 요청 본문에 자리를 내주지 않는 편이 낫다.
+ *
+ * `updated_at`은 기본값 `now()`가 INSERT에만 적용되고 이 테이블에는 갱신 트리거가 없어
+ * (Task 002는 `woodong_announcements`에만 트리거를 붙였다) 여기서 명시적으로 채운다.
+ */
+export async function updateChannelPreferenceAction(
+  input: UpdateChannelPreferenceInput,
+): Promise<ActionResult<{ channel: string; enabled: boolean }>> {
+  const parsed = updateChannelPreferenceSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClient();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
+
+  const userId = claimsData?.claims?.sub;
+  if (claimsError || !userId) {
+    return { success: false, formError: "로그인이 필요합니다." };
+  }
+
+  const { channel, enabled } = parsed.data;
+
+  const { error } = await supabase
+    .from("woodong_notification_preferences")
+    .upsert(
+      {
+        user_id: userId,
+        channel,
+        enabled,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,channel" },
+    );
+
+  if (error) {
+    console.error("[updateChannelPreferenceAction] upsert failed:", error);
+    if (isRlsError(error)) {
+      return {
+        success: false,
+        formError: "본인의 알림 설정만 변경할 수 있어요.",
+      };
+    }
+    return { success: false, formError: mapSupabaseError(error) };
+  }
+
+  // 설정이 바뀌면 이후 팬아웃 대상이 달라진다. 마이페이지 자체도 서버에서 다시 읽어야 한다.
+  revalidatePath("/protected/me");
+
+  return { success: true, data: { channel, enabled } };
 }

@@ -462,13 +462,15 @@ export const ko: Dictionary = {
     channelSettings: {
       title: "알림 채널 설정",
       inApp: "앱 내 알림",
-      kakao: "카카오톡",
-      slack: "슬랙",
-      email: "이메일",
+      webPush: "웹 푸시",
+      inAppDescription: "알림센터와 종 아이콘으로 받아요.",
+      webPushDescription:
+        "브라우저 알림으로 받아요. 2차 업데이트에서 지원할 예정이라 지금은 설정만 저장돼요.",
       comingSoonNotice:
-        "카카오톡·슬랙·이메일 발송은 다음 업데이트에서 지원할 예정이에요. 지금은 앱 내 알림만 실제로 전송돼요.",
-      saveSuccessToast:
-        "알림 설정을 저장했어요. (데모 화면이라 실제로 저장되지는 않아요)",
+        "지금은 앱 내 알림만 실제로 전송돼요. 앱 내 알림을 끄면 새 공지가 와도 알림센터에 쌓이지 않아요.",
+      saveSuccessToast: "알림 설정을 저장했어요.",
+      saveErrorToast:
+        "알림 설정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.",
     },
     types: {
       announcement: "공지",

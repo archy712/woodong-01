@@ -340,11 +340,16 @@ export interface Dictionary {
     channelSettings: {
       title: string;
       inApp: string;
-      kakao: string;
-      slack: string;
-      email: string;
+      /** 웹 푸시 채널 이름(v1.6에서 카카오톡/슬랙/이메일을 대체). */
+      webPush: string;
+      /** `in_app` 채널의 보조 설명. */
+      inAppDescription: string;
+      /** `web_push` 채널의 보조 설명 — 1차에서는 설정만 저장된다는 안내. */
+      webPushDescription: string;
       comingSoonNotice: string;
       saveSuccessToast: string;
+      /** 저장 실패 토스트. */
+      saveErrorToast: string;
     };
     types: {
       announcement: string;
