@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2·3 완료, Phase 4 착수 예정 (19/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3 완료, Phase 4 진행 중 (20/44 Tasks 완료)
 
 ---
 
@@ -304,13 +304,17 @@
 
 > **의존성**: Phase 0(스키마·RLS), Task 008(폼 아키텍처), Task 012(UI), Phase 3(인증).
 
-- **Task 019: 모임 CRUD 구현**
-  - 모임 생성 Server Action: 생성자를 **자동으로 `admin`(총무)로 `woodong_group_members`에 등록**하고 상세 페이지로 이동
-  - 필수 항목(모임 이름) 미입력 시 유효성 검사 에러 표시 및 요청 미전송
-  - 모임 정보 수정(이름/설명/대표 이미지/`default_due_amount`/`type`) — 대표 이미지는 `woodong-covers` 비공개 버킷 업로드 + 클라이언트 리사이즈 + 서명 URL 조회
-  - 모임 삭제: 확인 다이얼로그 재확인 후 연관 회비/투표/공지 데이터 함께 삭제(또는 소프트 삭제) 처리 방식 확정 및 구현
-  - 더미 데이터를 실제 Supabase 쿼리로 교체하고 `revalidatePath`로 목록/상세 갱신
-  - **완료 조건**: 생성 → 상세 이동 → 수정 → 삭제 전 구간 동작, 비멤버의 조회/수정이 RLS로 차단됨
+- **Task 019: 모임 CRUD 구현** ✅ - 완료
+  - ✅ 모임 생성은 Task 008에서 만든 `createGroupAction`을 그대로 사용(생성자 `admin` 자기등록 + 상세 페이지 이동). 이번 Task에서 실계정으로 재확인
+  - ✅ 필수 항목(모임 이름) 미입력 시 "모임 이름을 입력해주세요" 표시 및 요청 미전송(react-hook-form + zod 클라이언트 검증)
+  - ✅ 모임 정보 수정(`updateGroupAction`): 이름/설명/유형/기본 회비 + 대표 이미지. 이미지는 브라우저에서 형식·5MB 검증 → Canvas 리사이즈 → `woodong-covers` 비공개 버킷 업로드 후 **오브젝트 경로만** 액션에 전달하고, 조회는 서명 URL로 한다(공개 URL 미사용). 경로 위조를 막기 위해 서버에서 `{groupId}/` 접두어를 재검증
+  - ✅ 모임 삭제(`deleteGroupAction`): **하드 삭제**로 확정 — 자식 테이블 FK가 전부 `ON DELETE CASCADE`라 모임 행 하나로 회비/투표/공지/알림/멤버십이 함께 정리되고, 소프트 삭제는 모든 조회·RLS에 "미삭제" 조건을 덧붙여야 해 1차 범위에서 비용이 더 크다(복구 요구사항도 PRD에 없음). ⚠️ Storage 삭제 정책이 `woodong_is_group_admin()`을 요구하므로 **커버 이미지를 먼저 지우고 모임 행을 나중에** 지운다(순서가 바뀌면 이미지가 영구히 남는다)
+  - ✅ 더미 조회를 실제 쿼리로 교체: 조회 전용 모듈 `lib/woodong/queries/groups.ts` 신설(`listMyGroups`/`getGroupDetail`/`listGroupMembers`, 전부 사용자 세션 클라이언트로 RLS 아래 동작). 목록·상세·설정 페이지가 실데이터로 렌더링되고 뮤테이션 후 `revalidatePath`로 갱신. 상세의 공지/회비/투표 요약과 초대 목록은 각 도메인 Task(020/024/028/029) 몫이라 더미 유지(실제 모임 id에는 더미가 없어 자연히 빈 상태로 표시)
+  - ✅ 총무 전용 UI 게이팅: 일반회원에게는 정보 수정 폼 대신 안내 문구를 보여주고 위험 구역(삭제) 카드를 렌더링하지 않는다(쓰기는 RLS가 막지만 실패할 조작을 유도하지 않기 위한 이중 방어). Server Action도 UPDATE/DELETE 결과가 0행이면 조용히 성공 처리하지 않고 권한 오류로 되돌린다(PostgREST는 RLS 거부를 에러가 아니라 0행으로 응답)
+  - ⚠️ **(과정에서 발견·수정한 선행 버그)** Task 004에서 넣은 `next.config.ts`의 `images.remotePatterns`가 `new URL(...)` 인스턴스 형태라 **`search`가 빈 문자열로 고정**돼, `?token=...`이 필수인 서명 URL이 전부 매칭에서 탈락했다(대표 이미지가 `next/image`에서 "hostname is not configured"로 렌더링 실패). 객체 형태로 바꿔 `search` 제약을 없애 해결
+  - ⚠️ **(Task 021 선행 제약 발견)** 공유 `profiles`의 SELECT 정책이 `id = auth.uid() OR is_admin()`이라 **총무도 다른 멤버의 이름/연락처를 읽을 수 없다.** 로드맵 Task 021의 "profiles 조인으로 이름 표시"는 그대로는 불가능하며, 우동 전용 `SECURITY DEFINER` RPC(`woodong_get_vote_results` 패턴)가 필요하다. 이번 Task의 멤버 목록은 실제 멤버십 행(역할/본인 여부)만 표시하고 이름 표시는 Task 021로 넘겼다(공유 테이블 정책은 변경하지 않음)
+  - ✅ Playwright 실계정 검증(계정 2개): 생성(빈 이름 검증 포함) → 상세 이동("1명 참여 중" = 총무 자동 등록) → 수정 + 커버 업로드(DB 경로·리사이즈된 .jpg 확인, 상세에서 서명 URL 이미지 렌더링 확인) → **비멤버 접근 시 "모임을 찾을 수 없거나 접근 권한이 없어요"** → 일반회원으로 추가 후 설정 화면이 총무 전용 안내로 표시 → **UI를 우회한 REST PATCH/DELETE도 RLS가 0행으로 차단**(데이터 무변경 확인) → 총무로 삭제 → 목록 빈 상태 + `woodong_groups`/`woodong_group_members`/`storage.objects` 전부 0건. 테스트 계정 2개는 이메일 정확 일치로 삭제해 정리
+  - **완료 조건**: ✅ 생성 → 상세 이동 → 수정 → 삭제 전 구간 동작, ✅ 비멤버의 조회/수정이 RLS로 차단됨, ✅ `npm run check-all` 통과
 
 - **Task 020: 초대 코드 발급·참여·무효화 구현**
   - > **Task 003에서 확인된 선행 제약**: `woodong_group_members` INSERT 정책은 "자신이 만든 그룹의 admin 자기등록"만 허용하도록 잠겨 있어, 초대로 합류하는 `member` 행 INSERT는 클라이언트에서 직접 불가능하다. `woodong_increment_invite_used_count()`를 호출하고 멤버십을 INSERT하는 통합 `SECURITY DEFINER` RPC(예: `woodong_redeem_group_invite(p_code text)`)를 신규로 만들어야 한다. 또한 `woodong_group_invites` SELECT가 관리자 전용이라 `/invite/[code]` 공개 미리보기 페이지가 모임 이름 등을 직접 조회할 수 없으므로, 최소 정보만 반환하는 별도 `SECURITY DEFINER` 함수도 필요하다.
