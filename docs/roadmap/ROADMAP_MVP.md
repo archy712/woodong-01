@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2 완료, Phase 3 진행 중 (17/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2 완료, Phase 3 진행 중 (18/44 Tasks 완료)
 
 ---
 
@@ -272,12 +272,16 @@
   - ✅ Playwright 실계정 검증: (1) 비로그인으로 `/protected/groups/g-1/dues` 접근 → `?next=%2Fprotected%2Fgroups%2Fg-1%2Fdues`로 이동 → 회원가입 링크가 `next` 승계 → 가입 직후 해당 회비 페이지로 복귀, (2) `/invite/RUN-8F3K2Q` → "로그인하고 참여하기" → 로그인 → 초대 화면 복귀 및 "참여하기" 버튼으로 전환, (3) `?next=https://evil.example.com/pwn` 주입 후 로그인 → `/protected/groups`로 폴백, (4) Google 버튼 클릭 시 Supabase authorize의 `redirect_to`가 `/auth/callback?next=%2Fprotected%2Fnotifications%3Ftab%3Dunread`로 생성됨을 확인(소셜 왕복 완주 E2E는 Task 018-1). 쿼리스트링 보존·`//evil.com`·역슬래시·`/auth` 루프 차단은 curl로 추가 확인. 테스트 계정은 검증 후 `auth.users`에서 삭제로 정리
   - **완료 조건**: ✅ 비로그인 상태로 `/protected/groups/[id]/dues` 접근 → 로그인 → 해당 경로 복귀, ✅ 외부 URL 주입 시 기본 경로로 폴백, ✅ `npm run check-all` 통과
 
-- **Task 018: 마이페이지 연동 계정 관리 및 프로필**
-  - `getUserIdentities()` 기준 연결된 provider 목록 표시
-  - `linkIdentity()`로 추가 연동(Manual Linking 베타 옵션 활성화 전제), `unlinkIdentity()`로 해제
-  - **연결된 provider가 2개 이상일 때만 해제 버튼 활성화**(마지막 1개는 로그인 수단 상실 방지를 위해 해제 불가)
-  - `profiles`의 `name`/`phone_number` 등은 **읽기 전용 재사용** 원칙에 따라 표시 위주로 처리(우동에서 `role`·`avatar_key`·`notify_on_*`는 사용/변경 금지)
-  - **완료 조건**: provider 목록 정확 표시, 마지막 identity 해제 시도 차단, `profiles` 스키마 변경 0건
+- **Task 018: 마이페이지 연동 계정 관리 및 프로필** ✅ - 완료
+  - ✅ `app/protected/me`가 서버에서 `getUserIdentities()`로 연결된 provider를 읽어 신규 `components/me/linked-accounts.tsx`(Client)에 최소 필드(`identityId`/`provider`/`email`)만 내려준다 — 더미 하드코딩(Google 연동됨/Kakao 안 됨) 제거
+  - ✅ `linkIdentity()`로 추가 연동(Manual Linking 베타 활성화 전제, Task 001에서 적용 완료): OAuth 왕복이라 `redirectTo`를 `/auth/callback?next=/protected/me`로 구성해 Task 017의 복귀 경로 규약을 그대로 태운다. `unlinkIdentity()`는 확인 다이얼로그(AlertDialog) 뒤에서 실행
+  - ✅ **마지막 identity 보호 이중 방어**: identity가 1개면 해제 버튼 `disabled` + 안내 문구 노출, 클릭 시에도 `getUserIdentities()`로 재조회해 2개 미만이면 중단(다른 탭에서 먼저 해제한 경우 대비). 서버(GoTrue)도 `422 single_identity_not_deletable`로 거부함을 실제 API 호출로 확인
+  - ✅ 연동 실패 경로 보강: `linkIdentity`는 code 없이 `?error=...`로 콜백에 돌아오므로(예: 이미 다른 계정에 붙은 identity → `identity_already_exists`) `app/auth/callback/route.ts`가 이 파라미터를 먼저 읽어 에러 화면에 전달하도록 수정 — 기존에는 "No code provided"로 뭉개졌다
+  - ✅ 부수 정리 2건: provider 브랜드 SVG를 `components/auth/provider-icons.tsx`로 추출해 로그인 버튼과 연동 목록이 공유(중복 제거), 비밀번호 변경 카드는 **이메일 identity가 있는 계정에만** 노출(현재 비밀번호 재인증이 전제라 소셜 전용 계정에는 동작하지 않음)
+  - ⚠️ **(문구 정정)** `kakaoNoEmailNotice`가 "마이페이지에서 이메일 계정과 연동할 수 있어요"라고 안내했으나, Task 015에서 확인한 SMTP 제약(이메일 확인 메일 발송 불가) 때문에 소셜 전용 계정에 이메일 로그인 수단을 붙이는 경로는 1차에 존재하지 않는다. "Google 계정을 연동하면 로그인 수단을 하나 더 둘 수 있어요"로 4개 언어 모두 정정
+  - ℹ️ `profiles`는 스키마 변경 0건(읽기 전용 원칙 유지). 단 `name`/`phone_number`/`bio`의 본인 행 UPDATE는 Task 012에서 근거를 남기고 이미 허용한 상태라 이번 Task에서 되돌리지 않았다(`lib/woodong/actions/profile.ts` 주석 참고). `role`·`avatar_key`·`notify_on_*` 미사용 원칙은 그대로이며 아바타는 `woodong_profiles`를 쓴다
+  - ✅ Playwright 실계정 검증: (1) identity 1개 계정 → 이메일 "연동됨" + 해제 버튼 비활성 + 마지막 수단 안내, Google/Kakao "연동 안 됨" + 연동하기 버튼, (2) identity 2개 상태 → 해제 버튼 활성화 및 안내 문구 사라짐 → Google 해제 실행 → 토스트 + 목록 즉시 갱신 + `auth.identities`에서 실제 삭제 확인, (3) 마지막 identity 해제를 API로 직접 시도 → `422 single_identity_not_deletable`, (4) 연동하기 클릭 시 authorize URL의 `redirect_to`가 `/auth/callback?next=%2Fprotected%2Fme`로 생성됨. 2개 identity 상태는 Google 실계정 자격증명 없이 재현하기 위해 테스트 계정에 합성 google identity를 넣어 만들었고(해제는 실제 API 호출), **실제 Google 연동 왕복 완주는 Task 018-1에서 수행**. 테스트 계정은 검증 후 `auth.users`에서 삭제로 정리
+  - **완료 조건**: ✅ provider 목록 정확 표시, ✅ 마지막 identity 해제 시도 차단(UI·서버 양쪽), ✅ `profiles` 스키마 변경 0건, ✅ `npm run check-all` 통과
 
 - **Task 018-1: 인증 통합 테스트 (Playwright MCP)**
   - **## 테스트 체크리스트**
