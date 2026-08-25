@@ -2569,6 +2569,19 @@ export type Database = {
           total_count: number;
         }[];
       };
+      woodong_create_announcement: {
+        Args: { p_body: string; p_group_id: string; p_title: string };
+        Returns: {
+          announcement_body: string;
+          announcement_created_at: string;
+          announcement_created_by: string;
+          announcement_group_id: string;
+          announcement_id: string;
+          announcement_title: string;
+          announcement_updated_at: string;
+          notified_count: number;
+        }[];
+      };
       woodong_create_due_cycle: {
         Args: {
           p_amount: number;

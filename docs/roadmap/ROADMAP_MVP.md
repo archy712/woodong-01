@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 착수 예정 (27/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (28/44 Tasks 완료)
 
 ---
 
@@ -433,12 +433,20 @@
 > **1차 범위**: 앱 내 알림만 구현. 외부 채널(웹 푸시)과 실시간 pg_cron 스케줄러는 **2차 확장**(v1.6, 카카오톡 알림톡/Slack/이메일은 로드맵에서 완전히 제외). 회비 리마인드와 투표 마감은 **조회 시점 lazy 처리**로 대체한다.
 > **의존성**: Phase 4·5(공지/회비 데이터), Phase 0(알림 테이블·컬럼 보호 트리거).
 
-- **Task 025: 공지사항(`woodong_announcements`) CRUD 및 알림 팬아웃**
-  - 공지 목록/작성/수정 UI 및 Server Action(작성·수정 권한은 `woodong_is_group_admin()`)
-  - 발송 시 각 멤버의 `woodong_notification_preferences`에서 **`in_app`이 활성화된 대상 기준으로 `woodong_notifications` 레코드 생성**(1차는 `in_app`만 발송)
-  - **모임 전체 팬아웃 INSERT는 클라이언트 RLS로 불가능하므로 Edge Function에서 `service_role` 키로 수행**(서버 전용 환경 변수 관리, PRD 4.2)
-  - `type='notice'`, `related_type='announcement'`, `related_id`=공지 ID로 다형 참조 기록
-  - **완료 조건**: 공지 1건 발송 시 `in_app` 활성 멤버 수만큼 알림 생성, `service_role` 키가 클라이언트 번들에 노출되지 않음 확인
+- **Task 025: 공지사항(`woodong_announcements`) CRUD 및 알림 팬아웃** ✅ - 완료
+  - ⚠️ **(계획 변경, 사용자 승인) 팬아웃을 Edge Function이 아니라 `SECURITY DEFINER` RPC로 구현**했다(마이그레이션 `create_woodong_announcement_fanout`). 로드맵은 "클라이언트 RLS로 불가능하므로 Edge Function + `service_role`"을 전제했는데, 같은 제약을 **DB 함수로 풀면 세 가지가 더 낫다**: ① 공지 INSERT와 알림 팬아웃이 **한 트랜잭션**이라 "아무에게도 전달되지 않은 공지"가 남을 수 없다(Edge Function은 왕복 2회라 사이에서 실패하면 되돌릴 수 없다 — Task 022에서 회비 팬아웃을 RPC로 만든 것과 같은 이유), ② **`service_role` 키를 아예 쓰지 않으므로** "번들 노출" 위험이 원천 제거된다, ③ 이 저장소는 같은 성격의 권한 상승을 이미 **DEFINER RPC 12개**로 처리해 왔고 Edge Function은 0개다(`woodong_redeem_group_invite`가 가장 가까운 선례). 배포 대상·시크릿 관리·무료 플랜 콜드 스타트도 늘지 않는다
+  - ✅ `woodong_create_announcement(p_group_id, p_title, p_body)` — 총무 판정을 **함수 내부에서** `woodong_is_group_admin()`으로 수행한다. DEFINER는 RLS를 우회하므로 판정을 RLS에 맡길 수 없다(회비 팬아웃이 INVOKER로 충분했던 것과 갈리는 지점 — 그쪽은 필요한 권한이 이미 총무에게 열려 있었다). 제목/본문 공백 검증도 함수 안에서 한 번 더 한다(REST 직접 호출 대비). `set search_path = ''` + `anon` EXECUTE 명시 REVOKE는 기존 규약 그대로
+  - ✅ **팬아웃 대상 규칙**: 활성 멤버 중 `in_app`을 **명시적으로 끄지 않은** 사람(`coalesce(p.enabled, true)`) + **작성자 본인 제외**. 설정 행이 없으면 받는 **opt-out**이다 — opt-in으로 두면 마이페이지에 한 번도 안 들어간 사람은 어떤 공지도 못 받는데 그건 알림 기능이 없는 것과 같다. 자기가 방금 쓴 공지 알림을 자기가 받을 이유도 없다
+  - ✅ `type='notice'`, `related_type='announcement'`, `related_id`=공지 ID, `channel='in_app'`, `status='sent'`로 기록(앱 내 알림은 레코드 생성이 곧 전달이라 `pending`을 거치지 않는다)
+  - ✅ **수정은 알림을 재발송하지 않는다**(정책 확정). 오탈자 하나에 멤버 전원 알림이 다시 가면 알림이 신뢰를 잃고, 이미 읽은 사람에게 같은 공지가 안읽음으로 되살아난다. 크게 바뀌었으면 새 공지를 쓰는 편이 받는 사람에게도 분명하다 — 폼에 "수정해도 알림은 다시 가지 않아요"로 명시. `groupId`는 수정 대상에서 제외했다(공지를 다른 모임으로 옮기면 이미 발송된 알림의 `related_id`가 그 모임 비멤버를 가리킨다)
+  - ✅ 수정 Server Action은 **RPC를 쓰지 않는다** — 팬아웃이 없어 권한 상승이 필요 없고 `woodong_announcements_update_admin` 정책이 이미 총무만 통과시킨다. RLS 거부가 0행으로 오므로 `count: "exact"`로 확인해 권한 오류로 되돌린다(Task 019~023과 같은 패턴). `updated_at`은 Task 002의 트리거가 갱신하고, 목록은 `created_at`과 1초 넘게 벌어졌을 때만 "수정됨" 배지를 붙인다(INSERT 시점 마이크로초 차이로 갓 쓴 공지가 수정됨으로 보이지 않게)
+  - ✅ 조회 전용 모듈 `lib/woodong/queries/announcements.ts`(`listAnnouncements`/`listRecentAnnouncements`)와 Server Action `lib/woodong/actions/announcements.ts` 신설. 공지 목록·작성 폼의 더미를 실데이터로 교체하고, **모임 홈의 "최근 공지" 카드도 실데이터로 전환**(홈은 최신 3건만 좁혀 읽는다). 비멤버에게는 회비 화면과 같은 "모임을 찾을 수 없거나 접근 권한이 없어요"를 먼저 보여준다
+  - ✅ 발송 성공 토스트는 **서버가 실제로 만든 알림 건수**를 그대로 쓴다(클라이언트가 멤버 수로 흉내 내면 작성자·비활성 멤버가 빠진 서버 계산과 어긋난다). 총무가 아니면 "공지 작성" 버튼을 렌더링하지 않고, `/announcements/new`에 직접 들어와도 폼 대신 안내 문구를 보여준다
+  - ✅ i18n 신규 키 9종(ko 확정 문구, en/ja/zh는 관례대로 스텁+`TODO(i18n)`)
+  - ✅ **(과정에서 함께 고친 것)** 공지 작성 페이지 상단 "공지사항" 돌아가기 링크가 360px에서 높이 20px로 **44px 터치 타겟 규칙(Task 013)을 위반**하고 있었다 — `min-h-11` 적용
+  - ✅ Playwright 실계정 E2E(계정 3개, m2는 `in_app`을 끈 상태): 빈 폼 제출은 **요청 0건** + 두 필드 검증 문구 → 제목/본문 앞뒤 공백이 DB에서 trim되어 저장 → **총원 3명 중 정확히 1명에게만 알림 생성**(작성자 본인 제외, `in_app` 끈 m2 제외)되고 토스트도 "1명에게 알림을 보냈어요" → 수정 후에도 **알림은 여전히 1건**(재발송 없음)이고 `updated_at`만 갱신되며 "수정됨" 배지 노출. 일반회원은 목록에 작성/수정 버튼이 없고 `/new`는 폼 0개. **UI 우회 REST 5종 전부 차단**: 팬아웃 RPC·공지 INSERT·알림 INSERT는 `403 42501`(RPC는 "공지는 총무만 작성할 수 있습니다"), 공지 UPDATE/DELETE는 0행(제목 무변경 SQL 확인), 알림은 필터 없이 요청해도 **본인 것만** 반환. 360px에서 가로 스크롤 0건·터치 타겟 위반 0건. 테스트 계정 3개·모임·공지·알림·설정 정리 완료
+  - ✅ **`service_role` 키 미노출 검증**: 애플리케이션 코드에 `SERVICE_ROLE` 참조 **0건**, `.env.local`의 실제 키 값(219자)으로 `.next/static`(클라이언트 전송 자산)과 `.next` 전체를 문자열 검색해 **발견 0건**. 브라우저가 받은 HTML+인라인+스크립트 24개(약 6MB) 전수 검사에서도 `sb_secret_` 형태 0건 — 검출된 `service_role` 문자열은 전부 `@supabase/auth-js`의 JSDoc 주석이었다(같은 검사에서 `sb_publishable_` 키는 정상 검출되어 검사 자체가 동작함을 확인)
+  - **완료 조건**: ✅ 공지 1건 발송 시 `in_app` 활성 멤버 수만큼(작성자 제외) 알림 생성, ✅ `service_role` 키가 클라이언트 번들에 노출되지 않음(코드 참조 0건 + 빌드 산출물 0건), ✅ `get_advisors`(security) **ERROR 0건**(신규 WARN 1건은 `authenticated`에게 의도적으로 연 DEFINER RPC로, Task 003/020/021과 동일 패턴이며 `anon`에는 REVOKE됨), ✅ `npm run check-all` 통과
 
 - **Task 026: 알림센터 구현 (읽음/클릭 처리)**
   - 헤더 종 아이콘 + 미읽음 뱃지, 알림센터 페이지(전체 이력, 읽음/안읽음 구분 표시)

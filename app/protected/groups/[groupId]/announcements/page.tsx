@@ -1,20 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { MegaphoneIcon, PlusIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
+import { AnnouncementList } from "@/components/announcements/announcement-list";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { getDummyAnnouncements } from "@/lib/woodong/dummy";
+import { listAnnouncements } from "@/lib/woodong/queries/announcements";
+import { getGroupDetail } from "@/lib/woodong/queries/groups";
 
 async function AnnouncementsContent({
   params,
@@ -32,7 +27,25 @@ async function AnnouncementsContent({
   const locale = await getLocale();
   const dict = getDictionary(locale);
 
-  const announcements = getDummyAnnouncements(groupId);
+  // 비멤버는 RLS 때문에 어차피 빈 목록을 보게 되지만, "공지가 없는 모임"과 구분되지 않는다.
+  // 회비 화면과 같은 안내를 먼저 보여주고 조회 자체를 하지 않는다.
+  const detail = await getGroupDetail(supabase, groupId, data.claims.sub);
+
+  if (!detail) {
+    return (
+      <div className="flex w-full flex-1 flex-col gap-4 p-6 sm:p-8">
+        <h1 className="text-2xl font-bold">
+          {dict.groups.announcements.pageTitle}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {dict.groups.detailNotFound}
+        </p>
+      </div>
+    );
+  }
+
+  const announcements = await listAnnouncements(supabase, groupId);
+  const isAdmin = detail.role === "admin";
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
@@ -40,46 +53,24 @@ async function AnnouncementsContent({
         <h1 className="text-2xl font-bold">
           {dict.groups.announcements.pageTitle}
         </h1>
-        <Button asChild size="sm">
-          <Link href={`/protected/groups/${groupId}/announcements/new`}>
-            <PlusIcon />
-            {dict.groups.announcements.writeButton}
-          </Link>
-        </Button>
+        {/* 쓰기는 RLS와 RPC가 막지만, 총무가 아닌 사람에게 반드시 실패할 버튼을 보여주지 않는다. */}
+        {isAdmin && (
+          <Button asChild size="sm">
+            <Link href={`/protected/groups/${groupId}/announcements/new`}>
+              <PlusIcon />
+              {dict.groups.announcements.writeButton}
+            </Link>
+          </Button>
+        )}
       </div>
 
-      {announcements.length > 0 ? (
-        <ul className="flex flex-col gap-4">
-          {announcements.map((a) => (
-            <li key={a.id}>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-2">
-                    <CardTitle className="text-base">{a.title}</CardTitle>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {new Date(a.created_at).toLocaleDateString("ko-KR")}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm whitespace-pre-line text-muted-foreground">
-                    {a.body}
-                  </p>
-                </CardContent>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <MegaphoneIcon />
-            </EmptyMedia>
-            <EmptyTitle>{dict.emptyStates.noAnnouncements}</EmptyTitle>
-          </EmptyHeader>
-        </Empty>
-      )}
+      <AnnouncementList
+        announcements={announcements}
+        isAdmin={isAdmin}
+        labels={dict.groups.announcements}
+        commonLabels={dict.common}
+        emptyLabel={dict.emptyStates.noAnnouncements}
+      />
     </div>
   );
 }

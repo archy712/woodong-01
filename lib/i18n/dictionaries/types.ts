@@ -210,6 +210,16 @@ export interface Dictionary {
       submitButton: string;
       writeButton: string;
       submitSuccessToast: string;
+      notifiedCountSuffix: string;
+      notifiedNoneNotice: string;
+      editButton: string;
+      editTitle: string;
+      editSubmitButton: string;
+      editSuccessToast: string;
+      editedBadge: string;
+      adminOnlyNotice: string;
+      notifyNotice: string;
+      editNotifyNotice: string;
     };
   };
   dues: {

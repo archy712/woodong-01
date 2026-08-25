@@ -340,6 +340,17 @@ export const ja: Dictionary = {
       writeButton: "공지 작성",
       submitSuccessToast:
         "공지를 발송했어요. (데모 화면이라 실제로 저장되지는 않아요)",
+      // TODO(i18n): Task 025 신규 키 — 2차 확장에서 번역
+      notifiedCountSuffix: "명에게 알림을 보냈어요.",
+      notifiedNoneNotice: "알림을 받을 다른 멤버가 아직 없어요.",
+      editButton: "수정",
+      editTitle: "공지 수정",
+      editSubmitButton: "수정 저장",
+      editSuccessToast: "공지를 수정했어요.",
+      editedBadge: "수정됨",
+      adminOnlyNotice: "공지 작성과 수정은 총무만 할 수 있어요.",
+      notifyNotice: "발송하면 모임 멤버 전원에게 앱 내 알림이 전달돼요.",
+      editNotifyNotice: "수정해도 알림은 다시 가지 않아요.",
     },
   },
   dues: {

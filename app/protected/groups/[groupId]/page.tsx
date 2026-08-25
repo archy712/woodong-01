@@ -24,6 +24,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { formatWon } from "@/lib/woodong/dues-summary";
 import { getDummyGroupDashboard } from "@/lib/woodong/dummy";
+import { listRecentAnnouncements } from "@/lib/woodong/queries/announcements";
 import { getLatestDueCycleSummary } from "@/lib/woodong/queries/dues";
 import { getGroupDetail } from "@/lib/woodong/queries/groups";
 
@@ -44,9 +45,9 @@ async function GroupDetailContent({
   const locale = await getLocale();
   const dict = getDictionary(locale);
 
-  // 모임 자체는 Task 019, 회비 요약은 Task 024에서 실제 쿼리로 교체했다. 공지/투표 요약은 각 도메인
-  // Task(025/029)에서 교체 예정이라 아직 더미다 — 실제 모임 id에는 더미가 없으므로 두 카드가
-  // 자연스럽게 빈 상태로 렌더링된다.
+  // 모임 자체는 Task 019, 회비 요약은 Task 024, 공지 요약은 Task 025에서 실제 쿼리로 교체했다.
+  // 투표 요약만 Task 029에서 교체 예정이라 아직 더미다 — 실제 모임 id에는 더미가 없으므로
+  // 그 카드가 자연스럽게 빈 상태로 렌더링된다.
   const detail = await getGroupDetail(supabase, groupId, claimsData.claims.sub);
 
   if (!detail) {
@@ -62,7 +63,10 @@ async function GroupDetailContent({
 
   const { group, memberCount, coverUrl } = detail;
   const dashboard = getDummyGroupDashboard(groupId);
-  const latestDues = await getLatestDueCycleSummary(supabase, groupId);
+  const [latestDues, recentAnnouncements] = await Promise.all([
+    getLatestDueCycleSummary(supabase, groupId),
+    listRecentAnnouncements(supabase, groupId),
+  ]);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6 sm:p-8">
@@ -110,9 +114,9 @@ async function GroupDetailContent({
           </div>
         </CardHeader>
         <CardContent>
-          {dashboard.latestAnnouncements.length > 0 ? (
+          {recentAnnouncements.length > 0 ? (
             <ul className="flex flex-col gap-3">
-              {dashboard.latestAnnouncements.map((a) => (
+              {recentAnnouncements.map((a) => (
                 <li key={a.id} className="text-sm">
                   <p className="font-medium">{a.title}</p>
                   <p className="line-clamp-1 text-muted-foreground">{a.body}</p>
