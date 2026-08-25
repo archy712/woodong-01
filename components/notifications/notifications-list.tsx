@@ -1,13 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { BellIcon, MegaphoneIcon, VoteIcon, WalletIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  BellIcon,
+  Loader2Icon,
+  MegaphoneIcon,
+  VoteIcon,
+  WalletIcon,
+} from "lucide-react";
 
-import type {
-  Notification,
-  NotificationType,
-} from "@/lib/woodong/notifications";
+import type { NotificationType } from "@/lib/woodong/notifications";
+import type { NotificationListItem } from "@/lib/woodong/queries/notifications";
+import {
+  markAllNotificationsReadAction,
+  markNotificationClickedAction,
+} from "@/lib/woodong/actions/notifications";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,7 +46,7 @@ const TYPE_ICON: Record<NotificationType, React.ElementType> = {
   settlement_published: WalletIcon,
 };
 
-function resolveHref(notification: Notification): string {
+function resolveHref(notification: NotificationListItem): string {
   const base = `/protected/groups/${notification.group_id}`;
   switch (notification.related_type) {
     case "vote":
@@ -51,34 +61,84 @@ function resolveHref(notification: Notification): string {
 }
 
 /**
- * 알림센터 목록. 실제 `read_at`/`clicked_at` 갱신(RLS 컬럼 보호 트리거 대상)은 Task 026 몫이라,
- * 이번 Task에서는 클릭/모두 읽음 처리를 로컬 state로만 반영한다(새로고침하면 초기 더미 상태로 복귀).
+ * 사용자가 링크를 "이 탭에서 열려는" 클릭인지 판별한다.
+ *
+ * 새 탭/새 창(⌘·Ctrl·Shift·Alt, 휠 클릭)으로 여는 경우에는 가로채지 않고 브라우저에 맡긴다.
+ * 그 경로에서는 클릭 기록이 남지 않지만, 이동을 가로채 막는 쪽이 사용자에게 더 나쁘다.
+ */
+function isPlainLeftClick(event: React.MouseEvent): boolean {
+  return (
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey
+  );
+}
+
+/**
+ * 알림센터 목록 (Task 026에서 실데이터 연동).
+ *
+ * 목록은 로컬 state로 들지 않고 서버가 내려준 값을 그대로 그린다(공지 목록·회비 대시보드와
+ * 같은 규약). 읽음/클릭 처리는 Server Action이 `read_at`/`clicked_at`을 갱신하고
+ * `revalidatePath` + `router.refresh()`로 다시 받아온다.
+ *
+ * 클릭은 **Action을 await한 뒤에 이동**한다. 이동을 먼저 시작하면 브라우저가 진행 중인
+ * 요청을 취소해 클릭 기록이 조용히 누락될 수 있는데, 그러면 KPI "알림 클릭률"이 실제보다
+ * 낮게 잡힌다(PRD 10장). 기록이 실패하면 토스트만 띄우고 **이동은 그대로 진행한다** —
+ * 지표 때문에 사용자가 알림을 못 여는 것이 더 나쁘다.
  */
 export function NotificationsList({
-  initialNotifications,
+  notifications,
   labels,
 }: {
-  initialNotifications: Notification[];
+  notifications: NotificationListItem[];
   labels: Dictionary["notifications"];
 }) {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const router = useRouter();
+  const [isMarkingAll, startMarkAll] = useTransition();
+  const [openingId, setOpeningId] = useState<string | null>(null);
   const unreadCount = notifications.filter((n) => !n.read_at).length;
 
-  function markAllRead() {
-    const now = new Date().toISOString();
-    setNotifications((prev) =>
-      prev.map((n) => (n.read_at ? n : { ...n, read_at: now })),
-    );
+  function handleMarkAllRead() {
+    startMarkAll(async () => {
+      const result = await markAllNotificationsReadAction();
+
+      if (!result.success) {
+        toast.error(result.formError ?? labels.markReadErrorToast);
+        return;
+      }
+
+      toast.success(
+        `${result.data.markedCount}${labels.markAllReadSuccessSuffix}`,
+      );
+      router.refresh();
+    });
   }
 
-  function markRead(id: string) {
-    setNotifications((prev) =>
-      prev.map((n) =>
-        n.id === id && !n.read_at
-          ? { ...n, read_at: new Date().toISOString() }
-          : n,
-      ),
-    );
+  async function handleOpen(
+    event: React.MouseEvent<HTMLAnchorElement>,
+    notification: NotificationListItem,
+  ) {
+    if (!isPlainLeftClick(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    const href = resolveHref(notification);
+    setOpeningId(notification.id);
+
+    const result = await markNotificationClickedAction(notification.id);
+
+    if (!result.success) {
+      toast.error(result.formError ?? labels.markReadErrorToast);
+    }
+
+    // 헤더의 미읽음 뱃지는 루트 레이아웃에 있어 클라이언트 내비게이션만으로는 다시 그려지지
+    // 않는다. 이동 전에 서버 트리를 갱신해야 이동 직후 뱃지가 맞는 숫자를 보여준다.
+    router.refresh();
+    router.push(href);
+    setOpeningId(null);
   }
 
   if (notifications.length === 0) {
@@ -89,7 +149,7 @@ export function NotificationsList({
             <BellIcon />
           </EmptyMedia>
           <EmptyTitle>{labels.emptyState}</EmptyTitle>
-          <EmptyDescription>{labels.pageTitle}</EmptyDescription>
+          <EmptyDescription>{labels.allReadMessage}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
@@ -97,19 +157,20 @@ export function NotificationsList({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {unreadCount > 0
-            ? `${unreadCount}${labels.unreadLabel}`
-            : labels.readLabel}
+            ? `${unreadCount}${labels.unreadCountSuffix}`
+            : labels.allReadMessage}
         </p>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={markAllRead}
-          disabled={unreadCount === 0}
+          onClick={handleMarkAllRead}
+          disabled={unreadCount === 0 || isMarkingAll}
         >
+          {isMarkingAll && <Loader2Icon className="animate-spin" />}
           {labels.markAllReadButton}
         </Button>
       </div>
@@ -118,15 +179,21 @@ export function NotificationsList({
         {notifications.map((notification) => {
           const Icon = TYPE_ICON[notification.type];
           const isUnread = !notification.read_at;
+          const isOpening = openingId === notification.id;
           return (
             <Item key={notification.id} asChild variant="outline" size="sm">
               <Link
                 href={resolveHref(notification)}
-                onClick={() => markRead(notification.id)}
-                className={cn(isUnread && "bg-accent/40")}
+                onClick={(event) => handleOpen(event, notification)}
+                aria-busy={isOpening}
+                className={cn("min-h-11", isUnread && "bg-accent/40")}
               >
                 <ItemMedia variant="icon">
-                  <Icon />
+                  {isOpening ? (
+                    <Loader2Icon className="animate-spin" />
+                  ) : (
+                    <Icon />
+                  )}
                 </ItemMedia>
                 <ItemContent>
                   <ItemTitle>
@@ -134,11 +201,17 @@ export function NotificationsList({
                     {isUnread && (
                       <Badge
                         variant="default"
+                        aria-label={labels.unreadLabel}
                         className="h-2 w-2 rounded-full p-0"
                       />
                     )}
                   </ItemTitle>
                   <ItemDescription>{notification.body}</ItemDescription>
+                  {notification.group_name && (
+                    <ItemDescription className="text-xs">
+                      {notification.group_name}
+                    </ItemDescription>
+                  )}
                 </ItemContent>
                 <span className="shrink-0 text-xs text-muted-foreground">
                   {new Date(notification.created_at).toLocaleDateString(

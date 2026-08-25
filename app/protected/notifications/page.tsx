@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { getDummyNotifications } from "@/lib/woodong/dummy";
+import { listMyNotifications } from "@/lib/woodong/queries/notifications";
 
 async function NotificationsContent() {
   const supabase = await createClient();
@@ -18,13 +18,14 @@ async function NotificationsContent() {
   const locale = await getLocale();
   const dict = getDictionary(locale);
 
-  const notifications = getDummyNotifications();
+  // 필터를 걸지 않아도 RLS(`user_id = auth.uid()`)가 본인 알림만 내려준다.
+  const notifications = await listMyNotifications(supabase);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
       <h1 className="text-2xl font-bold">{dict.notifications.pageTitle}</h1>
       <NotificationsList
-        initialNotifications={notifications}
+        notifications={notifications}
         labels={dict.notifications}
       />
     </div>

@@ -327,6 +327,16 @@ export interface Dictionary {
     unreadLabel: string;
     readLabel: string;
     emptyState: string;
+    /** 미읽음 건수 뒤에 붙는 문구(`3` + 이 문구). */
+    unreadCountSuffix: string;
+    /** 미읽음이 0건일 때 목록 상단에 대신 보여주는 문구. */
+    allReadMessage: string;
+    /** "모두 읽음" 성공 토스트에서 처리 건수 뒤에 붙는 문구. */
+    markAllReadSuccessSuffix: string;
+    /** 읽음/클릭 처리 실패 토스트. */
+    markReadErrorToast: string;
+    /** 헤더 종 아이콘의 미읽음 뱃지 스크린리더 라벨. */
+    unreadBadgeLabel: string;
     channelSettings: {
       title: string;
       inApp: string;

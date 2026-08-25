@@ -473,6 +473,12 @@ export const ja: Dictionary = {
     unreadLabel: "안읽음",
     readLabel: "읽음",
     emptyState: "아직 알림이 없어요. 새 소식이 오면 바로 알려드릴게요!",
+    // TODO(i18n): Task 026の新規キーは韓国語の仮文言、翻訳が必要
+    unreadCountSuffix: "건의 새 알림이 있어요",
+    allReadMessage: "새 알림을 모두 확인했어요.",
+    markAllReadSuccessSuffix: "건을 읽음으로 표시했어요.",
+    markReadErrorToast: "읽음 처리에 실패했어요. 잠시 후 다시 시도해주세요.",
+    unreadBadgeLabel: "안 읽은 알림",
     channelSettings: {
       title: "通知チャンネル設定",
       inApp: "アプリ内通知",

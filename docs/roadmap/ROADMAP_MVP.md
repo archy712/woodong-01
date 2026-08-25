@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (28/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (29/44 Tasks 완료)
 
 ---
 
@@ -448,12 +448,22 @@
   - ✅ **`service_role` 키 미노출 검증**: 애플리케이션 코드에 `SERVICE_ROLE` 참조 **0건**, `.env.local`의 실제 키 값(219자)으로 `.next/static`(클라이언트 전송 자산)과 `.next` 전체를 문자열 검색해 **발견 0건**. 브라우저가 받은 HTML+인라인+스크립트 24개(약 6MB) 전수 검사에서도 `sb_secret_` 형태 0건 — 검출된 `service_role` 문자열은 전부 `@supabase/auth-js`의 JSDoc 주석이었다(같은 검사에서 `sb_publishable_` 키는 정상 검출되어 검사 자체가 동작함을 확인)
   - **완료 조건**: ✅ 공지 1건 발송 시 `in_app` 활성 멤버 수만큼(작성자 제외) 알림 생성, ✅ `service_role` 키가 클라이언트 번들에 노출되지 않음(코드 참조 0건 + 빌드 산출물 0건), ✅ `get_advisors`(security) **ERROR 0건**(신규 WARN 1건은 `authenticated`에게 의도적으로 연 DEFINER RPC로, Task 003/020/021과 동일 패턴이며 `anon`에는 REVOKE됨), ✅ `npm run check-all` 통과
 
-- **Task 026: 알림센터 구현 (읽음/클릭 처리)**
-  - 헤더 종 아이콘 + 미읽음 뱃지, 알림센터 페이지(전체 이력, 읽음/안읽음 구분 표시)
-  - 알림 클릭 시 관련 리소스(공지/투표/회비)로 이동하며 **`read_at`/`clicked_at` 갱신** — 컬럼 보호 트리거로 그 외 컬럼 UPDATE는 차단
-  - 본인 수신 알림만 조회 가능(RLS)
-  - KPI "알림 클릭률" 산출 기반이 되도록 `read_at`/`clicked_at` 기록 누락 방지
-  - **완료 조건**: 읽음/클릭 상태가 정확히 갱신되고 타인 알림 조회·조작이 차단됨
+- **Task 026: 알림센터 구현 (읽음/클릭 처리)** ✅ - 완료
+  - ✅ **DB 변경 0건** — 이번 Task는 마이그레이션도 RPC도 추가하지 않았다. Task 003이 이미 `woodong_notifications`에 본인 행 SELECT/UPDATE 정책과 컬럼 보호 트리거(`woodong_prevent_unauthorized_notification_update`)를 만들어 뒀고, 읽음/클릭은 **권한 상승이 필요 없는 유일한 쓰기 경로**다. 공지 팬아웃(Task 025)처럼 `SECURITY DEFINER`로 감쌌다면 오히려 그 트리거가 지켜 주는 보호막을 우리 손으로 우회하는 셈이 된다 — DEFINER는 필요할 때만 쓴다는 원칙을 여기서 지켰다
+  - ✅ 조회 전용 모듈 `lib/woodong/queries/notifications.ts` 신설: `listMyNotifications`(최신 50건, 모임 이름 FK 임베드)·`countUnreadNotifications`(헤더 뱃지용). 두 함수 모두 **`user_id` 앱 레벨 필터를 일부러 붙이지 않았다** — 정책(`user_id = auth.uid()`)이 이미 유일한 필터이고, 앱 필터를 덧대면 "정책이 없어도 안전하다"는 착각을 남긴다(REST 검증에서 필터 없는 요청도 본인 것만 온다고 실측). 실패 시 throw 대신 빈 배열/0으로 폴백해 헤더 하나 때문에 페이지 전체가 깨지지 않게 했다
+  - ✅ Server Action `lib/woodong/actions/notifications.ts` 신설:
+    - `markNotificationClickedAction` — **이미 값이 있는 컬럼은 덮어쓰지 않는다**. `read_at`/`clicked_at`은 "처음" 읽고 처음 누른 시각이어야 도달~반응 지연을 계산할 수 있고, 같은 알림을 다시 눌렀다고 지표가 뒤로 밀리면 안 된다. 쓸 것이 없으면 빈 UPDATE 자체를 보내지 않는다
+    - `markAllNotificationsReadAction` — `clicked_at`은 **건드리지 않는다**. 목록에서 "모두 읽음"을 누른 것은 알림을 실제로 열어 본 것이 아니라, 여기서 클릭까지 찍으면 KPI 클릭률이 부풀려진다
+    - 남의 알림 ID를 넘기면 RLS가 에러가 아니라 0행으로 응답하므로 SELECT로 존재를 먼저 확인하고, **타인 알림과 삭제된 알림에 같은 메시지**("알림을 찾을 수 없어요.")를 쓴다 — 구분해 주면 남의 알림 ID의 존재 자체가 샌다
+  - ✅ **클릭은 Action을 await한 뒤에 이동한다**(`components/notifications/notifications-list.tsx`). 이동을 먼저 시작하면 브라우저가 진행 중인 요청을 취소해 클릭 기록이 조용히 누락되고, 그러면 KPI "알림 클릭률"이 실제보다 낮게 잡힌다. 반대로 기록이 실패하면 토스트만 띄우고 **이동은 그대로 진행**한다 — 지표 때문에 사용자가 알림을 못 여는 것이 더 나쁘다. 새 탭/새 창(⌘·Ctrl·Shift·Alt, 휠 클릭)은 가로채지 않고 브라우저에 맡긴다(그 경로는 클릭 기록이 남지 않지만, 이동을 막는 쪽이 더 나쁘다)
+  - ✅ 헤더 종 아이콘 미읽음 뱃지(`components/header-auth-nav.tsx`, Task 011에서 예고한 자리): `head: true` + `count: "exact"`로 **페이로드 0인 개수 전용 요청**(모든 라우트의 헤더에서 매 요청 실행된다), 99 초과는 `99+`로 축약. 뱃지는 루트 레이아웃에 있어 클라이언트 내비게이션만으로는 다시 그려지지 않으므로, 클릭 처리 후 `router.refresh()`를 **이동 전에** 호출해 도착 화면의 숫자가 이미 맞도록 했다
+  - ✅ 목록에 **모임 이름**을 함께 표시(알림은 여러 모임에서 섞여 오므로 "어느 모임 소식인지"가 목록에서 바로 보여야 한다). 더미 데이터를 실데이터로 교체하고 로컬 state 기반 가짜 읽음 처리를 제거, 요약 문구도 `3안읽음` → `3건의 새 알림이 있어요`로 교정
+  - ✅ i18n 신규 키 5종(ko 확정 문구, en/ja/zh는 관례대로 스텁+`TODO(i18n)`)
+  - ✅ Playwright 실계정 E2E(계정 2개, 공지 2건 팬아웃): 헤더 뱃지 `2` + aria-label "알림 (안 읽은 알림 2)" → 알림 클릭 시 공지 화면으로 이동하며 `read_at`/`clicked_at` **동시 기록**, 도착 화면 뱃지 즉시 `1` → **같은 알림 재클릭 시 두 타임스탬프 불변**(최초 클릭 유지) → "모두 읽음" 토스트 "1건을 읽음으로 표시했어요."(이미 읽은 1건 제외) 후 `read_at`만 채워지고 `clicked_at`은 `null` 유지, 뱃지 사라짐 → 알림 0건일 때 빈 상태 문구 노출. **양방향 격리 확인**: m1은 본인 알림 1건만, m2는 본인 2건만 보인다
+  - ✅ **UI 우회 REST 6종 전부 차단**: 필터 없는 SELECT도 본인 2건만 반환, 타인 알림은 SELECT/UPDATE 모두 **0행**(원본 `read_at` 무변경 SQL 확인), 본인 알림이라도 `title`/`user_id`/`status` 변경은 컬럼 보호 트리거가 `P0001 "권한이 없습니다: read_at, clicked_at 외의 컬럼은 변경할 수 없습니다."`로 거부, 알림 INSERT는 `403 42501`, DELETE는 0행(정책 없음). Server Action이 보내는 것과 동일한 SELECT/UPDATE를 m1 세션으로 SQL 임퍼소네이션해도 `visible_rows=0 / updated_rows=0`
+  - ✅ 360px에서 가로 스크롤 0건·터치 타겟(44px) 위반 0건 실측. 테스트 계정 2개·모임·공지·알림 정리 완료(`woodong_*` 전부 0행)
+  - ⚠️ **(범위 밖 재관찰)** Task 024-1에서 후속 과제로 이관한 `PGRST303 "JWT issued at future"`(로그인 직후 `listMyGroups` 1회 실패)가 이번 테스트에서도 그대로 재현됐다. 알림 조회 경로에서는 발생하지 않았고 조치 위치도 그대로라, Task 033의 "에러 핸들링 및 폴백 UI" 항목에 남겨 둔다
+  - **완료 조건**: ✅ 읽음/클릭 상태가 정확히 갱신되고(최초 시각 보존, 중복 클릭에도 1회만) ✅ 타인 알림 조회·조작이 UI·REST·SQL 어느 경로로도 차단됨, ✅ `get_advisors`(security) **ERROR 0건**(WARN은 전부 기존 항목, 이번 Task는 DB 객체 추가 0건), ✅ `npm run check-all` 통과
 
 - **Task 027: 알림 채널 설정 (마이페이지)**
   - `woodong_notification_preferences` 기반 채널별 on/off UI(`web_push`/`in_app`) — **1차에서 실제 발송은 `in_app`만**, `web_push`는 설정만 저장하고 "2차 지원 예정" 안내 표기

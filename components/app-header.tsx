@@ -27,6 +27,7 @@ export async function AppHeader() {
             <HeaderAuthNav
               groupsLabel={dict.nav.groupsLabel}
               notificationsLabel={dict.nav.notificationsLabel}
+              unreadBadgeLabel={dict.notifications.unreadBadgeLabel}
             />
           </Suspense>
           <LanguageSwitcher locale={locale} />
