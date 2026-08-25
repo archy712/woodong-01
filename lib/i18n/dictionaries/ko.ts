@@ -407,14 +407,25 @@ export const ko: Dictionary = {
     editProfileButton: "프로필 수정하기",
     linkedAccountsSectionTitle: "연동된 계정",
     linkedAccountsNotice:
-      "Google·카카오 소셜 로그인 연동 관리는 다음 업데이트에서 지원할 예정이에요.",
+      "연동한 계정 중 아무거나로 로그인하면 같은 모임 정보를 볼 수 있어요.",
     connectedLabel: "연동됨",
     notConnectedLabel: "연동 안 됨",
+    emailProviderLabel: "이메일",
+    linkAccountButton: "연동하기",
+    unlinkAccountButton: "연동 해제",
+    lastIdentityNotice:
+      "마지막 로그인 수단은 해제할 수 없어요. 다른 계정을 먼저 연동해 주세요.",
+    unlinkConfirmTitle: "연동을 해제할까요?",
+    unlinkConfirmDescription:
+      "이 계정으로는 더 이상 로그인할 수 없어요. 모임 정보는 그대로 남아 있고, 언제든 다시 연동할 수 있어요.",
+    unlinkConfirmCancel: "취소",
+    unlinkConfirmAction: "해제하기",
+    unlinkSuccessToast: "연동을 해제했어요.",
   },
   auth: {
     socialAccountLinkedToast: "기존 계정에 연결됐어요.",
     kakaoNoEmailNotice:
-      "카카오 계정이 이메일을 제공하지 않아 별도 계정으로 가입돼요. 마이페이지에서 이메일 계정과 연동할 수 있어요.",
+      "카카오 계정이 이메일을 제공하지 않아 별도 계정으로 가입돼요. 마이페이지에서 Google 계정을 연동하면 로그인 수단을 하나 더 둘 수 있어요.",
     manualLinkCta: "계정 연동하기",
     loginWithGoogle: "Google로 계속하기",
     loginWithKakao: "카카오로 계속하기",

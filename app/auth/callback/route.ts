@@ -42,6 +42,16 @@ export async function GET(request: NextRequest) {
   // 통과하지 못하면 기본 목적지(모임 목록)로 폴백한다(Task 017).
   const next = resolveNextPath(searchParams.get("next"));
 
+  // 연동(linkIdentity) 실패는 code 없이 error 파라미터로 돌아온다
+  // (예: 이미 다른 계정에 붙어 있는 identity → `identity_already_exists`). Task 018.
+  const providerError =
+    searchParams.get("error_description") ?? searchParams.get("error");
+  if (providerError) {
+    return NextResponse.redirect(
+      `${origin}/auth/error?error=${encodeURIComponent(providerError)}`,
+    );
+  }
+
   if (!code) {
     return NextResponse.redirect(
       `${origin}/auth/error?error=${encodeURIComponent("No code provided")}`,

@@ -289,6 +289,15 @@ export interface Dictionary {
     linkedAccountsNotice: string;
     connectedLabel: string;
     notConnectedLabel: string;
+    emailProviderLabel: string;
+    linkAccountButton: string;
+    unlinkAccountButton: string;
+    lastIdentityNotice: string;
+    unlinkConfirmTitle: string;
+    unlinkConfirmDescription: string;
+    unlinkConfirmCancel: string;
+    unlinkConfirmAction: string;
+    unlinkSuccessToast: string;
   };
   auth: {
     socialAccountLinkedToast: string;

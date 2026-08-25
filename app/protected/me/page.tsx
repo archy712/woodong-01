@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { UserIcon } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { ChangePasswordForm } from "@/components/change-password-form";
+import {
+  LinkedAccounts,
+  type LinkedIdentity,
+} from "@/components/me/linked-accounts";
 import { NotificationChannelSettings } from "@/components/notifications/notification-channel-settings";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -32,8 +34,8 @@ async function MeContent() {
   const dict = getDictionary(locale);
 
   // 프로필(이름/이메일)은 이미 실제로 동작하는 Supabase 조회를 그대로 재사용한다
-  // (`app/protected/profile/page.tsx`와 동일 패턴). 알림 채널/연동 계정은 Task 018/027 몫이라
-  // 이번 Task는 더미 데이터로 렌더링한다.
+  // (`app/protected/profile/page.tsx`와 동일 패턴). 알림 채널은 Task 027 몫이라
+  // 아직 더미 데이터로 렌더링한다.
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, email, name, phone_number, bio")
@@ -50,6 +52,23 @@ async function MeContent() {
     woodongProfile && isAvatarKey(woodongProfile.avatar_key)
       ? woodongProfile.avatar_key
       : DEFAULT_AVATAR_KEY;
+
+  // 연동된 로그인 수단은 `getUserIdentities()`가 유일한 출처다(Task 018).
+  // 클라이언트로는 화면에 필요한 최소 필드만 내려보낸다.
+  const { data: identitiesData } = await supabase.auth.getUserIdentities();
+  const identities: LinkedIdentity[] = (identitiesData?.identities ?? []).map(
+    (identity) => ({
+      identityId: identity.identity_id,
+      provider: identity.provider,
+      email:
+        identity.identity_data?.email ??
+        (identity.provider === "email" ? (data.claims.email ?? null) : null),
+    }),
+  );
+
+  const hasEmailIdentity = identities.some(
+    (identity) => identity.provider === "email",
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
@@ -83,20 +102,23 @@ async function MeContent() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            {dict.auth.changePassword.title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ChangePasswordForm
-            auth={dict.auth}
-            email={data.claims.email ?? ""}
-            genericError={dict.errors.genericError}
-          />
-        </CardContent>
-      </Card>
+      {/* 비밀번호 변경은 현재 비밀번호 재인증이 전제라, 이메일 identity가 있는 계정만 노출한다. */}
+      {hasEmailIdentity && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              {dict.auth.changePassword.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChangePasswordForm
+              auth={dict.auth}
+              email={data.claims.email ?? ""}
+              genericError={dict.errors.genericError}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -118,30 +140,16 @@ async function MeContent() {
             {dict.me.linkedAccountsSectionTitle}
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2">
-              <UserIcon className="size-4" />
-              Google
-            </span>
-            <Badge variant="secondary">{dict.me.connectedLabel}</Badge>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2">
-              <UserIcon className="size-4" />
-              Kakao
-            </span>
-            <Badge variant="outline">{dict.me.notConnectedLabel}</Badge>
-          </div>
-          {/* Kakao 비즈 앱 미등록 계정은 이메일 없이 가입되므로 수동 연동을 안내한다(PRD 3.6.2). */}
-          {!data.claims.email && (
-            <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-              {dict.auth.kakaoNoEmailNotice}
-            </p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {dict.me.linkedAccountsNotice}
-          </p>
+        <CardContent>
+          <LinkedAccounts
+            identities={identities}
+            labels={dict.me}
+            genericError={dict.errors.genericError}
+            // Kakao 이메일 동의를 거부한 계정은 이메일 로그인 수단을 붙일 수 없다(PRD 3.6.2).
+            noEmailNotice={
+              data.claims.email ? null : dict.auth.kakaoNoEmailNotice
+            }
+          />
         </CardContent>
       </Card>
     </div>
