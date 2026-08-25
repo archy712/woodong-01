@@ -17,6 +17,7 @@ export function VoteDetail({
   hasVoted,
   isClosed,
   labels,
+  unnamedVoterLabel,
 }: {
   vote: Vote;
   options: VoteOption[];
@@ -25,6 +26,14 @@ export function VoteDetail({
   /** 마감 여부는 쿼리 계층에서 계산해 받는다(렌더 중 `Date.now()`는 순수성 규칙 위반). */
   isClosed: boolean;
   labels: Dictionary["votes"];
+  /**
+   * 이름이 비어 있는 참여자를 대신할 문구(Task 030).
+   *
+   * `woodong_get_vote_results()`는 이름이 없는 참여자를 빈 문자열로 돌려준다 — 배열에서
+   * 빼 버리면 "3표인데 이름은 1개"가 되기 때문이다. 멤버 목록·회비 대시보드와 **같은**
+   * 문구("이름 미확인 멤버")를 쓰도록 상위에서 받아 온다.
+   */
+  unnamedVoterLabel: string;
 }) {
   const totalResponses = results.reduce((sum, r) => sum + r.response_count, 0);
 
@@ -58,7 +67,10 @@ export function VoteDetail({
                 </div>
                 {!vote.is_anonymous && r.voter_names.length > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    {labels.voterNamesLabel}: {r.voter_names.join(", ")}
+                    {labels.voterNamesLabel}:{" "}
+                    {r.voter_names
+                      .map((name) => name || unnamedVoterLabel)
+                      .join(", ")}
                   </p>
                 )}
               </div>

@@ -18,6 +18,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getGroupDetail } from "@/lib/woodong/queries/groups";
 import { listVotes, type VoteListItem } from "@/lib/woodong/queries/votes";
+import { processExpiredVotes } from "@/lib/woodong/vote-closing";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 function VoteCard({
@@ -95,6 +96,16 @@ async function VotesContent({
       </div>
     );
   }
+
+  // 마감 lazy 처리 (Task 030): 스케줄러가 없는 1차 MVP에서는 목록에 들어온 이 순간이
+  // "마감 시각이 지난 투표가 있는지" 확인할 수 있는 시점이다. 조회보다 **먼저** 실행해야
+  // 방금 전환된 상태가 이번 렌더의 진행중/마감 분류에 반영된다. 실패해도 throw하지 않으므로
+  // 화면은 그대로 그려진다.
+  await processExpiredVotes(supabase, {
+    groupId,
+    title: dict.votes.closeNotificationTitle,
+    body: dict.votes.closeNotificationBody,
+  });
 
   const items = await listVotes(supabase, groupId);
   const openVotes = items.filter((item) => item.vote.status === "open");

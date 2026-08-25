@@ -335,6 +335,18 @@ export interface Dictionary {
     adminOnlyNotice: string;
     /** 마감 시각이 지난 투표에서 참여 위젯 대신 보여주는 안내(Task 029). */
     closedNotice: string;
+    /** 수동 조기마감 확인 다이얼로그 제목(Task 030). */
+    closeNowDialogTitle: string;
+    /** 수동 조기마감 성공 토스트(Task 030). */
+    closeNowSuccessToast: string;
+    /** 이미 마감돼 있어서 아무것도 하지 않았을 때의 안내(Task 030). */
+    closeNowAlreadyClosedToast: string;
+    /** 마감 결과 알림 팬아웃 건수 뒤에 붙는 문구(Task 030). */
+    closeNotifiedCountSuffix: string;
+    /** "투표 마감" 결과 알림 제목(Task 030). 뒤에 투표 제목이 붙는다. */
+    closeNotificationTitle: string;
+    /** "투표 마감" 결과 알림 본문(Task 030). */
+    closeNotificationBody: string;
   };
   notifications: {
     pageTitle: string;

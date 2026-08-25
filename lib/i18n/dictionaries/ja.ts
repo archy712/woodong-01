@@ -470,6 +470,12 @@ export const ja: Dictionary = {
     notificationBody: "마감 전에 투표에 참여해주세요.",
     adminOnlyNotice: "투표는 총무만 만들 수 있어요.",
     closedNotice: "마감된 투표라 더 이상 참여할 수 없어요.",
+    closeNowDialogTitle: "투표를 마감할까요?",
+    closeNowSuccessToast: "투표를 마감했어요.",
+    closeNowAlreadyClosedToast: "이미 마감된 투표예요.",
+    closeNotifiedCountSuffix: "명에게 결과 알림을 보냈어요.",
+    closeNotificationTitle: "투표가 마감됐어요",
+    closeNotificationBody: "투표 결과를 확인해보세요.",
   },
   notifications: {
     pageTitle: "通知センター",

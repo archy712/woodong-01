@@ -8,8 +8,8 @@
 - **사용자 노출명**: 우동 (Woodong)
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
-**📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (32/44 Tasks 완료)
+**📅 최종 업데이트**: 2026-08-26
+**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (33/44 Tasks 완료)
 
 ---
 
@@ -516,14 +516,23 @@
   - ⚠️ **(관찰, Task 030으로 이관)** 실명 투표 결과의 `voter_names`는 `profiles.name`이 비어 있으면 배열에서 **아예 빠진다**(`array_remove(..., null)`). 그러면 "3표"인데 이름은 1개만 보이는 화면이 나올 수 있다. 결과 화면은 Task 030 범위라 그쪽에서 멤버 목록과 같은 `unnamedMemberLabel` 폴백(Task 021의 `member-display.ts`)을 적용하는 편이 맞다
   - **완료 조건**: ✅ 단일/복수 선택 투표가 각각 명세대로 동작, ✅ 중복 투표 차단 확인(UI·REST·한 문장 다중 INSERT 전부), ✅ `get_advisors`(security) **ERROR 0건**(신규 WARN 1건은 `authenticated`에게 의도적으로 연 DEFINER RPC, 트리거 함수는 EXECUTE 전량 회수라 WARN 없음), ✅ `npm run check-all` 통과
 
-- **Task 030: 투표 lazy 마감·집계·결과 알림 구현**
+- **Task 030: 투표 lazy 마감·집계·결과 알림 구현** ✅ - 완료
   - > **Task 003에서 확인된 선행 제약**: `woodong_votes` UPDATE는 관리자 전용 정책뿐이라 lazy 마감(아무 멤버나 조회 시 `status`를 `closed`로 전환)이 RLS를 통과하지 못한다. lazy/수동 조기마감 공용 `SECURITY DEFINER` 함수를 새로 만들어야 한다.
-  - **lazy 마감**: 마감일시가 지난 투표의 목록/상세 조회 시 서버에서 상태를 `closed`로 전환하고 결과를 집계해 조회 멤버에게 즉시 표시
-  - **수동 조기마감**: 총무의 "지금 마감" 클릭 → 확인 다이얼로그 → lazy 마감과 동일한 로직 수행
-  - **익명/실명 투표 결과**: Task 003에서 이미 `woodong_get_vote_results(p_vote_id)` `SECURITY DEFINER` 함수로 구현 완료(`woodong_vote_responses` 직접 SELECT 불필요) — 익명 투표는 `voter_names`가 `null`(카운트만), 실명 투표는 투표자 이름 배열을 반환하므로 이 Task에서는 이 함수를 호출해 결과 화면만 구성하면 된다
-  - 마감 전환 완료 시 **참여 여부와 무관하게 모임 멤버 전원에게 결과 알림(`type='vote_close'`)** 기록(1차: 조회 트리거 기반, 2차: pg_cron 실시간 전환)
-  - 결과 시각화는 Task 013 차트 컴포넌트 재사용
-  - **완료 조건**: 마감 전환이 1회만 수행되고(중복 알림 없음), 익명 투표에서 응답자 식별 정보가 어떤 경로로도 노출되지 않음
+  - ✅ 마이그레이션 `create_woodong_vote_closing` — 함수 3종:
+    - `woodong_close_expired_votes(p_group_id, p_title, p_body)` — **lazy 마감**. `update ... where status='open' and closes_at <= now()` **한 문장으로 선점**한다. 동시에 두 멤버가 같은 투표를 열면 뒤에 온 UPDATE는 앞의 행 잠금에서 기다렸다가 **갱신된 행으로 조건을 다시 평가**하므로(READ COMMITTED의 EvalPlanQual) 0행이 되고 결과 알림도 만들어지지 않는다. 조회 후 갱신(select → update)으로 나눴다면 둘 다 "내가 닫는다"고 판단해 알림이 두 번 갔을 것이다 — Task 028의 회비 리마인드와 같은 패턴. DEFINER는 RLS를 우회하므로 `woodong_is_group_member()`로 "내가 속한 모임인지"를 함수 안에서 직접 확인한다
+    - `woodong_close_vote_now(p_vote_id, p_title, p_body)` — **총무 수동 조기마감**. 같은 선점 방식이라 이미 닫힌 투표에서는 0행 → 결과 알림이 다시 가지 않는다. 총무 판정도 함수 안에서 `woodong_is_group_admin()`으로 한다. 없는 투표와 권한 없는 투표를 **구분해서 알려 주지 않는다**(구분하면 "그 투표가 존재하는지"가 비멤버에게 새는 정보가 된다)
+    - `woodong_notify_vote_close(p_vote_ids[], ...)` — 두 경로가 공유하는 **내부 전용** 팬아웃. 대상 규칙("활성 멤버 중 `in_app`을 명시적으로 끄지 않은 사람" = opt-out)을 두 함수에 복사해 두면 언젠가 한쪽만 고쳐져 규칙이 갈라진다. **EXECUTE는 anon·authenticated·public 전량 회수** — 직접 호출을 열어 주면 "마감을 선점하지 않은" 호출자가 아무 투표에나 알림을 만들 수 있다
+  - ⚠️ **lazy 마감과 수동 마감은 알림 대상이 한 명 다르다(의도한 것)**. lazy는 **아무도 제외하지 않는다** — 마감을 촉발한 사람은 "그 순간 화면을 연 사람"일 뿐이라 임의로 정해지는데, 그 사람만 빼면 **누가 먼저 열었느냐에 따라 알림 대상이 달라진다**. 반면 수동 마감은 총무가 의도해서 누른 것이라 공지·투표 생성 팬아웃과 같은 규칙으로 본인을 제외한다. 두 경우 모두 **참여 여부와는 무관하게** 나머지 멤버 전원이 받는다(결과는 모임의 결정 사항이라 투표하지 않은 사람에게도 알려야 한다)
+  - ✅ 마이그레이션 `fix_woodong_vote_results_unnamed_voters` — **Task 029에서 이관된 관찰 사항 해소**. 기존 `array_remove(array_agg(p.name), null)`은 `profiles.name`이 빈 참여자를 배열에서 통째로 빼서 **"2표인데 이름은 1개"**가 나왔다. 이제 빈 자리를 빈 문자열로 남기고(`array_agg(...) filter (where r.id is not null)`, 이름 없는 사람은 뒤로 정렬) 화면이 멤버 목록·회비 대시보드와 **같은** `unnamedMemberLabel`("이름 미확인 멤버")로 채운다 — `voter_names.length`가 `response_count`와 항상 일치하게 됐다. 익명 투표가 `null`을 반환하는 동작은 그대로
+  - ✅ 렌더 도중 쓰기를 하는 `lib/woodong/vote-closing.ts` 신설(`processExpiredVotes`). `queries/*`는 읽기 전용 규약이라 섞지 않고, 렌더 중에는 `revalidatePath`를 부를 수 없으므로 Server Action도 아니다 — Task 028의 `due-reminders.ts`와 같은 자리. 실패해도 throw하지 않는다(마감 전환 때문에 투표 화면 자체가 안 열리면 훨씬 나쁘다). 늦어져도 안전한 이유는 화면이 `status`가 아니라 `closes_at`을 직접 보고 참여 위젯을 감추기 때문(쿼리 계층의 `isClosed`)
+  - ✅ 호출 지점 3곳 — 투표 **목록**, 투표 **상세**(알림 클릭으로 목록을 거치지 않고 들어오는 경로), **모임 홈**. 전부 조회보다 **먼저** 실행해야 방금 전환된 상태가 이번 렌더에 반영된다
+  - ⚠️ **(로드맵에 없던 추가) 모임 홈의 "진행 중인 투표" 카드가 아직 더미였다** — Task 029가 목록·상세·생성만 실데이터로 바꾸면서 `listOpenVotes()`를 만들어 두고 연결하지 않았다. 그 카드는 `status`로만 거르므로 lazy 마감을 붙여도 만료 투표가 계속 "진행중"으로 남아 이번 Task의 결과가 화면에서 어긋난다. 실쿼리로 연결하고 `getDummyGroupDashboard` 의존을 제거했다
+  - ✅ 총무 전용 `CloseVoteButton`(`components/votes/close-vote-button.tsx`) — 마감은 되돌릴 수 없고 모임 전원에게 알림이 나가므로 `AlertDialog`로 한 번 더 확인받는다(모임 삭제와 같은 규약). 이미 닫혀 있었으면(다른 총무가 먼저 눌렀거나 lazy로 닫혔거나) **실패가 아니라** "이미 마감된 투표예요"로 알린다 — 원하던 상태에 이미 도달해 있는 것이다. Action이 RPC 호출 **전에** `status`를 한 번 읽는 이유는, 알림 대상이 총무 혼자인 모임에서는 정상 마감도 팬아웃 0건이라 "이미 마감돼 있었다"와 구분되지 않기 때문
+  - ✅ 결과 시각화는 Task 013 차트 컴포넌트(`VoteResultsChart`) 재사용 — Task 029에서 이미 연결돼 있어 이번엔 이름 폴백만 얹었다
+  - ✅ i18n: 신규 키 6종(마감 다이얼로그 제목, 성공/이미마감 토스트, 팬아웃 건수 접미사, 결과 알림 제목·본문) — `Dictionary` 타입 + 4개 언어 파일 갱신(en/ja/zh 스텁 관례 유지). 기존 `closeNowButton`/`closeNowConfirmMessage`는 Task 012의 UI 스텁을 그대로 썼다
+  - ✅ **DB 레벨 검증**(임시 픽스처: 모임 1·멤버 4·투표 3, 검증 후 전량 삭제): 만료 2건만 마감되고 진행중 1건은 그대로 → **재호출 0건**(중복 마감·중복 알림 없음) → 알림은 멤버 4명 중 `in_app`을 끈 1명을 뺀 **3건**, 투표하지 않은 멤버와 마감을 촉발한 멤버 모두 포함 → 일반회원의 수동 마감 `42501`("투표는 총무만 마감할 수 있습니다") → **비멤버의 lazy 마감 호출은 0건**(진행중 투표 status 그대로) → 총무 수동 마감 첫 호출 2건(본인 제외)·두 번째 호출 **0건** → 마감 후 참여 시도 `42501` → 비멤버의 결과 RPC 호출 거부 → **익명 투표 결과의 `voter_names`가 `null`**(카운트만), 실명 투표는 `["최지우", ""]`로 길이가 `response_count`와 일치
+  - ⚠️ **다중 세션 동시 요청 테스트는 Task 030-1(Playwright)로 넘긴다** — 이 환경에서는 진짜 동시 세션을 만들 수 없었다(pg_cron 워커가 멈춰 있고 dblink 미설치). 선점 자체는 Task 028에서 동시 8요청으로 검증된 것과 **같은 한 문장 UPDATE** 구조이고, 순차 재호출이 0건인 것까지는 위에서 확인했다
+  - **완료 조건**: ✅ 마감 전환이 1회만 수행되고 중복 알림 없음(순차 재호출 기준, 동시 요청은 Task 030-1), ✅ 익명 투표에서 응답자 식별 정보가 어떤 경로로도 노출되지 않음(RPC가 `null` 반환 + 비멤버 호출 거부), ✅ `get_advisors`(security) **ERROR 0건**(신규 WARN 2건은 `authenticated`에게 의도적으로 연 DEFINER RPC로 Task 025/028/029와 동일 패턴이며 `anon`에는 REVOKE됨, 내부 전용 팬아웃 함수는 EXECUTE 전량 회수라 WARN 없음), ✅ `npm run check-all` + `npm run build` 통과
 
 - **Task 030-1: 알림·투표 통합 테스트 (Playwright MCP)**
   - **## 테스트 체크리스트**

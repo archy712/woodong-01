@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15";
+    PostgrestVersion: "14.17";
   };
   public: {
     Tables: {
@@ -2569,6 +2569,14 @@ export type Database = {
           total_count: number;
         }[];
       };
+      woodong_close_expired_votes: {
+        Args: { p_body?: string; p_group_id?: string; p_title?: string };
+        Returns: number;
+      };
+      woodong_close_vote_now: {
+        Args: { p_body?: string; p_title?: string; p_vote_id: string };
+        Returns: number;
+      };
       woodong_create_announcement: {
         Args: { p_body: string; p_group_id: string; p_title: string };
         Returns: {
@@ -2688,6 +2696,15 @@ export type Database = {
           member_user_id: string;
           membership_id: string;
         }[];
+      };
+      woodong_notify_vote_close: {
+        Args: {
+          p_body: string;
+          p_exclude_user: string;
+          p_title: string;
+          p_vote_ids: string[];
+        };
+        Returns: number;
       };
       woodong_process_due_reminders: {
         Args: { p_body?: string; p_group_id?: string; p_title_suffix?: string };

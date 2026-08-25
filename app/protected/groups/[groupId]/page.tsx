@@ -23,10 +23,11 @@ import { Progress } from "@/components/ui/progress";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { formatWon } from "@/lib/woodong/dues-summary";
-import { getDummyGroupDashboard } from "@/lib/woodong/dummy";
 import { listRecentAnnouncements } from "@/lib/woodong/queries/announcements";
 import { getLatestDueCycleSummary } from "@/lib/woodong/queries/dues";
 import { getGroupDetail } from "@/lib/woodong/queries/groups";
+import { listOpenVotes } from "@/lib/woodong/queries/votes";
+import { processExpiredVotes } from "@/lib/woodong/vote-closing";
 
 async function GroupDetailContent({
   params,
@@ -45,9 +46,8 @@ async function GroupDetailContent({
   const locale = await getLocale();
   const dict = getDictionary(locale);
 
-  // 모임 자체는 Task 019, 회비 요약은 Task 024, 공지 요약은 Task 025에서 실제 쿼리로 교체했다.
-  // 투표 요약만 Task 029에서 교체 예정이라 아직 더미다 — 실제 모임 id에는 더미가 없으므로
-  // 그 카드가 자연스럽게 빈 상태로 렌더링된다.
+  // 모임 자체는 Task 019, 회비 요약은 Task 024, 공지 요약은 Task 025, 투표 요약은 Task 030에서
+  // 실제 쿼리로 교체했다(투표 카드만 Task 029에서 빠져 있었다).
   const detail = await getGroupDetail(supabase, groupId, claimsData.claims.sub);
 
   if (!detail) {
@@ -62,10 +62,19 @@ async function GroupDetailContent({
   }
 
   const { group, memberCount, coverUrl } = detail;
-  const dashboard = getDummyGroupDashboard(groupId);
-  const [latestDues, recentAnnouncements] = await Promise.all([
+
+  // 마감 lazy 처리 (Task 030): "진행 중인 투표" 카드는 `status`로 거르므로, 마감 시각이 지난
+  // 투표를 먼저 닫지 않으면 여기에 계속 진행중으로 남는다. 조회보다 **먼저** 실행한다.
+  await processExpiredVotes(supabase, {
+    groupId,
+    title: dict.votes.closeNotificationTitle,
+    body: dict.votes.closeNotificationBody,
+  });
+
+  const [latestDues, recentAnnouncements, openVotes] = await Promise.all([
     getLatestDueCycleSummary(supabase, groupId),
     listRecentAnnouncements(supabase, groupId),
+    listOpenVotes(supabase, groupId),
   ]);
 
   return (
@@ -203,9 +212,9 @@ async function GroupDetailContent({
           </div>
         </CardHeader>
         <CardContent>
-          {dashboard.openVotes.length > 0 ? (
+          {openVotes.length > 0 ? (
             <ul className="flex flex-col gap-3">
-              {dashboard.openVotes.map(({ vote }) => (
+              {openVotes.map((vote) => (
                 <li key={vote.id}>
                   <Link
                     href={`/protected/groups/${groupId}/votes/${vote.id}`}

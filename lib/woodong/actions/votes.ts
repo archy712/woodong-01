@@ -13,6 +13,7 @@ import { isRlsError, mapSupabaseError } from "@/lib/woodong/errors";
 import type { ActionResult } from "@/lib/woodong/common";
 
 const ADMIN_ONLY_ERROR = "투표는 총무만 만들 수 있어요.";
+const CLOSE_ADMIN_ONLY_ERROR = "투표는 총무만 마감할 수 있어요.";
 const CLOSED_VOTE_ERROR = "이미 마감된 투표예요.";
 const DUPLICATE_VOTE_ERROR = "이미 이 투표에 참여했어요.";
 
@@ -197,5 +198,70 @@ export async function submitVoteResponseAction(
   return {
     success: true,
     data: { voteId, recordedCount: data?.length ?? 0 },
+  };
+}
+
+export type CloseVoteResult = {
+  /** 이번 마감으로 실제 만들어진 결과 알림 건수(마감을 누른 총무 본인은 제외). */
+  notifiedCount: number;
+  /** 이미 다른 경로(다른 총무의 마감, 마감 시각 경과에 따른 lazy 마감)로 닫혀 있었는지. */
+  alreadyClosed: boolean;
+};
+
+/**
+ * 총무의 투표 수동 조기마감 Server Action (Task 030).
+ *
+ * `woodong_close_vote_now()` `SECURITY DEFINER` RPC 한 번으로 처리한다. 마감(UPDATE)과 결과
+ * 알림 팬아웃(INSERT)이 **한 트랜잭션**이어야 "닫혔는데 아무도 모르는 투표"가 남지 않고,
+ * 알림 INSERT는 어떤 클라이언트에도 열려 있지 않다(생성 RPC와 같은 이유).
+ *
+ * 중복 마감은 RPC의 UPDATE 선점이 막는다 — 이미 닫힌 투표에서는 0행이라 결과 알림이 다시
+ * 가지 않는다. 그때 `notifiedCount`가 0으로 돌아오므로 화면에는 "이미 마감된 투표"라고
+ * 알려 준다(실패가 아니라, 원하던 상태에 이미 도달해 있는 것이다).
+ */
+export async function closeVoteNowAction(input: {
+  voteId: string;
+  groupId: string;
+  notificationTitle?: string;
+  notificationBody?: string;
+}): Promise<ActionResult<CloseVoteResult>> {
+  const supabase = await createClient();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
+
+  if (claimsError || !claimsData?.claims?.sub) {
+    return { success: false, formError: "로그인이 필요합니다." };
+  }
+
+  // 마감 전 상태를 먼저 읽어 둔다. RPC는 "이번에 만든 알림 수"만 돌려주는데, 알림 대상이
+  // 총무 혼자인 모임에서는 정상 마감도 0이라 "이미 마감돼 있었다"와 구분되지 않는다.
+  const { data: before } = await supabase
+    .from("woodong_votes")
+    .select("status")
+    .eq("id", input.voteId)
+    .maybeSingle();
+
+  const { data, error } = await supabase.rpc("woodong_close_vote_now", {
+    p_vote_id: input.voteId,
+    ...(input.notificationTitle ? { p_title: input.notificationTitle } : {}),
+    ...(input.notificationBody ? { p_body: input.notificationBody } : {}),
+  });
+
+  if (error) {
+    console.error("[closeVoteNowAction] rpc failed:", error);
+    if (isRlsError(error)) {
+      return { success: false, formError: CLOSE_ADMIN_ONLY_ERROR };
+    }
+    return { success: false, formError: mapSupabaseError(error) };
+  }
+
+  revalidateVotePaths(input.groupId, input.voteId);
+
+  return {
+    success: true,
+    data: {
+      notifiedCount: data ?? 0,
+      alreadyClosed: before?.status === "closed",
+    },
   };
 }
