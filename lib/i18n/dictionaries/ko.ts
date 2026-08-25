@@ -278,12 +278,31 @@ export const ko: Dictionary = {
       title: "멤버 목록",
       roleAdmin: "총무",
       roleMember: "일반회원",
-      changeRoleButton: "역할 변경",
+      promoteButton: "총무로 지정",
+      demoteButton: "일반회원으로 변경",
       removeButton: "내보내기",
+      leaveButton: "모임 나가기",
+      promoteDialogTitle: "총무로 지정할까요?",
+      promoteConfirmMessage:
+        "모임 정보 수정, 회비 관리, 멤버 관리까지 할 수 있게 돼요.",
+      demoteDialogTitle: "일반회원으로 변경할까요?",
+      demoteConfirmMessage:
+        "총무 권한이 사라져 모임 설정과 회비를 관리할 수 없게 돼요.",
+      removeDialogTitle: "이 멤버를 내보낼까요?",
+      removeConfirmMessage:
+        "다시 참여하려면 새 초대 링크가 필요해요. 지난 회비·투표 기록은 그대로 남아요.",
+      leaveDialogTitle: "모임에서 나갈까요?",
+      leaveConfirmMessage:
+        "나가면 이 모임의 공지·회비·투표를 볼 수 없어요. 다시 들어오려면 초대 링크가 필요해요.",
+      roleChangeSuccessToast: "역할을 변경했어요.",
+      removeSuccessToast: "멤버를 내보냈어요.",
+      leaveSuccessToast: "모임에서 나왔어요.",
+      lastAdminNotice:
+        "마지막 총무예요. 다른 멤버를 총무로 지정하면 역할을 바꾸거나 모임을 나갈 수 있어요.",
+      memberViewNotice: "멤버 역할 변경과 내보내기는 총무만 할 수 있어요.",
+      phoneLabel: "연락처",
       meLabel: "나",
       unnamedMemberLabel: "이름 미확인 멤버",
-      namesComingSoonNotice:
-        "멤버 이름·연락처 표시는 다음 업데이트에서 지원할 예정이에요.",
     },
     invitePage: {
       title: "초대 참여",

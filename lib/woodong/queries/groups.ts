@@ -40,6 +40,14 @@ export type GroupMemberRow = {
   role: GroupMemberRole;
   joinedAt: string | null;
   isMe: boolean;
+  /** `profiles.name`. 아직 프로필에 이름을 채우지 않은 사용자는 null. */
+  name: string | null;
+  /** 총무 또는 본인에게만 채워진다(RPC에서 분기). 그 외에는 null. */
+  email: string | null;
+  /** 총무 또는 본인에게만 채워진다(RPC에서 분기). 그 외에는 null. */
+  phoneNumber: string | null;
+  /** `woodong_profiles.avatar_key`. 미설정이면 null(호출부에서 기본 아바타로 폴백). */
+  avatarKey: string | null;
 };
 
 type Client = SupabaseClient<Database>;
@@ -157,23 +165,24 @@ export async function getGroupDetail(
 }
 
 /**
- * 모임의 활성 멤버 목록.
+ * 모임의 활성 멤버 목록 (Task 021).
  *
  * 이름/연락처는 공유 `profiles`에 있는데, 그 테이블의 SELECT 정책이 **본인 행 또는 앱 관리자**로
- * 제한돼 있어 총무라도 다른 멤버의 이름을 읽을 수 없다. 이름 표시는 우동 전용
- * `SECURITY DEFINER` RPC가 필요하며 Task 021에서 다룬다(공유 테이블은 변경하지 않는다).
+ * 제한돼 있어 총무라도 다른 멤버의 이름을 읽을 수 없다(Task 019에서 확인). 공유 테이블의 정책은
+ * 다른 앱과 함께 쓰므로 건드리지 않고, 우동 전용 `SECURITY DEFINER` RPC
+ * `woodong_list_group_members()`로 필요한 최소 필드만 가져온다.
+ *
+ * 이메일/전화번호는 RPC가 **총무 또는 본인에게만** 채워 주고 그 외에는 null로 내려준다
+ * (일반회원끼리 서로의 연락처를 볼 이유가 없다). 비멤버 호출은 빈 배열이다.
  */
 export async function listGroupMembers(
   supabase: Client,
   groupId: string,
   userId: string,
 ): Promise<GroupMemberRow[]> {
-  const { data, error } = await supabase
-    .from("woodong_group_members")
-    .select("id, user_id, role, joined_at")
-    .eq("group_id", groupId)
-    .eq("status", "active")
-    .order("joined_at", { ascending: true });
+  const { data, error } = await supabase.rpc("woodong_list_group_members", {
+    p_group_id: groupId,
+  });
 
   if (error) {
     console.error("[queries/groups] listGroupMembers failed:", error);
@@ -181,10 +190,14 @@ export async function listGroupMembers(
   }
 
   return (data ?? []).map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    role: row.role as GroupMemberRole,
-    joinedAt: row.joined_at,
-    isMe: row.user_id === userId,
+    id: row.membership_id,
+    userId: row.member_user_id,
+    role: row.member_role as GroupMemberRole,
+    joinedAt: row.member_joined_at,
+    isMe: row.member_user_id === userId,
+    name: row.member_name,
+    email: row.member_email,
+    phoneNumber: row.member_phone,
+    avatarKey: row.member_avatar_key,
   }));
 }

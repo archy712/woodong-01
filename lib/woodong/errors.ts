@@ -18,6 +18,19 @@ const UNIQUE_VIOLATION_ERROR_CODE = "23505";
 /** FOREIGN KEY 제약 위반(참조 대상이 없거나 접근할 수 없음). */
 const FOREIGN_KEY_VIOLATION_ERROR_CODE = "23503";
 
+/** `raise exception`으로 올린 사용자 정의 예외(plpgsql 기본 SQLSTATE). */
+const RAISE_EXCEPTION_ERROR_CODE = "P0001";
+
+/**
+ * 마지막 총무 보호 트리거(`woodong_prevent_last_admin_change`, Task 003)가 막았을 때의 문구.
+ *
+ * PRD 3.2 AC에 명시된 문장 그대로이며, DB 트리거가 올리는 메시지와 동일하다. DB가 내려준
+ * 원문을 그대로 노출하지 않고 이 상수를 쓰는 이유: DB 메시지를 사용자에게 그대로 보여주는
+ * 습관이 생기면 다른 트리거가 추가됐을 때 영문 내부 메시지가 새어 나갈 수 있다.
+ */
+export const LAST_ADMIN_ERROR_MESSAGE =
+  "마지막 총무는 역할을 변경하거나 탈퇴할 수 없습니다. 먼저 다른 멤버를 총무로 지정해주세요";
+
 function hasErrorCode(error: unknown): error is Pick<PostgrestError, "code"> {
   return (
     typeof error === "object" &&
@@ -42,6 +55,23 @@ export function isRlsError(error: unknown): boolean {
     error instanceof Error &&
     error.message.toLowerCase().includes("row-level security policy")
   );
+}
+
+/**
+ * 마지막 총무 보호 트리거가 거부한 요청인지 판별한다 (Task 021).
+ *
+ * `P0001`은 plpgsql `raise exception` 전부가 쓰는 범용 코드라 코드만으로는 어떤 트리거가
+ * 막았는지 알 수 없다. 트리거 메시지의 고유 문구까지 함께 확인해, 나중에 다른 `raise exception`이
+ * 추가돼도 "마지막 총무" 문구가 엉뚱한 에러에 붙지 않게 한다.
+ */
+export function isLastAdminError(error: unknown): boolean {
+  if (!hasErrorCode(error) || error.code !== RAISE_EXCEPTION_ERROR_CODE) {
+    return false;
+  }
+
+  const { message } = error as unknown as { message?: unknown };
+
+  return typeof message === "string" && message.includes("마지막 총무");
 }
 
 /**

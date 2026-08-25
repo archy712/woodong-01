@@ -4,10 +4,8 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { GroupDangerZone } from "@/components/groups/group-danger-zone";
 import { GroupInviteManager } from "@/components/groups/group-invite-manager";
+import { GroupMemberList } from "@/components/groups/group-member-list";
 import { GroupSettingsForm } from "@/components/groups/group-settings-form";
-import { AVATAR_EMOJI, DEFAULT_AVATAR_KEY } from "@/lib/woodong/avatars";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Empty,
@@ -16,13 +14,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import {
-  Item,
-  ItemContent,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getGroupDetail, listGroupMembers } from "@/lib/woodong/queries/groups";
@@ -109,42 +100,13 @@ async function GroupSettingsContent({
         </CardHeader>
         <CardContent>
           {members.length > 0 ? (
-            <>
-              <ItemGroup className="gap-1">
-                {members.map((member) => (
-                  <Item key={member.id} size="sm">
-                    <ItemMedia variant="image">
-                      <Avatar>
-                        <AvatarFallback>
-                          {AVATAR_EMOJI[DEFAULT_AVATAR_KEY]}
-                        </AvatarFallback>
-                      </Avatar>
-                    </ItemMedia>
-                    <ItemContent>
-                      <ItemTitle>
-                        {member.isMe
-                          ? dict.groups.members.meLabel
-                          : dict.groups.members.unnamedMemberLabel}
-                      </ItemTitle>
-                    </ItemContent>
-                    <Badge
-                      variant={
-                        member.role === "admin" ? "default" : "secondary"
-                      }
-                    >
-                      {member.role === "admin"
-                        ? dict.groups.members.roleAdmin
-                        : dict.groups.members.roleMember}
-                    </Badge>
-                  </Item>
-                ))}
-              </ItemGroup>
-              {/* 이름/연락처는 공유 profiles의 SELECT 정책이 "본인 행" 한정이라 아직 못 읽는다.
-                  우동 전용 SECURITY DEFINER RPC로 채우는 것은 Task 021 몫이다. */}
-              <p className="mt-3 text-xs text-muted-foreground">
-                {dict.groups.members.namesComingSoonNotice}
-              </p>
-            </>
+            <GroupMemberList
+              groupId={groupId}
+              members={members}
+              isAdmin={isAdmin}
+              labels={dict.groups.members}
+              commonLabels={dict.common}
+            />
           ) : (
             <Empty>
               <EmptyHeader>

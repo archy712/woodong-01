@@ -2621,6 +2621,20 @@ export type Database = {
         Args: { p_group_id: string };
         Returns: boolean;
       };
+      woodong_list_group_members: {
+        Args: { p_group_id: string };
+        Returns: {
+          member_avatar_key: string;
+          member_email: string;
+          member_joined_at: string;
+          member_name: string;
+          member_phone: string;
+          member_role: string;
+          member_status: string;
+          member_user_id: string;
+          membership_id: string;
+        }[];
+      };
       woodong_redeem_group_invite: {
         Args: { p_code: string };
         Returns: {

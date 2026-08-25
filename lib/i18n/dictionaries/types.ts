@@ -167,11 +167,26 @@ export interface Dictionary {
       title: string;
       roleAdmin: string;
       roleMember: string;
-      changeRoleButton: string;
+      promoteButton: string;
+      demoteButton: string;
       removeButton: string;
+      leaveButton: string;
+      promoteDialogTitle: string;
+      promoteConfirmMessage: string;
+      demoteDialogTitle: string;
+      demoteConfirmMessage: string;
+      removeDialogTitle: string;
+      removeConfirmMessage: string;
+      leaveDialogTitle: string;
+      leaveConfirmMessage: string;
+      roleChangeSuccessToast: string;
+      removeSuccessToast: string;
+      leaveSuccessToast: string;
+      lastAdminNotice: string;
+      memberViewNotice: string;
+      phoneLabel: string;
       meLabel: string;
       unnamedMemberLabel: string;
-      namesComingSoonNotice: string;
     };
     invitePage: {
       title: string;

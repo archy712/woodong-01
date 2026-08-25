@@ -144,6 +144,35 @@ export const deleteGroupSchema = z.object({
 export type DeleteGroupInput = z.infer<typeof deleteGroupSchema>;
 
 /**
+ * 멤버 역할 변경 (Task 021).
+ *
+ * 대상은 `user_id`가 아니라 **멤버십 행 id**로 지정한다. `(group_id, user_id)`로도 특정되지만,
+ * 행 id 하나로 좁히면 "다른 모임의 같은 사용자"를 건드릴 여지가 아예 없다.
+ * `groupId`는 RLS가 쓰는 값이 아니라 UPDATE 대상 한정과 재검증 경로 생성에 쓴다.
+ */
+export const updateMemberRoleSchema = z.object({
+  groupId: z.string().uuid("올바른 모임 ID가 아닙니다"),
+  memberId: z.string().uuid("올바른 멤버 ID가 아닙니다"),
+  role: z.enum(["admin", "member"], {
+    errorMap: () => ({ message: "올바른 역할이 아닙니다" }),
+  }),
+});
+export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;
+
+/**
+ * 멤버 제외 / 모임 나가기 (Task 021).
+ *
+ * 물리 삭제가 아니라 `status = 'left'` 전환이다. 회비 청구·납부·투표 응답이 멤버십이 아니라
+ * `user_id`를 참조하므로 행을 지우면 과거 기록의 주체를 잃고, 재참여 시에도
+ * `UNIQUE(group_id, user_id)` 위에서 되살리는 편이 이력이 남는다(Task 020의 재참여 경로 참고).
+ */
+export const removeGroupMemberSchema = z.object({
+  groupId: z.string().uuid("올바른 모임 ID가 아닙니다"),
+  memberId: z.string().uuid("올바른 멤버 ID가 아닙니다"),
+});
+export type RemoveGroupMemberInput = z.infer<typeof removeGroupMemberSchema>;
+
+/**
  * 초대 코드 발급 폼.
  *
  * `woodong_group_invites.expires_at`/`max_uses`는 DB 컬럼 자체는 nullable(무제한 허용)이지만,
