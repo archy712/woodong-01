@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2 완료, Phase 3 진행 중 (18/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3 완료, Phase 4 착수 예정 (19/44 Tasks 완료)
 
 ---
 
@@ -236,7 +236,7 @@
 
 ---
 
-### Phase 3: 인증 (PRD 우선순위 1)
+### Phase 3: 인증 (PRD 우선순위 1) ✅
 
 > **범위**: 이메일 회원가입/로그인 + Google 소셜 로그인 + Kakao 소셜 로그인(이메일 미제공 예외 처리 포함). **Naver는 1차 범위에서 완전히 제외**(2차 착수 전 1~2일 스파이크로 구현 가능 여부 검증 후 결정).
 > **의존성**: Task 001(Auth 옵션 결정), Task 006(라우트 골격).
@@ -283,16 +283,20 @@
   - ✅ Playwright 실계정 검증: (1) identity 1개 계정 → 이메일 "연동됨" + 해제 버튼 비활성 + 마지막 수단 안내, Google/Kakao "연동 안 됨" + 연동하기 버튼, (2) identity 2개 상태 → 해제 버튼 활성화 및 안내 문구 사라짐 → Google 해제 실행 → 토스트 + 목록 즉시 갱신 + `auth.identities`에서 실제 삭제 확인, (3) 마지막 identity 해제를 API로 직접 시도 → `422 single_identity_not_deletable`, (4) 연동하기 클릭 시 authorize URL의 `redirect_to`가 `/auth/callback?next=%2Fprotected%2Fme`로 생성됨. 2개 identity 상태는 Google 실계정 자격증명 없이 재현하기 위해 테스트 계정에 합성 google identity를 넣어 만들었고(해제는 실제 API 호출), **실제 Google 연동 왕복 완주는 Task 018-1에서 수행**. 테스트 계정은 검증 후 `auth.users`에서 삭제로 정리
   - **완료 조건**: ✅ provider 목록 정확 표시, ✅ 마지막 identity 해제 시도 차단(UI·서버 양쪽), ✅ `profiles` 스키마 변경 0건, ✅ `npm run check-all` 통과
 
-- **Task 018-1: 인증 통합 테스트 (Playwright MCP)**
+- **Task 018-1: 인증 통합 테스트 (Playwright MCP)** ✅ - 완료
   - **## 테스트 체크리스트**
-    - 이메일 가입 → 즉시 세션 발급 및 보호 페이지 접근(Task 015에서 기본 플로우 검증 완료, 회귀 확인 목적)
-    - Google 로그인 성공 후 `next` 경로 복귀
-    - 동일 verified 이메일 소셜 로그인 시 자동 연결 + 안내 토스트 노출
-    - 이메일 없는 Kakao 계정 가입 및 수동 연동 안내 노출
-    - 마지막 identity 해제 차단, provider 2개 이상일 때만 해제 버튼 활성화
-    - 마이페이지 비밀번호 변경: 틀린 현재 비밀번호 거부, 올바른 현재 비밀번호 + 새 비밀번호 변경 후 재로그인(Task 015에서 기본 플로우 검증 완료, 회귀 확인 목적)
-    - 엣지 케이스: 잘못된 `next` 값(외부 URL), 중복 가입 시도
-  - **완료 조건**: 위 시나리오 전부 통과, 실패 케이스의 에러 메시지가 브랜드 톤 가이드에 부합
+    - ✅ 이메일 가입 → 즉시 세션 발급 및 보호 페이지 접근(회귀) — 비로그인 상태로 `/protected/groups/g-1/dues` 접근 → `next` 부착 → 가입 → 해당 경로 복귀까지 한 번에 확인
+    - ✅ Google 로그인 성공 후 `next` 경로 복귀 — 사용자 실계정(`archy712@gmail.com`)으로 검증: 비로그인 상태에서 `/protected/groups/g-1/votes` 접근 → `?next=%2Fprotected%2Fgroups%2Fg-1%2Fvotes` 부착 → Google 로그인 → **정확히 그 경로로 복귀**(주소창·헤더 로그인 상태·"투표" 탭 활성 스크린샷 확인). 인가 URL의 `redirect_to`에 `/auth/callback?next=...`가 실리는 것도 함께 확인
+    - ➖ 동일 verified 이메일 소셜 로그인 시 자동 연결 + 안내 토스트 — **Task 016의 실계정 검증으로 갈음**(사용자 결정). 재검증하려면 우동 전용 여분 Google 계정이 필요한데, 유일한 실계정(`archy712@gmail.com`)은 공유 프로젝트의 다른 앱에서 쓰던 기존 user라 이메일 identity를 붙이는 조작을 하지 않기로 함
+    - ✅ 이메일 없는 Kakao 계정 가입 및 수동 연동 안내 — 실계정으로 검증(Task 016에서 이월된 항목 해소): 카카오계정에서 우동 앱 **연결 끊기** → Supabase에서 기존 `archy712@kakao.com` user 삭제(사용자 승인) → 동의 화면에서 **`카카오계정(이메일)` 선택 항목 해제** 후 로그인 → **`email = null`인 신규 user + kakao identity 1개** 생성 확인, `no_email` 안내 토스트가 실제로 노출됨(문구·"계정 연동하기" 액션·파라미터 자동 정리는 자동화 브라우저에서 별도 확인)
+    - ✅ 마지막 identity 해제 차단, provider 2개 이상일 때만 해제 버튼 활성화 — 1개 상태(버튼 비활성 + 안내) → 합성 identity로 2개 상태(활성) → 해제 → 다시 1개 상태 회귀 확인
+    - ✅ 마이페이지 비밀번호 변경(회귀) — 틀린 현재 비밀번호 거부("현재 비밀번호가 올바르지 않아요.") → 올바른 비밀번호로 변경 성공 → 로그아웃 → 새 비밀번호로 재로그인
+    - ✅ 엣지 케이스 — 외부 URL `next` 주입 시 `/protected/groups` 폴백, 중복 가입 시도 차단, 약한 비밀번호 거부
+  - ⚠️ **(테스트 중 발견·수정)** 로그인/회원가입 실패 문구가 Supabase 영문 원문("Invalid login credentials", "User already registered")으로 노출되고 있었다(완료 조건 "브랜드 톤 부합" 위반). 인증 계층 전용 매퍼 `lib/auth/auth-error-message.ts`의 `mapAuthErrorMessage()`를 신설해 GoTrue `code`(`invalid_credentials`/`user_already_exists`/`weak_password`/`same_password`/`identity_already_exists`/`single_identity_not_deletable`/rate limit)를 한국어 문구로 매핑하고, 매핑에 없는 에러는 원문 대신 일반 문구로 폴백(콘솔에는 원문 기록)하도록 정리. 인증 관련 5개 컴포넌트(로그인/회원가입/소셜 버튼/비밀번호 변경/연동 계정)가 `genericError` 문자열 대신 `errors` 사전을 받도록 시그니처 통일, `errors` 네임스페이스에 auth 문구 7종 추가(ko 확정 + en/ja/zh 스텁)
+  - 🐛 **(테스트 중 발견·수정한 실제 버그)** 마이페이지 "연동된 계정"이 **실제로 연동된 provider를 전부 "연동 안 됨"으로 표시**하는 경우가 사용자 실세션에서 재현됐다. 원인은 서버 컴포넌트의 `getUserIdentities()`(내부적으로 `getUser()` 호출)가 세션 갱신 시점에 `400 "Auth session missing!"`으로 실패하는데 그 에러를 무시하고 빈 배열로 렌더링한 것 — 이 저장소가 `getUser()` 대신 `getClaims()`를 쓰기로 한 이유와 같은 계열의 문제다. **provider 목록의 출처를 JWT 클레임 `app_metadata.providers`로 교체**(서명 검증을 마친 값이라 추가 네트워크 호출 없음)하고, identity_id가 실제로 필요한 **해제 시점에만** 브라우저 클라이언트로 조회하도록 정리. 클레임은 토큰 발급 시점 기준이라 해제 직후 목록이 남는 문제가 있어 **해제 성공 후 `refreshSession()`으로 토큰을 재발급**한 뒤 갱신한다. 클레임에 provider가 하나도 없는 비정상 상태에는 "연동 정보를 불러오지 못했어요" 안내를 노출(오해로 인한 재연동 시도 방지)
+  - ✅ 교체 후 재검증: provider 1개(해제 비활성) → 2개(해제 활성, 목록 정확) → Google 해제 → `auth.identities` 실제 삭제 + `raw_app_meta_data.providers` 갱신 + 화면 즉시 반영까지 확인
+  - ⚠️ **(정리 중 실수)** 테스트 계정 정리에 `like 'woodong-%@example.com'` 와일드카드를 써서 이번 테스트 계정 외에 Task 012의 잔여 테스트 계정(`woodong-task012-test@example.com`)까지 함께 삭제했다. `woodong_*` 테이블이 전부 0행이라 실데이터 영향은 없었으나, 앞으로 정리는 이메일 정확 일치로만 수행한다
+  - **완료 조건**: ✅ 시나리오 통과(자동 연결 1건은 Task 016 검증으로 갈음), ✅ 실패 케이스 문구가 브랜드 톤에 부합, ✅ `npm run check-all` 통과
 
 ---
 
