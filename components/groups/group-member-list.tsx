@@ -14,8 +14,10 @@ import {
   removeGroupMemberAction,
   updateMemberRoleAction,
 } from "@/lib/woodong/actions/members";
-import { AVATAR_EMOJI, DEFAULT_AVATAR_KEY } from "@/lib/woodong/avatars";
-import type { AvatarKey } from "@/lib/woodong/avatars";
+import {
+  memberAvatarEmoji,
+  memberDisplayName,
+} from "@/lib/woodong/member-display";
 import type { GroupMemberRow } from "@/lib/woodong/queries/groups";
 import {
   AlertDialog,
@@ -50,23 +52,9 @@ type PendingAction = {
   member: GroupMemberRow;
 } | null;
 
-function avatarEmoji(avatarKey: string | null): string {
-  if (avatarKey && avatarKey in AVATAR_EMOJI) {
-    return AVATAR_EMOJI[avatarKey as AvatarKey];
-  }
-  return AVATAR_EMOJI[DEFAULT_AVATAR_KEY];
-}
-
-/**
- * 화면에 보여줄 이름.
- *
- * `profiles.name`이 비어 있는 사용자가 흔해서(가입 시 이름을 받지 않는다) 이메일을 폴백으로 쓰되,
- * 이메일은 RPC가 총무·본인에게만 내려주므로 일반회원 화면에서는 자연히 "이름 미확인 멤버"가 된다.
- */
+/** 회비 대시보드(Task 022)와 표시 규칙을 공유하려고 `lib/woodong/member-display.ts`로 옮겼다. */
 function displayName(member: GroupMemberRow, labels: MemberLabels): string {
-  if (member.name) return member.name;
-  if (member.email) return member.email;
-  return labels.unnamedMemberLabel;
+  return memberDisplayName(member, labels.unnamedMemberLabel);
 }
 
 /**
@@ -178,7 +166,7 @@ export function GroupMemberList({
               <ItemMedia variant="image">
                 <Avatar>
                   <AvatarFallback>
-                    {avatarEmoji(member.avatarKey)}
+                    {memberAvatarEmoji(member.avatarKey)}
                   </AvatarFallback>
                 </Avatar>
               </ItemMedia>

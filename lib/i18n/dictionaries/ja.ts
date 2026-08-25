@@ -360,14 +360,14 @@ export const ja: Dictionary = {
       titleLabel: "項目名",
       amountLabel: "金額",
       periodLabel: "対象期間",
-      reminderIntervalLabel: "リマインド周期（日）",
+      reminderIntervalLabel: "リマインド周期（任意・日）",
       submitButton: "会費項目を作成",
       // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
       dueDateLabel: "납부 기한",
       dueTypeLabel: "회비 유형",
       createTriggerButton: "새 회비 항목",
       successToast:
-        "회비 항목을 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
+        "회비 항목을 만들었어요. 활성 멤버 전원에게 청구가 생성됐어요.",
     },
     markPaidButton: "納付済みにする",
     reminderToastMessage:

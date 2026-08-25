@@ -4,11 +4,10 @@ import { useState } from "react";
 import { Loader2Icon, PlusIcon } from "lucide-react";
 
 import { useServerActionForm } from "@/hooks/use-server-action-form";
-import { createDemoAction } from "@/lib/woodong/dummy/demo-action";
+import { createDueCycleAction } from "@/lib/woodong/actions/dues";
 import {
   createDueCycleSchema,
   type CreateDueCycleInput,
-  type DueCycle,
 } from "@/lib/woodong/dues";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,22 +36,13 @@ import {
 } from "@/components/ui/select";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
-const demoCreateDueCycleAction = createDemoAction<
-  CreateDueCycleInput,
-  DueCycle
->((input) => ({
-  id: crypto.randomUUID(),
-  group_id: input.groupId,
-  title: input.title,
-  period: input.period,
-  amount: input.amount,
-  due_type: input.dueType,
-  due_date: input.dueDate,
-  reminder_interval_days: input.reminderIntervalDays ?? null,
-  created_by: null,
-  created_at: new Date().toISOString(),
-}));
-
+/**
+ * 회비 항목 생성 다이얼로그 (Task 022).
+ *
+ * 생성 성공 시 활성 멤버 전원에게 `unpaid` 청구가 함께 만들어지므로(팬아웃), 화면 갱신은
+ * 새 항목 하나를 로컬 state에 끼워 넣는 방식이 아니라 서버 재조회로 처리한다
+ * (`onCreated`가 받은 id로 탭만 선택하고 나머지는 부모가 `router.refresh()`로 다시 받아온다).
+ */
 export function CreateDueCycleDialog({
   groupId,
   labels,
@@ -60,7 +50,7 @@ export function CreateDueCycleDialog({
 }: {
   groupId: string;
   labels: Dictionary["dues"];
-  onCreated: (cycle: DueCycle) => void;
+  onCreated: (cycleId: string) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -77,10 +67,10 @@ export function CreateDueCycleDialog({
   const { form, onSubmit, isPending } = useServerActionForm({
     schema: createDueCycleSchema,
     defaultValues,
-    action: demoCreateDueCycleAction,
+    action: createDueCycleAction,
     successMessage: labels.create.successToast,
-    onSuccess: (cycle) => {
-      onCreated(cycle);
+    onSuccess: ({ cycle }) => {
+      onCreated(cycle.id);
       setOpen(false);
       form.reset(defaultValues);
     },

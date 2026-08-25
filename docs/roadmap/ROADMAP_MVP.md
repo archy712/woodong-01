@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2·3·4 완료, Phase 5 착수 예정 (23/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3·4 완료, Phase 5 진행 중 (24/44 Tasks 완료)
 
 ---
 
@@ -369,12 +369,20 @@
 > **1차 범위는 3.4-a(회비 현황)만.** 지출 등록·영수증 첨부·정산 리포트 발행/PDF(3.4-b)는 **Phase 8(2차 확장)**로 이동한다. 회비 대시보드의 "잔액"은 1차에서 노출하지 않거나 "수입만 집계"로 한정한다.
 > **의존성**: Phase 4(모임/멤버십), Phase 0(스키마·트리거).
 
-- **Task 022: 회비 항목(`woodong_due_cycles`) 생성 및 청구 팬아웃**
-  - 회비 항목 생성 폼: 제목(`title`), 대상 기간(`period`), 금액(`amount`), 납부 기한(`due_date`), 리마인드 주기(`reminder_interval_days`), `due_type`(`regular`/`extra`)
-  - 생성 시 **해당 시점의 모든 활성 멤버에 대해 `woodong_dues` 레코드를 `unpaid` 상태로 자동 생성**(멤버당 1건, `UNIQUE(due_cycle_id, user_id)`로 중복 방지)
-  - `woodong_dues.amount`는 생성 시점 `woodong_due_cycles.amount` 스냅샷으로 저장, `group_id`는 RLS 단순화를 위해 비정규화 저장
-  - 팬아웃 트랜잭션 처리 방식(RPC 또는 Server Action 내 일괄 insert) 확정 및 부분 실패 방지
-  - **완료 조건**: 항목 생성 1회로 활성 멤버 수만큼 청구가 정확히 생성되고 재실행 시에도 중복 생성되지 않음
+- **Task 022: 회비 항목(`woodong_due_cycles`) 생성 및 청구 팬아웃** ✅ - 완료
+  - ✅ **팬아웃 방식 확정 — 신규 RPC `woodong_create_due_cycle()`**(마이그레이션 `create_woodong_due_cycle_fanout`). 항목 INSERT와 멤버별 청구 INSERT를 한 함수에 넣어 **호출 1회 = 트랜잭션 1개**로 만들었다. Server Action에서 INSERT를 두 번 나눠 하면 두 번째가 실패했을 때 "청구가 하나도 없는 회비 항목"이 남고(총무는 만든 줄 아는데 아무도 청구받지 않는다), 애플리케이션에서는 이 부분 실패를 되돌릴 방법이 없다
+  - ✅ ⚠️ 이 함수는 다른 우동 RPC와 달리 **`SECURITY DEFINER`가 아니라 `SECURITY INVOKER`(기본값)**다. 팬아웃에 필요한 권한(`woodong_due_cycles` INSERT / `woodong_dues` INSERT / `woodong_group_members` SELECT)이 전부 기존 RLS 정책으로 총무에게 이미 열려 있어 권한을 뚫을 이유가 없고, INVOKER로 두면 총무 판정을 애플리케이션이 아니라 RLS(`woodong_is_group_admin`)가 그대로 강제한다. 그래서 `get_advisors`(security)에 **신규 WARN이 한 건도 추가되지 않았다**(Task 003/020/021은 DEFINER라 WARN이 늘었다). `set search_path = ''` + `anon` EXECUTE 명시 REVOKE는 기존 규약 그대로
+  - ✅ 청구는 **생성 시점의 활성 멤버 스냅샷**이다: `status = 'active'`인 멤버만 대상이고(나간 멤버 제외), `woodong_dues.amount`는 항목 금액의 스냅샷, `group_id`는 RLS 단순화를 위해 비정규화 저장. 재실행(중복 제출·재시도)은 `on conflict on constraint woodong_dues_due_cycle_id_user_id_key do nothing`으로 흡수하고, 실제 생성 건수를 `charged_count`로 함께 반환한다
+  - ✅ **항목 생성 후 가입한 멤버는 기존 항목에 소급 청구되지 않는다**(정책 확정). 지난 회비를 소급해 물리면 "가입 전 회비"를 청구하는 셈이라 기본값으로는 위험하고, 필요한 경우 총무가 새 항목을 만들면 된다. 반대로 **내보낸 멤버의 과거 청구는 삭제하지 않는다**(납부 이력의 주체를 잃지 않기 위해 — Task 021의 `status='left'` 전환과 같은 이유). 이 정책은 Task 024-1 체크리스트의 "항목 생성 후 신규 가입 멤버 처리"에 대한 답이다
+  - ✅ 금액 하한을 **DB CHECK 제약**(`woodong_due_cycles.amount > 0`, `woodong_dues.amount > 0`)으로도 못박았다. zod가 이미 1원 이상을 강제하지만, 총무는 UI를 우회해 `woodong_due_cycles`에 직접 INSERT할 권한이 있어서(총무 본인은 RLS를 통과한다) 애플리케이션 검증만으로는 0원/음수 항목을 막을 수 없다
+  - ✅ 조회 전용 모듈 `lib/woodong/queries/dues.ts`(`getDuesOverview` — 항목·청구·납부 합계를 한 번에, 전부 사용자 세션 클라이언트로 RLS 아래 동작)와 Server Action `lib/woodong/actions/dues.ts`(`createDueCycleAction`) 신설. 회비 화면의 더미 조회를 실제 쿼리로 교체하고, 비멤버에게는 모임 상세와 같은 "모임을 찾을 수 없거나 접근 권한이 없어요"를 먼저 보여준다(빈 회비 목록과 구분되지 않으면 안 된다)
+  - ✅ 대시보드는 로컬 state를 버리고 서버가 내려준 값을 그대로 그린다(멤버 목록·초대 관리자와 같은 규약). 생성 후에는 `revalidatePath` + `router.refresh()`로 다시 받아오는데, 팬아웃 결과(활성 멤버 N명)를 클라이언트가 흉내 내면 서버와 다르게 계산될 수 있기 때문이다. 총무가 아니면 "새 회비 항목" 버튼을 렌더링하지 않는다(RLS 이중 방어)
+  - ✅ **납부 기록 UI(더미 다이얼로그·"납부완료로 변경" 버튼)는 이번에 화면에서 내렸다** — 실데이터 화면에 저장되지 않는 버튼을 남기면 "납부 처리했는데 새로고침하면 사라지는" 오해를 만든다. `components/dues/record-payment-dialog.tsx` 파일은 그대로 두고 Task 023에서 실제 Server Action과 함께 다시 붙인다. 멤버 이름/아바타 표시 규칙은 Task 021의 `woodong_list_group_members()` RPC를 재사용하고, 두 화면이 어긋나지 않도록 `lib/woodong/member-display.ts`로 헬퍼를 모았다
+  - ⚠️ **(E2E에서 발견·수정한 자체 버그)** 리마인드 주기는 선택 항목(nullable)인데 **비워 두면 저장이 막혔다**. `z.coerce.number()`가 빈 문자열을 `0`으로 바꿔 `.optional()`을 무력화하고 `min(1)`에 걸린 것 — `z.preprocess`로 빈 값을 `undefined`로 먼저 정규화해 해결하고, 라벨에도 "(선택)"을 명시했다(4개 언어). ℹ️ 같은 원인으로 `createGroupSchema.defaultDueAmount`도 빈 칸이 `null`이 아니라 `0`으로 저장되는데, `min: 0`이라 에러는 나지 않아 이번 범위에서는 손대지 않았다(Task 024에서 회비 기본값을 쓸 때 함께 정리)
+  - ✅ SQL 레벨 시나리오 15건 전수 통과(임시 픽스처 트랜잭션으로 팬아웃 건수·제목/기간 trim·`created_by`·금액/상태/그룹 스냅샷·나간 멤버 제외·재실행 0건·일반회원/비멤버 차단(42501)·금액 0원과 잘못된 `due_type` 차단(23514) + 항목 수 불변·리마인드 주기 null·두 번째 항목의 별도 청구 세트·일반회원 조회 4건/비멤버 0건까지 자동 검증 후 롤백, 흔적 0건)
+  - ✅ Playwright 실계정 E2E(계정 2개): 빈 폼 제출 시 4개 필드 검증 문구 + **`fetch` 후킹으로 요청 0건**, 음수 금액도 요청 0건 → 총무 1명 상태에서 항목 생성(제목·기간 앞뒤 공백이 DB에서 trim, 청구 1건) → 초대로 일반회원 합류 → 두 번째 항목 생성 시 청구 2건·탭 자동 선택·토스트 노출 → 일반회원 화면에는 **"새 회비 항목" 버튼이 아예 없고** 남의 이름은 "이름 미확인 멤버"(Task 021의 연락처 노출 범위 그대로) → 일반회원 내보내기 후 세 번째 항목은 다시 청구 1건(과거 청구는 보존) → 내보내진 계정으로 회비 페이지 접근 시 "모임을 찾을 수 없거나 접근 권한이 없어요". **UI를 우회한 REST 호출 5종도 전부 차단**: RPC 직접 호출/항목 INSERT/청구 INSERT는 `403 42501`, 청구 status PATCH와 항목 DELETE는 0행(무변경), 같은 모임 청구 SELECT만 정상. 360px에서 가로 스크롤 0건·44px 미만 터치 타겟 0건. 테스트 계정 2개와 모임은 삭제해 `woodong_*` 전부 0행 복귀
+  - ℹ️ (Task 024로 넘기는 관찰) 멤버별 납부율 차트의 Y축 라벨이 360px에서 잘린다(이름 미설정 계정은 긴 이메일로 폴백되기 때문). 대시보드 표시 개선은 Task 024 범위다
+  - **완료 조건**: ✅ 항목 생성 1회로 활성 멤버 수만큼 청구가 정확히 생성되고 재실행 시에도 중복 생성되지 않음, ✅ `get_advisors`(security) **ERROR 0건 + 신규 WARN 0건**, ✅ `npm run check-all` 통과
 
 - **Task 023: 납부 이력 기록 및 상태 자동 갱신**
   - 총무가 특정 멤버 상태를 "납부완료/부분납부"로 변경 시 `woodong_payments`에 이력 기록(`amount`, `paid_at`, `recorded_by`, `memo`)

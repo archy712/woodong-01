@@ -360,14 +360,14 @@ export const en: Dictionary = {
       titleLabel: "Item Name",
       amountLabel: "Amount",
       periodLabel: "Period",
-      reminderIntervalLabel: "Reminder Interval (days)",
+      reminderIntervalLabel: "Reminder Interval (optional, days)",
       submitButton: "Create Dues Item",
       // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
       dueDateLabel: "납부 기한",
       dueTypeLabel: "회비 유형",
       createTriggerButton: "새 회비 항목",
       successToast:
-        "회비 항목을 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
+        "회비 항목을 만들었어요. 활성 멤버 전원에게 청구가 생성됐어요.",
     },
     markPaidButton: "Mark as Paid",
     reminderToastMessage:

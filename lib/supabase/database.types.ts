@@ -2569,6 +2569,30 @@ export type Database = {
           total_count: number;
         }[];
       };
+      woodong_create_due_cycle: {
+        Args: {
+          p_amount: number;
+          p_due_date: string;
+          p_due_type: string;
+          p_group_id: string;
+          p_period: string;
+          p_reminder_interval_days?: number;
+          p_title: string;
+        };
+        Returns: {
+          charged_count: number;
+          cycle_amount: number;
+          cycle_created_at: string;
+          cycle_created_by: string;
+          cycle_due_date: string;
+          cycle_due_type: string;
+          cycle_group_id: string;
+          cycle_id: string;
+          cycle_period: string;
+          cycle_reminder_interval_days: number;
+          cycle_title: string;
+        }[];
+      };
       woodong_created_group: { Args: { p_group_id: string }; Returns: boolean };
       woodong_get_invite_preview: {
         Args: { p_code: string };

@@ -71,12 +71,21 @@ export const createDueCycleSchema = z.object({
     required_error: "회비 유형을 선택해주세요",
   }),
   dueDate: dateOnlyString("납부 기한을 입력해주세요"),
-  reminderIntervalDays: z.coerce
-    .number()
-    .int("리마인드 주기는 정수(일)로 입력해주세요")
-    .min(1, "리마인드 주기는 1일 이상이어야 합니다")
-    .max(90, "리마인드 주기는 최대 90일까지 설정 가능합니다")
-    .optional(),
+  /**
+   * 선택 항목(`woodong_due_cycles.reminder_interval_days`는 nullable).
+   *
+   * `z.coerce.number()`는 빈 문자열을 `0`으로 바꿔 버려서 `.optional()`만으로는 "비워 두기"가
+   * 불가능하다(`min(1)`에 걸려 저장이 막힌다). 빈 값을 먼저 `undefined`로 정규화해야 한다.
+   */
+  reminderIntervalDays: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.coerce
+      .number()
+      .int("리마인드 주기는 정수(일)로 입력해주세요")
+      .min(1, "리마인드 주기는 1일 이상이어야 합니다")
+      .max(90, "리마인드 주기는 최대 90일까지 설정 가능합니다")
+      .optional(),
+  ),
 });
 export type CreateDueCycleInput = z.infer<typeof createDueCycleSchema>;
 

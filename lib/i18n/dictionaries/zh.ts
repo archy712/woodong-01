@@ -351,14 +351,14 @@ export const zh: Dictionary = {
       titleLabel: "项目名称",
       amountLabel: "金额",
       periodLabel: "适用期间",
-      reminderIntervalLabel: "提醒周期（天）",
+      reminderIntervalLabel: "提醒周期（选填，天）",
       submitButton: "创建会费项目",
       // TODO(i18n): Task 012 新增键为韩语占位文案，待翻译
       dueDateLabel: "납부 기한",
       dueTypeLabel: "회비 유형",
       createTriggerButton: "새 회비 항목",
       successToast:
-        "회비 항목을 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
+        "회비 항목을 만들었어요. 활성 멤버 전원에게 청구가 생성됐어요.",
     },
     markPaidButton: "标记为已缴费",
     reminderToastMessage: "你还没有缴纳会费哦，Woodong 悄悄提醒你一下！",
