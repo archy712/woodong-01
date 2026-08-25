@@ -372,7 +372,8 @@ export const zh: Dictionary = {
         "회비 항목을 만들었어요. 활성 멤버 전원에게 청구가 생성됐어요.",
     },
     markPaidButton: "标记为已缴费",
-    reminderToastMessage: "你还没有缴纳会费哦，Woodong 悄悄提醒你一下！",
+    reminderNotificationTitleSuffix: "缴费提醒",
+    reminderNotificationBody: "你还没有缴纳会费哦，Woodong 悄悄提醒你一下！",
     // TODO(i18n): Task 012 新增键为韩语占位文案，待翻译
     incomeOnlyNotice:
       "회비는 수입만 집계돼요. 지출·잔액 관리는 추후 업데이트에서 지원할 예정이에요.",

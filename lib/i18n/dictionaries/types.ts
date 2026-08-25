@@ -247,7 +247,10 @@ export interface Dictionary {
       successToast: string;
     };
     markPaidButton: string;
-    reminderToastMessage: string;
+    /** 회비 리마인드 알림 제목에서 회비 항목 이름 뒤에 붙는 문구(Task 028). */
+    reminderNotificationTitleSuffix: string;
+    /** 회비 리마인드 알림 본문(Task 028). */
+    reminderNotificationBody: string;
     incomeOnlyNotice: string;
     memberProgressTitle: string;
     unpaidHighlightTitle: string;

@@ -381,7 +381,8 @@ export const en: Dictionary = {
         "회비 항목을 만들었어요. 활성 멤버 전원에게 청구가 생성됐어요.",
     },
     markPaidButton: "Mark as Paid",
-    reminderToastMessage:
+    reminderNotificationTitleSuffix: "payment reminder",
+    reminderNotificationBody:
       "You haven't paid your dues yet — a friendly reminder from Woodong!",
     // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
     incomeOnlyNotice:

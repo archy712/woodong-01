@@ -2672,6 +2672,10 @@ export type Database = {
           membership_id: string;
         }[];
       };
+      woodong_process_due_reminders: {
+        Args: { p_body?: string; p_group_id?: string; p_title_suffix?: string };
+        Returns: number;
+      };
       woodong_redeem_group_invite: {
         Args: { p_code: string };
         Returns: {

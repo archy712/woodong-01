@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-25
-**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (30/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3·4·5 완료, Phase 6 진행 중 (31/44 Tasks 완료)
 
 ---
 
@@ -479,12 +479,23 @@
   - ⚠️ **미검증 경로**: 저장 실패 시 토글이 이전 값으로 되돌아가는 분기는 실패를 인위적으로 만들 방법이 마땅치 않아 E2E로 밟지 못했다(코드 경로는 성공/실패 공통이며 실패 시 `formError` → 토스트 + 롤백)
   - **완료 조건**: ✅ 설정 저장/복원 정상 동작(기본값·upsert·복원 전부 실측), ✅ `in_app` 비활성 사용자에게 앱 내 알림이 생성되지 않음(0건 → 재활성화 시 1건), ✅ `get_advisors`(security) **ERROR 0건**(WARN은 전부 기존 항목), ✅ `npm run check-all` 통과
 
-- **Task 028: 회비 리마인드 lazy 처리 구현**
+- **Task 028: 회비 리마인드 lazy 처리 구현** ✅ - 완료
   - > **Task 003에서 확인된 선행 제약**: `woodong_dues`에는 클라이언트용 UPDATE 정책이 전혀 없다(상태는 트리거 전용). `last_reminded_at` 갱신도 `SECURITY DEFINER` RPC를 통해서만 가능하므로, 리마인드 생성 로직 자체를 이 RPC 안에 구현해야 한다.
-  - 멤버가 **회비 대시보드 또는 알림센터에 진입하는 시점**에, `woodong_due_cycles.reminder_interval_days`와 `woodong_dues.last_reminded_at`을 비교해 주기가 지난 **미납 멤버에 한해** 리마인드 알림(`type='due_reminder'`)을 `woodong_notifications`에 기록
-  - 리마인드 생성 후 `last_reminded_at` 갱신, 동시 조회 시 중복 생성 방지(원자적 갱신 또는 조건부 insert)
-  - **실시간 배치 발송(pg_cron)은 2차 확장**임을 코드 주석과 문서에 명시
-  - **완료 조건**: 주기 미도래 시 미생성, 주기 도래 시 1건만 생성, 동시 요청에서도 중복 생성 0건
+  - ✅ 마이그레이션 `create_woodong_process_due_reminders` — `woodong_process_due_reminders(p_group_id, p_title_suffix, p_body)` `SECURITY DEFINER` + `set search_path = ''`, `anon` EXECUTE 명시 REVOKE(비로그인 호출은 `401 42501 permission denied for function`으로 실측 확인). 대상은 **호출자 본인(`auth.uid()`)의 청구로만** 좁히며, 남의 리마인드를 만들 수 있는 인자 자체가 없다
+  - ✅ **선점(UPDATE) → 알림 INSERT를 한 문장(CTE)으로** 처리한다. 조회 후 갱신으로 나누면 동시에 들어온 두 요청이 모두 "보낼 때가 됐다"고 판단해 중복 알림을 만든다. 한 문장으로 두면 뒤에 온 UPDATE가 행 잠금에서 기다렸다가 **갱신된 행으로 조건을 다시 평가**(READ COMMITTED EvalPlanQual)해 0행이 된다
+  - ✅ **첫 리마인드의 기준점은 `coalesce(last_reminded_at, cycle.created_at)`**. `last_reminded_at`이 null이라고 곧바로 보내면 회비 항목을 만든 직후 대시보드를 연 멤버가 주기가 지나지도 않았는데 독촉을 받는다. 이 기준이라야 로드맵의 "주기 미도래 시 미생성"이 갓 만든 항목에도 성립한다
+  - ✅ 대상 조건: 본인 청구 + `status <> 'paid'`(부분납부도 미납이므로 포함) + `reminder_interval_days is not null`(nullable = 리마인드 없음, PRD 5.5) + **활성 멤버**(모임을 떠난 사람에게 독촉하지 않는다 — 로드맵에 없던 조건이지만 탈퇴자에게 알림이 가는 것이 명백히 잘못이라 추가)
+  - ✅ `in_app`을 끈 사람에게는 **아무것도 하지 않는다** — 알림도 안 만들고 `last_reminded_at`도 건드리지 않는다. 그 컬럼은 "실제로 알린 시각"이어야 하고, 나중에 채널을 다시 켰을 때 곧바로 받는 편이 맞다(설정 행이 없으면 켜진 것으로 보는 opt-out 규칙은 공지 팬아웃과 동일)
+  - ✅ 호출부는 `lib/woodong/due-reminders.ts`의 `processDueReminders()` — **`queries/`에 두지 않았다**. 이름은 조회처럼 불리지만 실제로는 렌더 도중 쓰기를 하는 함수라, 읽기 전용 규약의 `queries/*`와 섞이면 안 된다. Server Action도 아니다(렌더 중에는 `revalidatePath`를 호출할 수 없고, 같은 렌더에서 곧바로 다시 읽으므로 재검증도 불필요). 실패해도 throw하지 않는다 — 리마인드 때문에 회비 화면이 안 열리면 훨씬 나쁘다
+  - ✅ 진입점 2곳(PRD 3.3/3.4-a가 지정한 그대로): 회비 대시보드(모임 한정)와 알림센터(모든 모임). 둘 다 **조회보다 먼저** 실행해 이번 렌더에 반영되게 했다
+  - ✅ 알림 문구는 i18n에서 넘긴다(`dues.reminderNotificationTitleSuffix`/`reminderNotificationBody` — 기존 미사용 키 `reminderToastMessage`를 실제 용도에 맞게 개명, en/ja/zh 접미사는 실제 번역). RPC 쪽에도 한국어 기본값을 두었는데, **2차 pg_cron 배치에는 사용자 로케일이 없어** 호출부가 문구를 넘길 수 없기 때문이다
+  - ✅ **⚠️ 실시간 배치 발송(pg_cron)은 2차 확장(Task 037)**임을 마이그레이션 주석·`due-reminders.ts` 주석에 명시(확장 시 대상 사용자 인자를 받는 형태로 넓히면 된다는 방향까지 기록)
+  - ✅ Playwright 실계정 E2E(계정 2개, 회비 항목 4종): **주기 미도래**(방금 만든 7일 주기)·**주기 미설정**(null)·**완납**(paid) 3종은 전부 미생성이고, **주기 도래 + 미납** 1건만 알림 생성 + 해당 청구의 `last_reminded_at`만 갱신 → 회비 화면·알림센터에 재진입해도 **추가 생성 0건** → 알림센터 목록에 `8월 정기회비 납부 리마인드`로 정상 노출(링크는 해당 모임 회비 화면)
+  - ✅ **동시성**: `last_reminded_at`을 10일 전으로 되돌린 뒤 **RPC 8회 동시 호출** — 정확히 1회만 `1`을 반환하고 나머지 7회는 `0`, 알림 증가분도 1건(중복 생성 0건)
+  - ✅ `in_app` off 상태로 회비 화면 진입 → 알림 미생성 **및 `last_reminded_at` 무변경** 확인, 다시 켜고 진입하면 곧바로 1건 생성. 탈퇴(`status='left'`) 상태에서는 주기가 지나도 0건
+  - ✅ **사용자 간 격리**: m1이 호출하면 m1 본인 청구에 대해서만 생성되고(같은 항목이라도 m2가 완납한 청구는 m2에게 안 가고 미납인 m1에게만 간다) m2의 알림/`last_reminded_at`은 무변경
+  - ✅ `database.types.ts` 재생성(신규 함수 4줄만 반영), 테스트 계정 2개·모임·회비 항목·청구·납부·알림 정리 완료(`woodong_*` 전부 0행)
+  - **완료 조건**: ✅ 주기 미도래 시 미생성, ✅ 주기 도래 시 1건만 생성, ✅ 동시 8요청에서도 중복 생성 0건, ✅ `get_advisors`(security) **ERROR 0건**(신규 WARN 1건은 `authenticated`에게 의도적으로 연 DEFINER RPC로 Task 003/020/021/025와 동일 패턴이며 `anon`에는 REVOKE됨), ✅ `npm run check-all` 통과
 
 - **Task 029: 투표 생성 및 참여 구현**
   - 투표 생성 폼: 제목, **선택지 2개 이상**, 마감일시(`closes_at`), `vote_type`(`multiple_choice`/`yes_no`), `allow_multiple`, `is_anonymous`

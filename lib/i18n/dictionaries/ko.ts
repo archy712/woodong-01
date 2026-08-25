@@ -368,7 +368,8 @@ export const ko: Dictionary = {
         "회비 항목을 만들었어요. 활성 멤버 전원에게 청구가 생성됐어요.",
     },
     markPaidButton: "납부완료로 변경",
-    reminderToastMessage:
+    reminderNotificationTitleSuffix: "납부 리마인드",
+    reminderNotificationBody:
       "아직 회비 납부 전이시네요. 우동이 살짝 알려드릴게요!",
     incomeOnlyNotice:
       "회비는 수입만 집계돼요. 지출·잔액 관리는 추후 업데이트에서 지원할 예정이에요.",
