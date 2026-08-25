@@ -34,7 +34,11 @@ export function UserNavMenu({
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/auth/login");
+    // 헤더(AuthButton/HeaderAuthNav)는 루트 레이아웃의 서버 컴포넌트라
+    // Router Cache에 담겨 있다. refresh() 없이 이동하면 캐시된 "로그인 상태"
+    // 헤더가 그대로 재사용되어, 세션은 끊겼는데 이메일 메뉴가 남는다.
+    router.replace("/auth/login");
+    router.refresh();
   };
 
   return (

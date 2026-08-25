@@ -52,8 +52,10 @@ export function SignUpForm({
     try {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
+      // 헤더는 루트 레이아웃의 서버 컴포넌트라 Router Cache에 담겨 있다.
+      // refresh() 없이 이동하면 캐시된 "비로그인" 헤더가 그대로 재사용된다.
       router.push("/protected");
+      router.refresh();
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : genericError);
     } finally {
