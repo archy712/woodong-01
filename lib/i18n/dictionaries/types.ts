@@ -250,6 +250,15 @@ export interface Dictionary {
       memoLabel: string;
       submitButton: string;
       successToast: string;
+      historyTitle: string;
+      historyEmpty: string;
+      addTitle: string;
+      totalPaidLabel: string;
+      remainingLabel: string;
+      updateSuccessToast: string;
+      deleteDialogTitle: string;
+      deleteConfirmMessage: string;
+      deleteSuccessToast: string;
     };
   };
   votes: {

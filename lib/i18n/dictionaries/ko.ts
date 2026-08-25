@@ -367,14 +367,23 @@ export const ko: Dictionary = {
     unpaidHighlightTitle: "아직 납부하지 않은 멤버",
     emptyState: "등록된 회비 항목이 없어요.",
     recordPayment: {
-      title: "납부 상태 변경",
+      title: "납부 관리",
       statusLabel: "납부 상태",
       amountLabel: "납부 금액",
       paidAtLabel: "납부 확인일",
       memoLabel: "비고 (선택)",
-      submitButton: "저장",
-      successToast:
-        "납부 상태를 변경했어요. (데모 화면이라 실제로 저장되지는 않아요)",
+      submitButton: "납부 기록하기",
+      successToast: "납부 이력을 기록했어요.",
+      historyTitle: "납부 이력",
+      historyEmpty: "아직 기록된 납부 이력이 없어요.",
+      addTitle: "납부 기록 추가",
+      totalPaidLabel: "납부 누계",
+      remainingLabel: "남은 금액",
+      updateSuccessToast: "납부 이력을 수정했어요.",
+      deleteDialogTitle: "이 납부 이력을 삭제할까요?",
+      deleteConfirmMessage:
+        "삭제하면 납부 상태가 남은 이력 기준으로 다시 계산돼요.",
+      deleteSuccessToast: "납부 이력을 삭제했어요.",
     },
   },
   votes: {

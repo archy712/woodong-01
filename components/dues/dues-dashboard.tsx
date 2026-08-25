@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangleIcon, WalletIcon } from "lucide-react";
+import { AlertTriangleIcon, Loader2Icon, WalletIcon } from "lucide-react";
+import { toast } from "sonner";
 
-import type { Due, DueCycle, DuesStatus } from "@/lib/woodong/dues";
+import { recordPaymentAction } from "@/lib/woodong/actions/dues";
+import type { Due, DueCycle, DuesStatus, Payment } from "@/lib/woodong/dues";
 import {
   memberAvatarEmoji,
   memberDisplayName,
@@ -15,6 +17,8 @@ import {
   DuesMemberRateChart,
   DuesOverallRateGauge,
 } from "@/components/dues/dues-paid-rate-chart";
+import { PaymentManagerDialog } from "@/components/dues/payment-manager-dialog";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,34 +42,93 @@ const STATUS_BADGE_VARIANT: Record<
 };
 
 /**
- * 회비 대시보드 (Task 022에서 실데이터 연동).
+ * 남은 금액을 한 번에 기록하는 "완납 처리" 버튼 (Task 023).
+ *
+ * 상태를 직접 `paid`로 바꾸는 게 아니라 **남은 금액만큼의 납부 이력을 남기고** 상태 갱신은 트리거에
+ * 맡긴다. 총무가 흔히 하는 "전액 입금 확인"을 다이얼로그를 열지 않고 끝내려는 단축 경로일 뿐,
+ * 저장되는 데이터는 다이얼로그에서 직접 기록한 것과 완전히 같다.
+ */
+function MarkPaidButton({
+  dueId,
+  remaining,
+  labels,
+  commonLabels,
+  onRecorded,
+}: {
+  dueId: string;
+  remaining: number;
+  labels: Dictionary["dues"];
+  commonLabels: Dictionary["common"];
+  onRecorded: () => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleClick() {
+    startTransition(async () => {
+      const result = await recordPaymentAction({
+        dueId,
+        amount: remaining,
+        // 렌더가 아니라 클릭 시점에 계산한다(SSR/hydration 불일치 방지). 기준은 저장·표시와 같은 UTC.
+        paidAt: new Date().toISOString().slice(0, 10),
+        memo: "",
+      });
+
+      if (!result.success) {
+        toast.error(result.formError ?? commonLabels.retry);
+        return;
+      }
+
+      toast.success(labels.recordPayment.successToast);
+      onRecorded();
+    });
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={handleClick}
+      disabled={isPending}
+    >
+      {isPending && <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />}
+      {labels.markPaidButton}
+    </Button>
+  );
+}
+
+/**
+ * 회비 대시보드 (Task 022에서 실데이터 연동, Task 023에서 납부 기록 연결).
  *
  * 목록은 로컬 state로 들지 않고 서버가 내려준 값을 그대로 그린다(멤버 목록·초대 관리자와 같은 규약).
- * 항목을 만들면 Server Action의 `revalidatePath` + `router.refresh()`로 다시 받아오는데, 이렇게 해야
- * 팬아웃으로 함께 생성된 청구 N건이 화면에 정확히 반영된다(클라이언트에서 흉내 내면 "그 시점의 활성
- * 멤버"를 서버와 다르게 계산할 수 있다).
+ * 항목을 만들거나 납부를 기록하면 Server Action의 `revalidatePath` + `router.refresh()`로 다시
+ * 받아온다. 특히 납부는 **한 번의 기록이 청구 상태·전체 납부율·미납자 목록을 동시에 바꾸므로**
+ * 로컬 state로 흉내 내면 서버 계산(트리거)과 어긋나기 쉽다.
  *
- * 납부 상태는 `woodong_dues.status`(DB 트리거가 납부 이력 합계로 자동 갱신)를 그대로 표시한다.
- * 납부 기록 UI는 Task 023에서 실제 Server Action과 함께 붙인다 — 실데이터 화면에 저장되지 않는
- * 더미 버튼을 남겨 두면 "납부 처리했는데 새로고침하면 사라지는" 오해를 만든다.
+ * 납부 상태는 `woodong_dues.status`를 그대로 표시한다. 이 값은 애플리케이션이 쓰는 게 아니라
+ * DB 트리거가 납부 이력 합계로 다시 계산해 주는 결과값이다.
  */
 export function DuesDashboard({
   groupId,
   cycles,
   duesByCycle,
+  paymentsByDue,
   paidAmounts,
   members,
   isAdmin,
   labels,
+  commonLabels,
   unnamedMemberLabel,
 }: {
   groupId: string;
   cycles: DueCycle[];
   duesByCycle: Record<string, Due[]>;
+  paymentsByDue: Record<string, Payment[]>;
   paidAmounts: Record<string, number>;
   members: GroupMemberRow[];
   isAdmin: boolean;
   labels: Dictionary["dues"];
+  commonLabels: Dictionary["common"];
   unnamedMemberLabel: string;
 }) {
   const router = useRouter();
@@ -218,7 +281,7 @@ export function DuesDashboard({
                         members={memberRateChartData}
                         labels={labels.status}
                       />
-                      {entries.map(({ due, name, avatarKey }) => (
+                      {entries.map(({ due, paidAmount, name, avatarKey }) => (
                         <div key={due.id} className="flex items-center gap-3">
                           <Avatar size="sm">
                             <AvatarFallback>
@@ -230,6 +293,27 @@ export function DuesDashboard({
                             <Badge variant={STATUS_BADGE_VARIANT[due.status]}>
                               {labels.status[due.status]}
                             </Badge>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1">
+                            {isAdmin && due.status !== "paid" && (
+                              <MarkPaidButton
+                                dueId={due.id}
+                                remaining={Math.max(due.amount - paidAmount, 0)}
+                                labels={labels}
+                                commonLabels={commonLabels}
+                                onRecorded={() => router.refresh()}
+                              />
+                            )}
+                            <PaymentManagerDialog
+                              dueId={due.id}
+                              dueAmount={due.amount}
+                              paidAmount={paidAmount}
+                              payments={paymentsByDue[due.id] ?? []}
+                              memberName={name}
+                              isAdmin={isAdmin}
+                              labels={labels.recordPayment}
+                              commonLabels={commonLabels}
+                            />
                           </div>
                         </div>
                       ))}

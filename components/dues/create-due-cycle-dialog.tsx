@@ -127,8 +127,6 @@ export function CreateDueCycleDialog({
                       <Input
                         type="number"
                         inputMode="numeric"
-                        min={0}
-                        step={1000}
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -187,8 +185,7 @@ export function CreateDueCycleDialog({
                   <FormControl>
                     <Input
                       type="number"
-                      min={1}
-                      max={90}
+                      inputMode="numeric"
                       {...field}
                       value={field.value ?? ""}
                     />

@@ -108,3 +108,35 @@ export const recordPaymentSchema = z.object({
     .or(z.literal("")),
 });
 export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;
+
+/** 납부 이력 수정 폼 (Task 023) — 오입력 정정. 대상 청구(`due_id`)는 바꿀 수 없다. */
+export const updatePaymentSchema = recordPaymentSchema
+  .omit({ dueId: true })
+  .extend({
+    paymentId: z.string().uuid("올바른 납부 이력 ID가 아닙니다"),
+  });
+export type UpdatePaymentInput = z.infer<typeof updatePaymentSchema>;
+
+/** 납부 이력 삭제 (Task 023). */
+export const deletePaymentSchema = z.object({
+  paymentId: z.string().uuid("올바른 납부 이력 ID가 아닙니다"),
+});
+export type DeletePaymentInput = z.infer<typeof deletePaymentSchema>;
+
+// ── 날짜 변환 ─────────────────────────────────────────────────────────────
+
+/**
+ * `<input type="date">`의 `YYYY-MM-DD` → `timestamptz` 저장용 ISO 문자열.
+ *
+ * **UTC 자정으로 고정**한다. `new Date("2026-08-25")`는 이미 UTC 자정으로 파싱되지만, 그 사실에
+ * 기대지 않고 명시적으로 붙여 둔다. 저장과 표시(`isoToDateOnly`)가 같은 기준(UTC)을 쓰면
+ * "고른 날짜와 목록에 보이는 날짜가 다른" 문제가 어떤 타임존에서도 생기지 않는다.
+ */
+export function dateOnlyToIso(value: string): string {
+  return new Date(`${value}T00:00:00.000Z`).toISOString();
+}
+
+/** `timestamptz` → `<input type="date">`와 목록 표시에 쓰는 `YYYY-MM-DD`. 기준은 `dateOnlyToIso` 참고. */
+export function isoToDateOnly(value: string): string {
+  return new Date(value).toISOString().slice(0, 10);
+}

@@ -50,10 +50,12 @@ async function DuesContent({
         groupId={groupId}
         cycles={overview.cycles}
         duesByCycle={overview.duesByCycle}
+        paymentsByDue={overview.paymentsByDue}
         paidAmounts={overview.paidAmounts}
         members={members}
         isAdmin={detail.role === "admin"}
         labels={dict.dues}
+        commonLabels={dict.common}
         unnamedMemberLabel={dict.groups.members.unnamedMemberLabel}
       />
     </div>
