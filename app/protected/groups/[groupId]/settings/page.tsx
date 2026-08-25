@@ -25,8 +25,8 @@ import {
 } from "@/components/ui/item";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { getDummyGroupInvites } from "@/lib/woodong/dummy";
 import { getGroupDetail, listGroupMembers } from "@/lib/woodong/queries/groups";
+import { listGroupInvites } from "@/lib/woodong/queries/invites";
 import { UsersIcon } from "lucide-react";
 
 async function GroupSettingsContent({
@@ -61,8 +61,9 @@ async function GroupSettingsContent({
   const { group, role, coverUrl } = detail;
   const isAdmin = role === "admin";
   const members = await listGroupMembers(supabase, groupId, data.claims.sub);
-  // 초대 링크 발급/무효화는 Task 020 몫이라 아직 더미다(실제 모임에는 더미 초대가 없어 빈 목록).
-  const invites = getDummyGroupInvites(groupId);
+  // 초대 목록의 SELECT 정책은 총무 전용이라 일반회원은 어차피 빈 배열을 받는다. 불필요한
+  // 왕복을 아끼려고 총무일 때만 조회한다.
+  const invites = isAdmin ? await listGroupInvites(supabase, groupId) : [];
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">
@@ -167,12 +168,20 @@ async function GroupSettingsContent({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <GroupInviteManager
-            groupId={groupId}
-            initialInvites={invites}
-            labels={dict.groups.invite}
-            commonLabels={dict.common}
-          />
+          {isAdmin ? (
+            <GroupInviteManager
+              groupId={groupId}
+              invites={invites}
+              labels={dict.groups.invite}
+              commonLabels={dict.common}
+            />
+          ) : (
+            // 초대 발급/조회/무효화 정책이 전부 `woodong_is_group_admin()`이라 일반회원에게는
+            // 빈 목록과 반드시 실패하는 버튼만 보인다. 정보 수정 카드와 같이 안내로 대체한다.
+            <p className="text-sm text-muted-foreground">
+              {dict.groups.invite.adminOnlyNotice}
+            </p>
+          )}
         </CardContent>
       </Card>
 

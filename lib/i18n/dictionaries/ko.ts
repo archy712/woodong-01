@@ -254,8 +254,11 @@ export const ko: Dictionary = {
       title: "멤버 초대",
       generateButton: "초대 링크 만들기",
       reissueButton: "코드 재발급",
+      reissueNotice:
+        "새 링크를 만들면 기존 링크는 자동으로 무효화돼요. 이미 참여한 멤버는 그대로 남아요.",
       copyLinkButton: "링크 복사",
       codeLabel: "초대 코드",
+      createdAtLabel: "발급일",
       expiresAtLabel: "만료일",
       maxUsesLabel: "최대 사용 횟수",
       usedCountLabel: "회 사용됨",
@@ -263,7 +266,13 @@ export const ko: Dictionary = {
       activeLabel: "사용 가능",
       inactiveLabel: "만료/무효화됨",
       issueSuccessToast:
-        "초대 링크를 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
+        "초대 링크를 만들었어요. 이전 링크는 더 이상 사용할 수 없어요.",
+      revokeButton: "무효화",
+      revokeDialogTitle: "이 초대 링크를 무효화할까요?",
+      revokeConfirmMessage:
+        "무효화하면 이 링크로는 더 이상 모임에 참여할 수 없어요. 이미 참여한 멤버는 그대로 남아요.",
+      revokeSuccessToast: "초대 링크를 무효화했어요.",
+      adminOnlyNotice: "초대 링크 발급은 총무만 할 수 있어요.",
     },
     members: {
       title: "멤버 목록",
@@ -283,10 +292,16 @@ export const ko: Dictionary = {
       loginToJoinButton: "로그인하고 참여하기",
       alreadyMemberMessage:
         "이미 참여 중인 모임이에요. 모임 페이지로 이동할게요.",
+      alreadyMemberNotice: "이미 이 모임의 멤버예요.",
+      goToGroupButton: "모임으로 이동",
       previewNotice: "아래 모임의 초대를 받았어요. 참여하면 멤버로 등록돼요.",
-      expiredMessage: "이 초대 링크는 만료되었거나 더 이상 사용할 수 없어요.",
-      joinSuccessToast:
-        "참여했어요! (데모 화면이라 실제로 멤버로 등록되지는 않아요)",
+      expiredMessage:
+        "이 초대 링크는 만료됐어요. 총무에게 새 링크를 요청해주세요.",
+      revokedMessage:
+        "이 초대 링크는 무효화됐어요. 총무에게 새 링크를 요청해주세요.",
+      exhaustedMessage:
+        "이 초대 링크는 사용 가능 횟수를 모두 채웠어요. 총무에게 새 링크를 요청해주세요.",
+      joinSuccessToast: "참여했어요! 이제 이 모임의 멤버예요.",
     },
     announcements: {
       pageTitle: "공지사항",

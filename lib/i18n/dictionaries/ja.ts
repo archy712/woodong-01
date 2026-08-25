@@ -266,8 +266,18 @@ export const ja: Dictionary = {
       emptyState: "발급된 초대 링크가 없어요.",
       activeLabel: "사용 가능",
       inactiveLabel: "만료/무효화됨",
+      // TODO(i18n): Task 020の新規キーは韓国語の仮文言、翻訳が必要
+      reissueNotice:
+        "새 링크를 만들면 기존 링크는 자동으로 무효화돼요. 이미 참여한 멤버는 그대로 남아요.",
+      createdAtLabel: "발급일",
       issueSuccessToast:
-        "초대 링크를 만들었어요. (데모 화면이라 실제로 저장되지는 않아요)",
+        "초대 링크를 만들었어요. 이전 링크는 더 이상 사용할 수 없어요.",
+      revokeButton: "무효화",
+      revokeDialogTitle: "이 초대 링크를 무효화할까요?",
+      revokeConfirmMessage:
+        "무효화하면 이 링크로는 더 이상 모임에 참여할 수 없어요. 이미 참여한 멤버는 그대로 남아요.",
+      revokeSuccessToast: "초대 링크를 무효화했어요.",
+      adminOnlyNotice: "초대 링크 발급은 총무만 할 수 있어요.",
     },
     members: {
       title: "メンバー一覧",
@@ -289,9 +299,16 @@ export const ja: Dictionary = {
       // TODO(i18n): Task 012/017の新規キーは韓国語の仮文言、翻訳が必要
       loginToJoinButton: "로그인하고 참여하기",
       previewNotice: "아래 모임의 초대를 받았어요. 참여하면 멤버로 등록돼요.",
-      expiredMessage: "이 초대 링크는 만료되었거나 더 이상 사용할 수 없어요.",
-      joinSuccessToast:
-        "참여했어요! (데모 화면이라 실제로 멤버로 등록되지는 않아요)",
+      // TODO(i18n): Task 020の新規キーは韓国語の仮文言、翻訳が必要
+      alreadyMemberNotice: "이미 이 모임의 멤버예요.",
+      goToGroupButton: "모임으로 이동",
+      expiredMessage:
+        "이 초대 링크는 만료됐어요. 총무에게 새 링크를 요청해주세요.",
+      revokedMessage:
+        "이 초대 링크는 무효화됐어요. 총무에게 새 링크를 요청해주세요.",
+      exhaustedMessage:
+        "이 초대 링크는 사용 가능 횟수를 모두 채웠어요. 총무에게 새 링크를 요청해주세요.",
+      joinSuccessToast: "참여했어요! 이제 이 모임의 멤버예요.",
     },
     announcements: {
       pageTitle: "お知らせ",

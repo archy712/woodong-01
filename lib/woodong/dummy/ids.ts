@@ -24,9 +24,8 @@ export function userId(n: number): string {
   return dummyUuid(2, n);
 }
 
-export function inviteId(n: number): string {
-  return dummyUuid(3, n);
-}
+// 섹션 코드 3(초대)은 Task 020에서 초대가 실데이터로 전환되면서 더미가 사라져 비어 있다.
+// 다른 섹션 코드와 겹치지 않도록 번호는 재사용하지 않는다.
 
 export function dueCycleId(n: number): string {
   return dummyUuid(4, n);

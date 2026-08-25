@@ -1973,6 +1973,7 @@ export type Database = {
       woodong_group_invites: {
         Row: {
           code: string;
+          created_at: string;
           created_by: string | null;
           expires_at: string | null;
           group_id: string;
@@ -1984,6 +1985,7 @@ export type Database = {
         };
         Insert: {
           code: string;
+          created_at?: string;
           created_by?: string | null;
           expires_at?: string | null;
           group_id: string;
@@ -1995,6 +1997,7 @@ export type Database = {
         };
         Update: {
           code?: string;
+          created_at?: string;
           created_by?: string | null;
           expires_at?: string | null;
           group_id?: string;
@@ -2567,6 +2570,18 @@ export type Database = {
         }[];
       };
       woodong_created_group: { Args: { p_group_id: string }; Returns: boolean };
+      woodong_get_invite_preview: {
+        Args: { p_code: string };
+        Returns: {
+          group_description: string;
+          group_id: string;
+          group_name: string;
+          group_type: string;
+          is_member: boolean;
+          member_count: number;
+          status: string;
+        }[];
+      };
       woodong_get_vote_results: {
         Args: { p_vote_id: string };
         Returns: {
@@ -2581,6 +2596,7 @@ export type Database = {
         Args: { p_invite_id: string };
         Returns: {
           code: string;
+          created_at: string;
           created_by: string | null;
           expires_at: string | null;
           group_id: string;
@@ -2604,6 +2620,13 @@ export type Database = {
       woodong_is_group_member: {
         Args: { p_group_id: string };
         Returns: boolean;
+      };
+      woodong_redeem_group_invite: {
+        Args: { p_code: string };
+        Returns: {
+          group_id: string;
+          status: string;
+        }[];
       };
     };
     Enums: {

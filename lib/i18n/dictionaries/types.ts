@@ -146,8 +146,10 @@ export interface Dictionary {
       title: string;
       generateButton: string;
       reissueButton: string;
+      reissueNotice: string;
       copyLinkButton: string;
       codeLabel: string;
+      createdAtLabel: string;
       expiresAtLabel: string;
       maxUsesLabel: string;
       usedCountLabel: string;
@@ -155,6 +157,11 @@ export interface Dictionary {
       activeLabel: string;
       inactiveLabel: string;
       issueSuccessToast: string;
+      revokeButton: string;
+      revokeDialogTitle: string;
+      revokeConfirmMessage: string;
+      revokeSuccessToast: string;
+      adminOnlyNotice: string;
     };
     members: {
       title: string;
@@ -172,8 +179,12 @@ export interface Dictionary {
       joinButton: string;
       loginToJoinButton: string;
       alreadyMemberMessage: string;
+      alreadyMemberNotice: string;
+      goToGroupButton: string;
       previewNotice: string;
       expiredMessage: string;
+      revokedMessage: string;
+      exhaustedMessage: string;
       joinSuccessToast: string;
     };
     announcements: {

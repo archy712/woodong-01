@@ -1,6 +1,6 @@
 import type { AvatarKey } from "@/lib/woodong/avatars";
-import type { Group, GroupInvite, GroupMember } from "@/lib/woodong/groups";
-import { GROUP_ID, inviteId, userId } from "./ids";
+import type { Group, GroupMember } from "@/lib/woodong/groups";
+import { GROUP_ID, userId } from "./ids";
 
 /**
  * `woodong_group_members`(도메인 타입 `GroupMember`)에는 이름/아바타가 없다(실제 화면에서는
@@ -217,47 +217,6 @@ export const ALL_DUMMY_MEMBERS: DummyGroupMember[] = [
   ...BOOK_CLUB_MEMBERS,
 ];
 
-export const DUMMY_GROUP_INVITES: Record<string, GroupInvite[]> = {
-  [GROUP_ID.running]: [
-    {
-      id: inviteId(1),
-      group_id: GROUP_ID.running,
-      code: "RUN-8F3K2Q",
-      created_by: RUNNING_MEMBERS[0].user_id,
-      expires_at: "2026-09-30T23:59:59+09:00",
-      max_uses: 20,
-      used_count: 9,
-      is_active: true,
-      revoked_at: null,
-    },
-  ],
-  [GROUP_ID.hiking]: [
-    {
-      id: inviteId(2),
-      group_id: GROUP_ID.hiking,
-      code: "HIKE-2X9PLM",
-      created_by: HIKING_MEMBERS[0].user_id,
-      expires_at: "2026-12-31T23:59:59+09:00",
-      max_uses: 30,
-      used_count: 13,
-      is_active: true,
-      revoked_at: null,
-    },
-    {
-      id: inviteId(3),
-      group_id: GROUP_ID.hiking,
-      code: "HIKE-OLD7C1",
-      created_by: HIKING_MEMBERS[0].user_id,
-      expires_at: "2026-06-01T23:59:59+09:00",
-      max_uses: 10,
-      used_count: 10,
-      is_active: false,
-      revoked_at: "2026-06-02T08:00:00+09:00",
-    },
-  ],
-  [GROUP_ID.bookClub]: [],
-};
-
 export function getDummyGroup(groupId: string): Group | undefined {
   return DUMMY_GROUPS.find((g) => g.id === groupId);
 }
@@ -268,36 +227,6 @@ export function getDummyMembers(groupId: string): DummyGroupMember[] {
 
 export function getDummyActiveMembers(groupId: string): DummyGroupMember[] {
   return getDummyMembers(groupId).filter((m) => m.status === "active");
-}
-
-export function getDummyGroupInvites(groupId: string): GroupInvite[] {
-  return DUMMY_GROUP_INVITES[groupId] ?? [];
-}
-
-/** 초대 코드로 초대/모임을 함께 조회한다(`/invite/[code]` 공개 미리보기 화면 전용). */
-export function findDummyInviteByCode(
-  code: string,
-): { invite: GroupInvite; group: Group } | undefined {
-  for (const group of DUMMY_GROUPS) {
-    const invite = getDummyGroupInvites(group.id).find((i) => i.code === code);
-    if (invite) return { invite, group };
-  }
-  return undefined;
-}
-
-/** 초대가 지금 시점에 실제로 사용 가능한 상태인지 판정한다(PRD 3.2 초대 유효성 조건). */
-export function isDummyInviteUsable(invite: GroupInvite): boolean {
-  if (!invite.is_active || invite.revoked_at) return false;
-  if (
-    invite.expires_at &&
-    new Date(invite.expires_at).getTime() <= Date.now()
-  ) {
-    return false;
-  }
-  if (invite.max_uses !== null && invite.used_count >= invite.max_uses) {
-    return false;
-  }
-  return true;
 }
 
 export function findDummyMemberProfile(

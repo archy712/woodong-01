@@ -49,12 +49,49 @@ export type GroupInvite = Pick<
   | "group_id"
   | "code"
   | "created_by"
+  | "created_at"
   | "expires_at"
   | "max_uses"
   | "used_count"
   | "is_active"
   | "revoked_at"
 >;
+
+/**
+ * 초대 코드 상태 — `woodong_get_invite_preview()`가 돌려주는 `status` 값 (Task 020).
+ *
+ * PRD 5.4의 참여 가능 조건(`is_active AND revoked_at IS NULL AND expires_at > now()
+ * AND (max_uses IS NULL OR used_count < max_uses)`)을 하나의 boolean으로 뭉개지 않고
+ * 실패 사유별로 쪼갠 값이다. 화면에서 "만료됐어요"와 "무효화됐어요", "사용 횟수를 다 썼어요"를
+ * 구분해 안내해야 사용자가 다음 행동(총무에게 새 링크 요청)을 알 수 있다.
+ */
+export type InviteStatus =
+  "valid" | "not_found" | "expired" | "revoked" | "exhausted";
+
+/** 초대 참여 결과 — `woodong_redeem_group_invite()`가 돌려주는 `status` 값 (Task 020). */
+export type RedeemInviteStatus =
+  | "joined"
+  | "already_member"
+  | "unauthenticated"
+  | Exclude<InviteStatus, "valid">;
+
+/**
+ * 공개 초대 화면(`/invite/[code]`)이 보여줄 최소 정보 (Task 020).
+ *
+ * `woodong_group_invites`의 SELECT 정책이 총무 전용이라 이 데이터는 `SECURITY DEFINER`
+ * RPC를 통해서만 얻을 수 있다. 모임 이름/설명/유형/멤버 수까지만 담고 회비·투표·멤버 명단 등
+ * 모임 내부 데이터는 절대 싣지 않는다(코드만 알면 비로그인 상태로도 볼 수 있는 값이다).
+ */
+export type InvitePreview = {
+  status: InviteStatus;
+  groupId: string | null;
+  groupName: string | null;
+  groupDescription: string | null;
+  groupType: string | null;
+  memberCount: number;
+  /** 현재 로그인 사용자가 이미 이 모임의 활성 멤버인지. 비로그인이면 항상 false. */
+  isMember: boolean;
+};
 
 // ── zod 스키마 ────────────────────────────────────────────────────────────
 
@@ -126,3 +163,31 @@ export const issueGroupInviteSchema = z.object({
     .max(10_000, "최대 사용 횟수가 너무 큽니다"),
 });
 export type IssueGroupInviteInput = z.infer<typeof issueGroupInviteSchema>;
+
+/**
+ * 초대 코드 무효화 (Task 020).
+ *
+ * `groupId`는 무효화 대상 판별에 꼭 필요하지는 않지만(초대 id만으로 특정된다),
+ * 뮤테이션 후 재검증할 경로(`/protected/groups/{groupId}/settings`)를 만들려면 필요하다.
+ */
+export const revokeGroupInviteSchema = z.object({
+  groupId: z.string().uuid("올바른 모임 ID가 아닙니다"),
+  inviteId: z.string().uuid("올바른 초대 ID가 아닙니다"),
+});
+export type RevokeGroupInviteInput = z.infer<typeof revokeGroupInviteSchema>;
+
+/**
+ * 초대 코드로 모임 참여 (Task 020).
+ *
+ * 코드 형식(`ABCD-EFGH`)을 정규식으로 못박지 않는다. 형식 검증에서 걸러 버리면 "유효하지 않은
+ * 초대 코드"와 "형식이 틀린 문자열"을 다른 화면으로 처리해야 하는데, 사용자 입장에서는 둘 다
+ * "이 링크는 못 쓴다"로 같기 때문이다. 존재 여부 판정은 DB(RPC)에 일임한다.
+ */
+export const redeemGroupInviteSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(1, "초대 코드를 입력해주세요")
+    .max(64, "초대 코드가 너무 깁니다"),
+});
+export type RedeemGroupInviteInput = z.infer<typeof redeemGroupInviteSchema>;
