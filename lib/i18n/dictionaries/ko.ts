@@ -270,6 +270,7 @@ export const ko: Dictionary = {
       title: "초대 참여",
       codeLabel: "초대 코드",
       joinButton: "참여하기",
+      loginToJoinButton: "로그인하고 참여하기",
       alreadyMemberMessage:
         "이미 참여 중인 모임이에요. 모임 페이지로 이동할게요.",
       previewNotice: "아래 모임의 초대를 받았어요. 참여하면 멤버로 등록돼요.",

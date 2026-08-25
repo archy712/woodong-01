@@ -1,7 +1,9 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { AlertTriangleIcon, UsersIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Empty,
@@ -11,8 +13,10 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { JoinInviteButton } from "@/components/groups/join-invite-button";
+import { buildLoginPath } from "@/lib/auth/next-path";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { createClient } from "@/lib/supabase/server";
 import {
   findDummyInviteByCode,
   getDummyActiveMembers,
@@ -65,6 +69,12 @@ async function InviteContent({
 
   const memberCount = getDummyActiveMembers(group.id).length;
 
+  // 초대 화면은 공개 라우트지만 참여는 로그인이 필요하다. 비로그인 사용자는
+  // 이 초대 화면 자체를 `next`로 실어 로그인시킨 뒤 다시 여기로 돌려보낸다(Task 017).
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const isAuthenticated = Boolean(claimsData?.claims);
+
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 p-8">
       <Card className="w-full max-w-sm">
@@ -86,11 +96,21 @@ async function InviteContent({
           <p className="text-sm text-muted-foreground">
             {dict.groups.invitePage.previewNotice}
           </p>
-          <JoinInviteButton
-            groupId={group.id}
-            label={dict.groups.invitePage.joinButton}
-            successToast={dict.groups.invitePage.joinSuccessToast}
-          />
+          {isAuthenticated ? (
+            <JoinInviteButton
+              groupId={group.id}
+              label={dict.groups.invitePage.joinButton}
+              successToast={dict.groups.invitePage.joinSuccessToast}
+            />
+          ) : (
+            <Button asChild>
+              <Link
+                href={buildLoginPath(`/invite/${encodeURIComponent(code)}`)}
+              >
+                {dict.groups.invitePage.loginToJoinButton}
+              </Link>
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>

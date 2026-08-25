@@ -276,7 +276,8 @@ export const en: Dictionary = {
       joinButton: "Join",
       alreadyMemberMessage:
         "You're already a member of this group. Taking you to the group page.",
-      // TODO(i18n): Task 012 new keys below are Korean placeholders, need translation.
+      // TODO(i18n): Task 012/017 new keys below are Korean placeholders, need translation.
+      loginToJoinButton: "로그인하고 참여하기",
       previewNotice: "아래 모임의 초대를 받았어요. 참여하면 멤버로 등록돼요.",
       expiredMessage: "이 초대 링크는 만료되었거나 더 이상 사용할 수 없어요.",
       joinSuccessToast:

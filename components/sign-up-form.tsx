@@ -24,11 +24,14 @@ export function SignUpForm({
   auth,
   or,
   genericError,
+  next,
   ...props
 }: {
   auth: Dictionary["auth"];
   or: string;
   genericError: string;
+  /** 가입 성공 후 복귀할 내부 경로. 페이지에서 `resolveNextPath()`로 검증해 내려준다. */
+  next: string;
 } & React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,7 +57,7 @@ export function SignUpForm({
       if (error) throw error;
       // 헤더는 루트 레이아웃의 서버 컴포넌트라 Router Cache에 담겨 있다.
       // refresh() 없이 이동하면 캐시된 "비로그인" 헤더가 그대로 재사용된다.
-      router.push("/protected");
+      router.push(next);
       router.refresh();
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : genericError);
@@ -119,7 +122,10 @@ export function SignUpForm({
             </div>
             <div className="mt-4 text-center text-sm">
               {auth.signUp.haveAccountText}{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
+              <Link
+                href={`/auth/login?next=${encodeURIComponent(next)}`}
+                className="underline underline-offset-4"
+              >
                 {auth.signUp.loginLink}
               </Link>
             </div>
@@ -129,7 +135,11 @@ export function SignUpForm({
             <span className="text-xs text-muted-foreground">{or}</span>
             <Separator className="flex-1" />
           </div>
-          <SocialAuthButtons auth={auth} genericError={genericError} />
+          <SocialAuthButtons
+            auth={auth}
+            genericError={genericError}
+            next={next}
+          />
         </CardContent>
       </Card>
     </div>

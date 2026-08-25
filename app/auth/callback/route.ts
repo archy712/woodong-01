@@ -1,3 +1,4 @@
+import { resolveNextPath } from "@/lib/auth/next-path";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
 import type { User } from "@supabase/supabase-js";
@@ -37,12 +38,9 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
 
-  // 오픈 리다이렉트 방지: 내부 경로만 허용한다(전체 검증 규칙은 Task 017에서 확장).
-  const requestedNext = searchParams.get("next");
-  const next =
-    requestedNext && requestedNext.startsWith("/")
-      ? requestedNext
-      : "/protected";
+  // 오픈 리다이렉트 방지: `sanitizeNextPath()`를 통과한 내부 경로만 허용하고,
+  // 통과하지 못하면 기본 목적지(모임 목록)로 폴백한다(Task 017).
+  const next = resolveNextPath(searchParams.get("next"));
 
   if (!code) {
     return NextResponse.redirect(

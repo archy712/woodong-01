@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 /**
  * 초대 참여 버튼. 실제 `woodong_redeem_group_invite()` RPC 호출은 Task 020 몫이라,
  * 이번 Task에서는 데모 안내 토스트 후 모임 상세로 이동시켜 참여 흐름만 보여준다.
- * 비로그인 상태라면 `proxy.ts`가 `/protected/groups/[groupId]`를 감지해 로그인으로 보낸다
- * (실제 인증 게이트가 그대로 동작하는 것을 함께 보여주는 의도적인 설계).
+ * 비로그인 사용자에게는 이 버튼 대신 초대 화면으로 복귀하는 로그인 링크가 렌더링되므로
+ * (`app/invite/[code]/page.tsx`, Task 017), 여기서는 로그인 상태를 전제한다.
  */
 export function JoinInviteButton({
   groupId,

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { sanitizeNextPath } from "../auth/next-path";
 import { hasEnvVars } from "../utils";
 
 export async function updateSession(request: NextRequest) {
@@ -61,8 +62,16 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith("/invite")
   ) {
     // no user, potentially respond by redirecting the user to the login page
+    // 로그인 후 원래 보려던 경로로 복귀시키기 위해 현재 경로를 `next`로 넘긴다(Task 017).
+    // 값은 로그인/콜백 쪽에서 `sanitizeNextPath()`로 다시 검증한다.
     const url = request.nextUrl.clone();
+    const requestedPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
     url.pathname = "/auth/login";
+    url.search = "";
+    const nextPath = sanitizeNextPath(requestedPath);
+    if (nextPath) {
+      url.searchParams.set("next", nextPath);
+    }
     return NextResponse.redirect(url);
   }
 

@@ -16,9 +16,12 @@ type SocialProvider = "google" | "kakao";
 export function SocialAuthButtons({
   auth,
   genericError,
+  next,
 }: {
   auth: Dictionary["auth"];
   genericError: string;
+  /** 소셜 로그인 성공 후 복귀할 내부 경로. 콜백 라우트에서 다시 검증한다(Task 017). */
+  next: string;
 }) {
   const [pendingProvider, setPendingProvider] = useState<SocialProvider | null>(
     null,
@@ -30,10 +33,14 @@ export function SocialAuthButtons({
     setPendingProvider(provider);
     setError(null);
 
+    // 복귀 경로는 provider를 왕복해야 하므로 콜백 URL의 쿼리에 실어 보낸다.
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    callbackUrl.searchParams.set("next", next);
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: callbackUrl.toString(),
       },
     });
 

@@ -267,7 +267,8 @@ export const zh: Dictionary = {
       codeLabel: "邀请码",
       joinButton: "加入",
       alreadyMemberMessage: "你已经是该小组的成员了，即将跳转到小组页面。",
-      // TODO(i18n): Task 012 新增键为韩语占位文案，待翻译
+      // TODO(i18n): Task 012/017 新增键为韩语占位文案，待翻译
+      loginToJoinButton: "로그인하고 참여하기",
       previewNotice: "아래 모임의 초대를 받았어요. 참여하면 멤버로 등록돼요.",
       expiredMessage: "이 초대 링크는 만료되었거나 더 이상 사용할 수 없어요.",
       joinSuccessToast:

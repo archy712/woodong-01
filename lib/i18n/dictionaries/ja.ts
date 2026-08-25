@@ -276,7 +276,8 @@ export const ja: Dictionary = {
       joinButton: "参加する",
       alreadyMemberMessage:
         "すでに参加しているグループです。グループページへ移動します。",
-      // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
+      // TODO(i18n): Task 012/017の新規キーは韓国語の仮文言、翻訳が必要
+      loginToJoinButton: "로그인하고 참여하기",
       previewNotice: "아래 모임의 초대를 받았어요. 참여하면 멤버로 등록돼요.",
       expiredMessage: "이 초대 링크는 만료되었거나 더 이상 사용할 수 없어요.",
       joinSuccessToast:

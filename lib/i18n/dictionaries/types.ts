@@ -162,6 +162,7 @@ export interface Dictionary {
       title: string;
       codeLabel: string;
       joinButton: string;
+      loginToJoinButton: string;
       alreadyMemberMessage: string;
       previewNotice: string;
       expiredMessage: string;
