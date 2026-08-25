@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -21,11 +22,8 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
-import {
-  getDummyActiveMembers,
-  getDummyGroup,
-  getDummyGroupDashboard,
-} from "@/lib/woodong/dummy";
+import { getDummyGroupDashboard } from "@/lib/woodong/dummy";
+import { getGroupDetail } from "@/lib/woodong/queries/groups";
 
 async function GroupDetailContent({
   params,
@@ -44,10 +42,12 @@ async function GroupDetailContent({
   const locale = await getLocale();
   const dict = getDictionary(locale);
 
-  // Task 012부터 더미 데이터로 렌더링한다. 실 Supabase 연동은 Task 019/024/029에서 진행한다.
-  const group = getDummyGroup(groupId);
+  // 모임 자체는 Task 019에서 실제 쿼리로 교체했다. 공지/회비/투표 요약은 각 도메인 Task
+  // (024/028/029)에서 교체 예정이라 아직 더미다 — 실제 모임 id에는 더미가 없으므로
+  // 각 카드가 자연스럽게 빈 상태로 렌더링된다.
+  const detail = await getGroupDetail(supabase, groupId, claimsData.claims.sub);
 
-  if (!group) {
+  if (!detail) {
     return (
       <div className="flex w-full flex-1 flex-col gap-4 p-6 sm:p-8">
         <h1 className="text-2xl font-bold">{dict.groups.detailTitle}</h1>
@@ -58,11 +58,23 @@ async function GroupDetailContent({
     );
   }
 
-  const memberCount = getDummyActiveMembers(groupId).length;
+  const { group, memberCount, coverUrl } = detail;
   const dashboard = getDummyGroupDashboard(groupId);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6 sm:p-8">
+      {coverUrl && (
+        <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg bg-muted">
+          <Image
+            src={coverUrl}
+            alt={group.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 768px"
+            className="object-cover"
+          />
+        </div>
+      )}
+
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-2xl font-bold">{group.name}</h1>

@@ -4,8 +4,16 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import { WOODONG_COVERS_BUCKET } from "@/lib/supabase/storage";
 import { mapSupabaseError } from "@/lib/woodong/errors";
-import { createGroupSchema, type CreateGroupInput } from "@/lib/woodong/groups";
+import {
+  createGroupSchema,
+  deleteGroupSchema,
+  updateGroupSchema,
+  type CreateGroupInput,
+  type DeleteGroupInput,
+  type UpdateGroupInput,
+} from "@/lib/woodong/groups";
 import type { ActionResult } from "@/lib/woodong/common";
 
 /**
@@ -102,4 +110,143 @@ export async function createGroupAction(
 
   revalidatePath("/protected/groups");
   redirect(`/protected/groups/${groupId}`);
+}
+
+/**
+ * 모임 정보 수정 Server Action (Task 019).
+ *
+ * 총무만 수정할 수 있다는 규칙은 `woodong_groups_update_admin`(`woodong_is_group_admin(id)`)
+ * RLS 정책이 강제한다. 일반회원이 호출하면 UPDATE 대상 행이 0건이 되는데, PostgREST는 이를
+ * 에러가 아니라 "0행 갱신"으로 돌려주므로 `count: "exact"`로 확인해 권한 오류로 되돌린다
+ * (조용히 성공한 것처럼 보이면 안 된다).
+ *
+ * 대표 이미지는 브라우저에서 리사이즈·업로드까지 끝낸 뒤 **오브젝트 경로만** 전달받는다
+ * (Task 004의 비공개 버킷 + 서명 URL 원칙). 경로를 다른 모임 폴더로 위조하지 못하도록
+ * `{groupId}/` 접두어를 서버에서 다시 검증한다.
+ */
+export async function updateGroupAction(
+  input: UpdateGroupInput,
+): Promise<ActionResult<{ groupId: string }>> {
+  const parsed = updateGroupSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClient();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub;
+
+  if (claimsError || !userId) {
+    return { success: false, formError: "로그인이 필요합니다." };
+  }
+
+  const { groupId, name, description, type, defaultDueAmount } = parsed.data;
+  const coverPath = parsed.data.coverImageObjectPath;
+
+  if (coverPath && !coverPath.startsWith(`${groupId}/`)) {
+    return { success: false, formError: "잘못된 이미지 경로입니다." };
+  }
+
+  const { error, count } = await supabase
+    .from("woodong_groups")
+    .update(
+      {
+        name,
+        description: description || null,
+        type: type || null,
+        default_due_amount: defaultDueAmount ?? null,
+        // undefined면 이 키 자체를 넣지 않아 기존 값을 유지한다.
+        ...(coverPath !== undefined
+          ? { cover_image_object_path: coverPath }
+          : {}),
+      },
+      { count: "exact" },
+    )
+    .eq("id", groupId);
+
+  if (error) {
+    console.error("[updateGroupAction] update failed:", error);
+    return { success: false, formError: mapSupabaseError(error) };
+  }
+
+  if (!count) {
+    return {
+      success: false,
+      formError: "모임 정보를 수정할 권한이 없어요. 총무에게 요청해주세요.",
+    };
+  }
+
+  revalidatePath("/protected/groups");
+  revalidatePath(`/protected/groups/${groupId}`);
+  revalidatePath(`/protected/groups/${groupId}/settings`);
+  return { success: true, data: { groupId } };
+}
+
+/**
+ * 모임 삭제 Server Action (Task 019).
+ *
+ * **하드 삭제**를 택했다. `woodong_*` 자식 테이블(멤버/초대/회비/청구/납부/공지/투표/알림)의
+ * FK가 전부 `ON DELETE CASCADE`라 모임 행 하나만 지우면 연관 데이터가 함께 정리되고,
+ * 소프트 삭제를 도입하면 모든 조회·RLS 정책에 "삭제되지 않은 모임" 조건을 추가해야 해
+ * 1차 MVP 범위에서는 얻는 것보다 비용이 크다(복구 요구사항도 PRD에 없다).
+ *
+ * ⚠️ 순서가 중요하다: Storage 오브젝트 삭제 정책이 `woodong_is_group_admin(...)`을 요구하므로
+ * 모임 행을 먼저 지우면 그 순간부터 관리자 판정이 실패해 대표 이미지가 영구히 남는다.
+ * 따라서 **커버 이미지를 먼저 지우고 모임 행을 나중에** 지운다.
+ */
+export async function deleteGroupAction(
+  input: DeleteGroupInput,
+): Promise<ActionResult<undefined>> {
+  const parsed = deleteGroupSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClient();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub;
+
+  if (claimsError || !userId) {
+    return { success: false, formError: "로그인이 필요합니다." };
+  }
+
+  const { groupId } = parsed.data;
+
+  const { data: objects, error: listError } = await supabase.storage
+    .from(WOODONG_COVERS_BUCKET)
+    .list(groupId);
+
+  if (listError) {
+    console.error("[deleteGroupAction] cover list failed:", listError);
+  } else if (objects && objects.length > 0) {
+    const { error: removeError } = await supabase.storage
+      .from(WOODONG_COVERS_BUCKET)
+      .remove(objects.map((object) => `${groupId}/${object.name}`));
+    if (removeError) {
+      // 이미지가 남는 건 데이터 정합성 문제가 아니라 저장 공간 문제라, 삭제 자체는 계속 진행한다.
+      console.error("[deleteGroupAction] cover remove failed:", removeError);
+    }
+  }
+
+  const { error, count } = await supabase
+    .from("woodong_groups")
+    .delete({ count: "exact" })
+    .eq("id", groupId);
+
+  if (error) {
+    console.error("[deleteGroupAction] delete failed:", error);
+    return { success: false, formError: mapSupabaseError(error) };
+  }
+
+  if (!count) {
+    return {
+      success: false,
+      formError: "모임을 삭제할 권한이 없어요. 총무만 삭제할 수 있어요.",
+    };
+  }
+
+  revalidatePath("/protected/groups");
+  return { success: true, data: undefined };
 }

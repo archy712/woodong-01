@@ -17,18 +17,22 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { deleteGroupAction } from "@/lib/woodong/actions/groups";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 /**
- * 모임 삭제 확인 다이얼로그.
+ * 모임 삭제 확인 다이얼로그 (Task 019).
  *
- * 실제 삭제 Server Action은 Task 019 몫이라, 확인 후에는 데모 안내 토스트만 띄우고
- * 목록 페이지로 이동시켜 "삭제된 것처럼" 흐름을 보여준다(실제 더미 데이터는 변경되지 않는다).
+ * 삭제는 하드 삭제이고 연관 데이터(회비·투표·공지·알림)가 CASCADE로 함께 사라지므로,
+ * 다이얼로그로 한 번 더 확인받은 뒤에만 `deleteGroupAction`을 호출한다.
+ * 총무가 아니면 애초에 이 카드가 렌더링되지 않지만, 서버에서도 RLS가 다시 막는다.
  */
 export function GroupDangerZone({
+  groupId,
   labels,
   commonLabels,
 }: {
+  groupId: string;
   labels: Dictionary["groups"]["settings"];
   commonLabels: Dictionary["common"];
 }) {
@@ -37,10 +41,18 @@ export function GroupDangerZone({
   const [open, setOpen] = useState(false);
 
   function handleDelete() {
-    startTransition(() => {
+    startTransition(async () => {
+      const result = await deleteGroupAction({ groupId });
+
+      if (!result.success) {
+        toast.error(result.formError ?? commonLabels.retry);
+        return;
+      }
+
       setOpen(false);
       toast.success(labels.deleteSuccessToast);
       router.push("/protected/groups");
+      router.refresh();
     });
   }
 

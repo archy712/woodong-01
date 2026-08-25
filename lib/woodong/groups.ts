@@ -82,6 +82,31 @@ export const createGroupSchema = z.object({
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 
 /**
+ * 모임 정보 수정 폼 (Task 019).
+ *
+ * 생성 폼과 같은 필드에 대상 모임 id와 대표 이미지 경로가 추가된다.
+ * 대표 이미지는 비공개 버킷의 **오브젝트 경로**만 저장하고(공개 URL 미사용, Task 004),
+ * 업로드 자체는 브라우저에서 끝낸 뒤 그 경로를 이 액션으로 넘긴다.
+ * `null`은 "대표 이미지 제거", `undefined`는 "변경 없음"을 뜻한다.
+ */
+export const updateGroupSchema = createGroupSchema.extend({
+  groupId: z.string().uuid("올바른 모임 ID가 아닙니다"),
+  coverImageObjectPath: z
+    .string()
+    .trim()
+    .max(500, "이미지 경로가 너무 깁니다")
+    .nullable()
+    .optional(),
+});
+export type UpdateGroupInput = z.infer<typeof updateGroupSchema>;
+
+/** 모임 삭제 (Task 019) — 확인 다이얼로그를 거친 뒤 호출한다. */
+export const deleteGroupSchema = z.object({
+  groupId: z.string().uuid("올바른 모임 ID가 아닙니다"),
+});
+export type DeleteGroupInput = z.infer<typeof deleteGroupSchema>;
+
+/**
  * 초대 코드 발급 폼.
  *
  * `woodong_group_invites.expires_at`/`max_uses`는 DB 컬럼 자체는 nullable(무제한 허용)이지만,

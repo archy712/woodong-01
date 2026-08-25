@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/empty";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
-import { getDummyGroupSummaries } from "@/lib/woodong/dummy";
+import { listMyGroups } from "@/lib/woodong/queries/groups";
 
 async function GroupsContent() {
   const supabase = await createClient();
@@ -37,9 +37,9 @@ async function GroupsContent() {
   const locale = await getLocale();
   const dict = getDictionary(locale);
 
-  // Task 012부터는 Phase 2 방침에 따라 더미 데이터로 렌더링한다. 실 Supabase 연동은
-  // Task 019(모임 CRUD)에서 이 더미 조회를 실제 쿼리로 교체한다.
-  const groups = getDummyGroupSummaries();
+  // Task 019에서 더미 조회를 실제 Supabase 쿼리로 교체했다. 납부율 요약은 회비 도메인이
+  // 붙는 Phase 5(Task 024)에서 이 카드에 추가한다.
+  const groups = await listMyGroups(supabase, claimsData.claims.sub);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6 sm:p-8">
@@ -80,10 +80,10 @@ async function GroupsContent() {
                       {group.memberCount}
                       {dict.common.memberCountSuffix}
                     </span>
-                    {group.latestDuePaidRate !== null && (
-                      <span>
-                        {dict.dues.summaryLabel} {group.latestDuePaidRate}%
-                      </span>
+                    {group.role === "admin" && (
+                      <Badge variant="outline">
+                        {dict.groups.members.roleAdmin}
+                      </Badge>
                     )}
                   </CardContent>
                 </Card>

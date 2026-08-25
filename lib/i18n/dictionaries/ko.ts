@@ -243,6 +243,12 @@ export const ko: Dictionary = {
         "모임 정보를 저장했어요. (데모 화면이라 실제로 저장되지는 않아요)",
       deleteSuccessToast:
         "모임을 삭제했어요. (데모 화면이라 실제로 삭제되지는 않아요)",
+      adminOnlyNotice: "모임 정보 수정은 총무만 할 수 있어요.",
+      coverImageLabel: "대표 이미지",
+      coverImageHint:
+        "JPEG·PNG·WebP, 5MB 이하. 업로드할 때 자동으로 크기를 줄여 저장해요.",
+      coverImageRemoveButton: "이미지 제거",
+      coverUploadError: "이미지를 올리지 못했어요. 잠시 후 다시 시도해주세요.",
     },
     invite: {
       title: "멤버 초대",
@@ -265,6 +271,10 @@ export const ko: Dictionary = {
       roleMember: "일반회원",
       changeRoleButton: "역할 변경",
       removeButton: "내보내기",
+      meLabel: "나",
+      unnamedMemberLabel: "이름 미확인 멤버",
+      namesComingSoonNotice:
+        "멤버 이름·연락처 표시는 다음 업데이트에서 지원할 예정이에요.",
     },
     invitePage: {
       title: "초대 참여",

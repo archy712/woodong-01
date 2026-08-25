@@ -136,6 +136,11 @@ export interface Dictionary {
       deleteDialogTitle: string;
       saveSuccessToast: string;
       deleteSuccessToast: string;
+      adminOnlyNotice: string;
+      coverImageLabel: string;
+      coverImageHint: string;
+      coverImageRemoveButton: string;
+      coverUploadError: string;
     };
     invite: {
       title: string;
@@ -157,6 +162,9 @@ export interface Dictionary {
       roleMember: string;
       changeRoleButton: string;
       removeButton: string;
+      meLabel: string;
+      unnamedMemberLabel: string;
+      namesComingSoonNotice: string;
     };
     invitePage: {
       title: string;
