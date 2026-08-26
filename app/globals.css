@@ -90,3 +90,70 @@
     word-break: keep-all;
   }
 }
+
+/*
+ * 정산 리포트 인쇄 (Task 036, PRD 3.4-b "웹 뷰 및 PDF 다운로드").
+ *
+ * PDF 생성 라이브러리를 쓰지 않는다. jsPDF류는 한글을 찍으려면 폰트를 임베드해야 하는데
+ * (서브셋해도 수백 KB~1MB), Task 033 후속에서 "JS 640KB 중 429KB 미사용"이 남은 LCP 병목으로
+ * 기록된 상태라 번들을 더 키우고 싶지 않았다. 브라우저 인쇄는 한글 폰트를 OS에서 가져오므로
+ * 의존성이 0이고, PRD AC도 "웹 뷰 **또는** PDF로 다운로드"다.
+ *
+ * 모든 규칙을 `body:has(.print-report)`로 감싼다. 정산 상세 화면만 `.print-report`를 붙이므로
+ * 다른 화면에서 Ctrl+P를 눌렀을 때 이 규칙들이 개입하지 않는다.
+ */
+@media print {
+  /* 라이트/다크 어느 테마로 보고 있든 인쇄물은 흰 종이 기준이다. 토큰만 갈아끼우면
+     화면에서 쓰던 Tailwind 클래스가 그대로 인쇄용 색으로 바뀐다. */
+  :root,
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 30%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+    --border: 0 0% 75%;
+    --input: 0 0% 75%;
+    /* 잔액 음수는 흑백 프린터에서도 구분돼야 하므로 무채색으로 죽이지 않는다. */
+    --destructive: 0 75% 35%;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  body:has(.print-report) * {
+    visibility: hidden;
+  }
+
+  body:has(.print-report) .print-report,
+  body:has(.print-report) .print-report * {
+    visibility: visible;
+  }
+
+  /* 헤더·탭·푸터가 차지하던 자리를 없애고 리포트를 종이 왼쪽 위에 붙인다. */
+  body:has(.print-report) .print-report {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+  }
+
+  /* 화면 전용 조작 영역(발행/삭제 버튼, 인쇄 버튼 자신 등)은 자리까지 없앤다. */
+  .print-hidden {
+    display: none !important;
+  }
+
+  /* 한 항목이 페이지 경계에서 잘리지 않게 한다. */
+  .print-avoid-break {
+    break-inside: avoid;
+  }
+}

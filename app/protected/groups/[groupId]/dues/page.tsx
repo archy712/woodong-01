@@ -79,6 +79,7 @@ async function DuesContent({
         labels={dict.dues}
         expenseLabels={dict.expenses}
         commonLabels={dict.common}
+        settlementsLinkLabel={dict.settlements.entryLinkLabel}
         unnamedMemberLabel={dict.groups.members.unnamedMemberLabel}
       />
     </div>

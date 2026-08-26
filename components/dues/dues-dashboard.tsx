@@ -1,8 +1,14 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangleIcon, Loader2Icon, WalletIcon } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  FileTextIcon,
+  Loader2Icon,
+  WalletIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { recordPaymentAction } from "@/lib/woodong/actions/dues";
@@ -135,6 +141,7 @@ export function DuesDashboard({
   labels,
   expenseLabels,
   commonLabels,
+  settlementsLinkLabel,
   unnamedMemberLabel,
 }: {
   groupId: string;
@@ -151,6 +158,8 @@ export function DuesDashboard({
   labels: Dictionary["dues"];
   expenseLabels: Dictionary["expenses"];
   commonLabels: Dictionary["common"];
+  /** 정산 리포트 화면으로 가는 링크 문구 (Task 036, `dict.settlements.entryLinkLabel`). */
+  settlementsLinkLabel: string;
   unnamedMemberLabel: string;
 }) {
   const router = useRouter();
@@ -480,6 +489,18 @@ export function DuesDashboard({
         commonLabels={commonLabels}
         unnamedMemberLabel={unnamedMemberLabel}
       />
+
+      {/*
+        정산 리포트 진입점 (Task 036). 정산은 이 화면의 수입(회비 수납)과 지출을 기간으로 잘라
+        스냅샷으로 굳힌 결과물이라, 상단 탭을 6개로 늘리는 대신 회비 화면 아래에 둔다.
+        멤버에게도 보인다 — 발행된 리포트 조회는 총무 전용이 아니다(RLS도 그렇게 열려 있다).
+      */}
+      <Button asChild variant="outline" className="self-start">
+        <Link href={`/protected/groups/${groupId}/dues/settlements`}>
+          <FileTextIcon />
+          {settlementsLinkLabel}
+        </Link>
+      </Button>
     </div>
   );
 }

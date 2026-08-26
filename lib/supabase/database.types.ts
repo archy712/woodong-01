@@ -2281,6 +2281,116 @@ export type Database = {
         };
         Relationships: [];
       };
+      woodong_settlement_items: {
+        Row: {
+          amount: number;
+          category: string;
+          created_at: string;
+          description: string | null;
+          entry_count: number;
+          group_id: string;
+          id: string;
+          item_type: string;
+          settlement_id: string;
+          sort_order: number;
+        };
+        Insert: {
+          amount: number;
+          category: string;
+          created_at?: string;
+          description?: string | null;
+          entry_count?: number;
+          group_id: string;
+          id?: string;
+          item_type: string;
+          settlement_id: string;
+          sort_order?: number;
+        };
+        Update: {
+          amount?: number;
+          category?: string;
+          created_at?: string;
+          description?: string | null;
+          entry_count?: number;
+          group_id?: string;
+          id?: string;
+          item_type?: string;
+          settlement_id?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_settlement_items_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "woodong_settlement_items_settlement_id_fkey";
+            columns: ["settlement_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_settlements";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      woodong_settlements: {
+        Row: {
+          balance: number;
+          created_at: string;
+          created_by: string | null;
+          group_id: string;
+          id: string;
+          period_end: string;
+          period_start: string;
+          published_at: string | null;
+          published_by: string | null;
+          status: string;
+          total_expense: number;
+          total_income: number;
+          updated_at: string;
+        };
+        Insert: {
+          balance?: number;
+          created_at?: string;
+          created_by?: string | null;
+          group_id: string;
+          id?: string;
+          period_end: string;
+          period_start: string;
+          published_at?: string | null;
+          published_by?: string | null;
+          status?: string;
+          total_expense?: number;
+          total_income?: number;
+          updated_at?: string;
+        };
+        Update: {
+          balance?: number;
+          created_at?: string;
+          created_by?: string | null;
+          group_id?: string;
+          id?: string;
+          period_end?: string;
+          period_start?: string;
+          published_at?: string | null;
+          published_by?: string | null;
+          status?: string;
+          total_expense?: number;
+          total_income?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_settlements_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       woodong_vote_options: {
         Row: {
           id: string;
@@ -2616,6 +2726,30 @@ export type Database = {
           total_count: number;
         }[];
       };
+      woodong_build_settlement_items: {
+        Args: { p_settlement_id: string };
+        Returns: {
+          balance: number;
+          created_at: string;
+          created_by: string | null;
+          group_id: string;
+          id: string;
+          period_end: string;
+          period_start: string;
+          published_at: string | null;
+          published_by: string | null;
+          status: string;
+          total_expense: number;
+          total_income: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "woodong_settlements";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       woodong_close_expired_votes: {
         Args: { p_body?: string; p_group_id?: string; p_title?: string };
         Returns: number;
@@ -2660,6 +2794,34 @@ export type Database = {
           cycle_reminder_interval_days: number;
           cycle_title: string;
         }[];
+      };
+      woodong_create_settlement_draft: {
+        Args: {
+          p_group_id: string;
+          p_period_end: string;
+          p_period_start: string;
+        };
+        Returns: {
+          balance: number;
+          created_at: string;
+          created_by: string | null;
+          group_id: string;
+          id: string;
+          period_end: string;
+          period_start: string;
+          published_at: string | null;
+          published_by: string | null;
+          status: string;
+          total_expense: number;
+          total_income: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "woodong_settlements";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       woodong_create_vote: {
         Args: {
@@ -2735,6 +2897,41 @@ export type Database = {
       woodong_process_due_reminders: {
         Args: { p_body?: string; p_group_id?: string; p_title_suffix?: string };
         Returns: number;
+      };
+      woodong_publish_settlement: {
+        Args: { p_body: string; p_settlement_id: string; p_title: string };
+        Returns: {
+          notified_count: number;
+          settlement: Database["public"]["Tables"]["woodong_settlements"]["Row"];
+        }[];
+      };
+      woodong_recalculate_settlement_draft: {
+        Args: {
+          p_period_end: string;
+          p_period_start: string;
+          p_settlement_id: string;
+        };
+        Returns: {
+          balance: number;
+          created_at: string;
+          created_by: string | null;
+          group_id: string;
+          id: string;
+          period_end: string;
+          period_start: string;
+          published_at: string | null;
+          published_by: string | null;
+          status: string;
+          total_expense: number;
+          total_income: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "woodong_settlements";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       woodong_redeem_group_invite: {
         Args: { p_code: string };

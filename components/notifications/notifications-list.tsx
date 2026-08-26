@@ -55,6 +55,8 @@ function resolveHref(notification: NotificationListItem): string {
       return `${base}/announcements`;
     case "due":
       return `${base}/dues`;
+    case "settlement":
+      return `${base}/dues/settlements/${notification.related_id}`;
     default:
       return base;
   }

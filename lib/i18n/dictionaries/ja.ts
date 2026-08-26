@@ -398,6 +398,75 @@ export const ja: Dictionary = {
       "삭제하면 되돌릴 수 없고, 첨부한 영수증도 함께 지워져요.",
     deleteSuccessToast: "지출을 삭제했어요.",
   },
+  settlements: {
+    // TODO(i18n): Task 036 keys below are Korean placeholders, need translation.
+    pageTitle: "정산 리포트",
+    entryLinkLabel: "정산 리포트",
+    backToDuesLabel: "회비 현황으로",
+    emptyState: "아직 만든 정산 리포트가 없어요.",
+    adminOnlyNotice: "정산 리포트 생성·발행은 총무만 할 수 있어요.",
+    statusDraft: "초안",
+    statusPublished: "발행됨",
+    draftVisibilityNotice:
+      "초안은 총무에게만 보여요. 금액을 확인한 뒤 발행하면 멤버 전원에게 알림이 갑니다.",
+    create: {
+      triggerButton: "새 정산 리포트",
+      title: "정산 리포트 만들기",
+      description:
+        "기간을 정하면 그 기간의 회비 수납액과 지출을 모아 초안을 만들어요.",
+      periodStartLabel: "정산 시작일",
+      periodEndLabel: "정산 종료일",
+      submitButton: "초안 만들기",
+      submittingLabel: "계산하는 중...",
+      successToast: "정산 초안을 만들었어요.",
+    },
+    recalculate: {
+      triggerButton: "기간 수정·재계산",
+      title: "기간 수정하고 다시 계산하기",
+      description:
+        "기간을 바꾸거나, 회비·지출을 고친 뒤 최신 금액으로 다시 계산할 때 사용해요.",
+      submitButton: "다시 계산",
+      submittingLabel: "계산하는 중...",
+      successToast: "정산 초안을 다시 계산했어요.",
+    },
+    publish: {
+      triggerButton: "발행",
+      dialogTitle: "정산 리포트를 발행할까요?",
+      confirmMessage:
+        "발행하면 모임 멤버 전원에게 알림이 가고, 이후에는 금액을 수정할 수 없어요.",
+      confirmButton: "발행",
+      successToast: "정산 리포트를 발행했어요.",
+      notifiedToastSuffix: "명에게 알렸어요.",
+      notificationTitle: "정산 리포트가 발행되었어요",
+      notificationBody: "모임의 수입·지출 정산 결과를 확인해보세요.",
+    },
+    delete: {
+      triggerButton: "삭제",
+      dialogTitle: "정산 리포트를 삭제할까요?",
+      confirmMessage:
+        "삭제하면 되돌릴 수 없어요. 다시 만들어 발행하면 멤버가 알림을 한 번 더 받아요.",
+      successToast: "정산 리포트를 삭제했어요.",
+    },
+    detail: {
+      notFound: "정산 리포트를 찾을 수 없어요.",
+      incomeSectionTitle: "수입",
+      expenseSectionTitle: "지출",
+      totalIncomeLabel: "총 수입",
+      totalExpenseLabel: "총 지출",
+      balanceLabel: "잔액",
+      entryCountSuffix: "건",
+      noItems: "이 기간에 집계된 수입·지출이 없어요.",
+      publishedAtLabel: "발행 일시",
+      publishedByLabel: "발행자",
+      createdByLabel: "작성자",
+      snapshotNotice:
+        "발행 시점의 수입·지출을 그대로 저장한 스냅샷이에요. 이후 회비·지출이 바뀌어도 이 리포트의 숫자는 변하지 않아요.",
+      incomeNote:
+        "수입은 실제로 납부 확인된 금액만 더한 값이에요(청구액이 아닙니다).",
+      printButton: "PDF로 저장",
+      printHint: '인쇄 창에서 대상을 "PDF로 저장"으로 선택하세요.',
+    },
+  },
   votes: {
     pageTitle: "投票一覧",
     detailTitle: "投票詳細",

@@ -327,6 +327,75 @@ export interface Dictionary {
     deleteConfirmMessage: string;
     deleteSuccessToast: string;
   };
+  /** 정산 리포트 (Task 036, PRD 3.4-b). 카테고리 문구는 `dues.type`·`expenses.category`를 재사용한다. */
+  settlements: {
+    pageTitle: string;
+    /** 회비 대시보드에서 이 화면으로 들어가는 링크 문구. */
+    entryLinkLabel: string;
+    backToDuesLabel: string;
+    emptyState: string;
+    adminOnlyNotice: string;
+    statusDraft: string;
+    statusPublished: string;
+    /** 초안이 총무에게만 보인다는 사실을 총무에게 알리는 안내(멤버는 이 문장 자체를 못 본다). */
+    draftVisibilityNotice: string;
+    create: {
+      triggerButton: string;
+      title: string;
+      description: string;
+      periodStartLabel: string;
+      periodEndLabel: string;
+      submitButton: string;
+      submittingLabel: string;
+      successToast: string;
+    };
+    recalculate: {
+      triggerButton: string;
+      title: string;
+      description: string;
+      submitButton: string;
+      submittingLabel: string;
+      successToast: string;
+    };
+    publish: {
+      triggerButton: string;
+      dialogTitle: string;
+      confirmMessage: string;
+      confirmButton: string;
+      successToast: string;
+      /** 발행 후 알림 건수를 덧붙일 때 쓰는 접미사(`3명에게 알렸어요` 형태). */
+      notifiedToastSuffix: string;
+      /** 멤버에게 기록되는 알림 제목/본문. `woodong_publish_settlement()`에 그대로 넘어간다. */
+      notificationTitle: string;
+      notificationBody: string;
+    };
+    delete: {
+      triggerButton: string;
+      dialogTitle: string;
+      confirmMessage: string;
+      successToast: string;
+    };
+    detail: {
+      notFound: string;
+      incomeSectionTitle: string;
+      expenseSectionTitle: string;
+      totalIncomeLabel: string;
+      totalExpenseLabel: string;
+      balanceLabel: string;
+      /** 항목 하나로 합산된 원본 레코드 수의 단위(`4건`의 `건`). */
+      entryCountSuffix: string;
+      noItems: string;
+      publishedAtLabel: string;
+      publishedByLabel: string;
+      createdByLabel: string;
+      /** 이 숫자가 실시간 값이 아니라 스냅샷이라는 사실을 알리는 각주. */
+      snapshotNotice: string;
+      /** 수입이 "청구액"이 아니라 "실제 수납액"임을 알리는 각주(`expenses.balance.note`와 같은 취지). */
+      incomeNote: string;
+      printButton: string;
+      printHint: string;
+    };
+  };
   votes: {
     pageTitle: string;
     detailTitle: string;
