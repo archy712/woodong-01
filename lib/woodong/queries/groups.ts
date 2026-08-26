@@ -170,14 +170,31 @@ export async function getGroupDetail(
   groupId: string,
   userId: string,
 ): Promise<GroupDetail | null> {
-  const { data: group, error } = await supabase
-    .from("woodong_groups")
-    .select(
-      "id, name, description, type, cover_image_object_path, default_due_amount, created_by, created_at",
-    )
-    .eq("id", groupId)
-    .maybeSingle();
+  // 셋 다 `groupId`/`userId`만 있으면 되고 서로의 결과를 쓰지 않는다. 예전에는 줄줄이
+  // await해서 왕복 3회가 순차로 쌓였는데, 이 화면의 LCP는 사실상 왕복 횟수에 비례한다
+  // (Task 033 프로덕션 실측: 모임 홈 LCP 4.7s, TTFB는 0.23s이고 스트리밍 완료가 2.3s).
+  //
+  // 모임이 없거나 비멤버여도 나머지 쿼리가 헛돌 뿐 결과는 같다 — 그 경우는 어차피 null을
+  // 돌려주고 끝이라, 흔한 성공 경로를 빠르게 만드는 쪽이 이득이다.
+  const [groupResult, membershipResult, counts] = await Promise.all([
+    supabase
+      .from("woodong_groups")
+      .select(
+        "id, name, description, type, cover_image_object_path, default_due_amount, created_by, created_at",
+      )
+      .eq("id", groupId)
+      .maybeSingle(),
+    supabase
+      .from("woodong_group_members")
+      .select("role")
+      .eq("group_id", groupId)
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle(),
+    countActiveMembers(supabase, [groupId]),
+  ]);
 
+  const { data: group, error } = groupResult;
   if (error) {
     console.error("[queries/groups] getGroupDetail failed:", error);
     throw error;
@@ -186,14 +203,7 @@ export async function getGroupDetail(
 
   // 위와 같은 이유로 여기서도 실패를 삼키지 않는다 — 에러를 버리면 `membership`이 null이 되어
   // "비멤버"와 구별되지 않는다.
-  const { data: membership, error: membershipError } = await supabase
-    .from("woodong_group_members")
-    .select("role")
-    .eq("group_id", groupId)
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .maybeSingle();
-
+  const { data: membership, error: membershipError } = membershipResult;
   if (membershipError) {
     console.error(
       "[queries/groups] getGroupDetail membership lookup failed:",
@@ -203,7 +213,8 @@ export async function getGroupDetail(
   }
   if (!membership) return null;
 
-  const counts = await countActiveMembers(supabase, [groupId]);
+  // 서명 URL만은 `group.cover_image_object_path`를 알아야 해서 위 묶음에 넣을 수 없다.
+  // 대표 이미지가 없는 모임(대부분)은 이 왕복 자체가 생기지 않는다.
   const coverUrl = group.cover_image_object_path
     ? await getSignedStorageUrl(
         supabase,

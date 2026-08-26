@@ -42,15 +42,20 @@ async function DuesContent({
   }
 
   // 리마인드 lazy 처리 (Task 028): 스케줄러가 없는 1차 MVP에서는 회비 화면에 들어온 이 순간이
-  // "밀린 리마인드가 있는지" 확인할 수 있는 시점이다. 조회보다 **먼저** 실행해야 방금 만들어진
-  // 리마인드가 이번 렌더에 반영된다. 실패해도 throw하지 않으므로 화면은 그대로 그려진다.
-  await processDueReminders(supabase, {
-    groupId,
-    titleSuffix: dict.dues.reminderNotificationTitleSuffix,
-    body: dict.dues.reminderNotificationBody,
-  });
-
-  const [overview, members] = await Promise.all([
+  // "밀린 리마인드가 있는지" 확인할 수 있는 시점이다. 실패해도 throw하지 않으므로 화면은
+  // 그대로 그려진다.
+  //
+  // 예전에는 조회보다 **먼저** await했는데, 이 화면이 리마인드 결과로 그리는 것이 하나도 없다
+  // — RPC가 건드리는 `woodong_dues.last_reminded_at`은 타입에만 있고 렌더링되지 않으며,
+  // 알림은 별도 화면(알림센터)과 헤더 배지(독립 Suspense)가 읽는다. 그래서 조회를 붙잡을
+  // 이유가 없어 나란히 돌린다(Task 033 후속 LCP 최적화).
+  // ⚠️ 나중에 이 화면에서 `last_reminded_at`을 표시하게 되면 다시 순서를 되돌려야 한다.
+  const [, overview, members] = await Promise.all([
+    processDueReminders(supabase, {
+      groupId,
+      titleSuffix: dict.dues.reminderNotificationTitleSuffix,
+      body: dict.dues.reminderNotificationBody,
+    }),
     getDuesOverview(supabase, groupId),
     listGroupMembers(supabase, groupId, data.claims.sub),
   ]);

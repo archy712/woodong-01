@@ -62,13 +62,26 @@ export async function getDuesOverview(
   supabase: Client,
   groupId: string,
 ): Promise<DuesOverview> {
-  const { data: cycleRows, error: cycleError } = await supabase
-    .from("woodong_due_cycles")
-    .select(DUE_CYCLE_COLUMNS)
-    .eq("group_id", groupId)
-    .order("due_date", { ascending: false })
-    .order("created_at", { ascending: false });
+  // 청구·납부는 `group_id`가 비정규화돼 있어 회차 목록을 기다릴 필요가 없다. 예전에는 회차를
+  // 먼저 읽고 "0건이면 조기 반환"하려고 순차로 돌렸는데, 그 절약(회차 0건일 때 왕복 2회)보다
+  // 항상 붙는 왕복 1회가 더 비쌌다 — 회차가 있는 흔한 경우가 매번 손해를 봤다
+  // (Task 033 후속 LCP 최적화).
+  const [cyclesResult, duesResult, paymentsResult] = await Promise.all([
+    supabase
+      .from("woodong_due_cycles")
+      .select(DUE_CYCLE_COLUMNS)
+      .eq("group_id", groupId)
+      .order("due_date", { ascending: false })
+      .order("created_at", { ascending: false }),
+    supabase.from("woodong_dues").select(DUE_COLUMNS).eq("group_id", groupId),
+    supabase
+      .from("woodong_payments")
+      .select(PAYMENT_COLUMNS)
+      .eq("group_id", groupId)
+      .order("paid_at", { ascending: false }),
+  ]);
 
+  const { data: cycleRows, error: cycleError } = cyclesResult;
   if (cycleError) {
     console.error("[queries/dues] listDueCycles failed:", cycleError);
     return EMPTY_OVERVIEW;
@@ -80,15 +93,6 @@ export async function getDuesOverview(
   }));
 
   if (cycles.length === 0) return EMPTY_OVERVIEW;
-
-  const [duesResult, paymentsResult] = await Promise.all([
-    supabase.from("woodong_dues").select(DUE_COLUMNS).eq("group_id", groupId),
-    supabase
-      .from("woodong_payments")
-      .select(PAYMENT_COLUMNS)
-      .eq("group_id", groupId)
-      .order("paid_at", { ascending: false }),
-  ]);
 
   if (duesResult.error) {
     console.error("[queries/dues] listDues failed:", duesResult.error);
@@ -131,9 +135,15 @@ export async function getLatestDueCycleSummary(
   supabase: Client,
   groupId: string,
 ): Promise<{ cycle: DueCycle; summary: DueCycleSummary } | null> {
+  // 회차 → 청구 → 납부는 앞의 결과가 있어야 다음을 부를 수 있어 왕복 3회가 순차로 쌓였다.
+  // 모임 홈에서 이 체인이 가장 긴 경로였다. PostgREST 임베딩(FK
+  // `woodong_dues.due_cycle_id`, `woodong_payments.due_id`)으로 **한 번에** 가져온다
+  // (Task 033 후속 LCP 최적화). RLS는 임베딩된 테이블에도 그대로 적용되므로 보이는 행은 같다.
   const { data: cycleRow, error: cycleError } = await supabase
     .from("woodong_due_cycles")
-    .select(DUE_CYCLE_COLUMNS)
+    .select(
+      `${DUE_CYCLE_COLUMNS}, woodong_dues(${DUE_COLUMNS}, woodong_payments(due_id, amount))`,
+    )
     .eq("group_id", groupId)
     .order("due_date", { ascending: false })
     .order("created_at", { ascending: false })
@@ -146,51 +156,22 @@ export async function getLatestDueCycleSummary(
   }
   if (!cycleRow) return null;
 
+  const { woodong_dues: dueRows, ...cycleColumns } = cycleRow;
+
   const cycle: DueCycle = {
-    ...cycleRow,
-    due_type: cycleRow.due_type as DueType,
+    ...cycleColumns,
+    due_type: cycleColumns.due_type as DueType,
   };
 
-  const { data: dueRows, error: dueError } = await supabase
-    .from("woodong_dues")
-    .select(DUE_COLUMNS)
-    .eq("due_cycle_id", cycle.id);
-
-  if (dueError) {
-    console.error("[queries/dues] getLatestDueCycleDues failed:", dueError);
-    return null;
-  }
-
-  const dues: Due[] = (dueRows ?? []).map((row) => ({
-    ...row,
-    status: row.status as DuesStatus,
-  }));
-
-  if (dues.length === 0) {
-    return { cycle, summary: summarizeDueCycle([], {}) };
-  }
-
-  const { data: paymentRows, error: paymentError } = await supabase
-    .from("woodong_payments")
-    .select("due_id, amount")
-    .in(
-      "due_id",
-      dues.map((due) => due.id),
-    );
-
   const paidAmounts: Record<string, number> = {};
-  if (paymentError) {
-    // 이력을 못 읽어도 인원 기준 납부율(트리거가 갱신한 status 기준)은 그대로 맞다.
-    console.error(
-      "[queries/dues] getLatestDueCyclePayments failed:",
-      paymentError,
-    );
-  } else {
-    for (const payment of paymentRows ?? []) {
+  const dues: Due[] = (dueRows ?? []).map((row) => {
+    const { woodong_payments: payments, ...dueColumns } = row;
+    for (const payment of payments ?? []) {
       paidAmounts[payment.due_id] =
         (paidAmounts[payment.due_id] ?? 0) + payment.amount;
     }
-  }
+    return { ...dueColumns, status: dueColumns.status as DuesStatus };
+  });
 
   return { cycle, summary: summarizeDueCycle(dues, paidAmounts) };
 }
