@@ -792,9 +792,45 @@
     - ⚠️ **일반회원 화면에서 발행자 이름이 "이름 미확인 멤버"로 보인다.** `woodong_list_group_members()`가 이메일을 총무·본인에게만 내려주고(Task 021), 테스트 계정은 프로필 이름을 채우지 않았기 때문이다. 의도된 개인정보 분리이고 폴백 문구도 기존 규약(`unnamedMemberLabel`) 그대로다
   - **완료 조건**: ✅ `woodong_settlements`/`woodong_settlement_items` 생성 + 발행 시점 스냅샷(총 수입/총 지출/잔액 + 항목별 상세), ✅ 기간 지정 리포트 생성(초안) + 웹 뷰 + PDF 다운로드(브라우저 인쇄), ✅ 일반회원은 조회만 가능하고 수정/삭제 버튼 미노출(RLS + UI 이중 방어), ✅ 발행 시 전체 멤버에게 `settlement_published` 알림 기록(발행자 제외, 중복 0건), ✅ **결정 2건 기록(D-1 검토 단계 도입, D-2 PDF 방식)**, ✅ `npm run check-all` + `npm run build` 통과, ✅ 프로덕션 데이터 원복
 
-- **Task 037: 실시간 배치 스케줄러(pg_cron) 전환**
+- **Task 037: 실시간 배치 스케줄러(pg_cron) 전환** ✅ - 완료
   - Supabase Cron(pg_cron) 도입으로 회비 리마인드·투표 마감/집계·정산 발행 알림을 **lazy 처리에서 실시간 발송으로 전환**
   - 기존 lazy 로직과의 중복 발송 방지 전략 수립 및 전환 절차 정의
+  - **## 사전 확인 — 범위 조정 1건**
+    - **정산 발행 알림은 스케줄러로 옮길 것이 없었다.** `settlement_published`는 총무가 발행 버튼을 누르는 순간 `woodong_publish_settlement` 안에서 팬아웃된다(Task 036) — 애초에 lazy가 아니라 즉시 발송이다. 공지(Task 025)·투표 생성(Task 029)·수동 마감도 같다. **실제 전환 대상은 회비 리마인드(Task 028)와 투표 자동 마감(Task 030) 둘뿐**이고, 이 판단을 `docs/ops/CRON_JOBS.md`에 "왜 잡이 없나" 절로 남겼다
+    - pg_cron은 이 프로젝트에 **이미 켜져 있었다**(다른 앱의 `weekly_log_reminder`, 마이그레이션 `enable_pg_cron`). 확장 활성화 작업이 필요 없었고, 잡 이름 접두어·UTC 스케줄 계산 같은 관례도 그 앱에서 그대로 가져왔다
+  - **## 마이그레이션 1 (`create_woodong_batch_notification_functions`)**
+    - **기존 RPC를 그대로 cron에서 부를 수 없다.** `woodong_process_due_reminders`/`woodong_close_expired_votes`는 `auth.uid()`로 **호출한 본인의 행만** 처리한다(화면을 연 사람이 곧 대상이었으니까). pg_cron에는 세션이 없어 `auth.uid()`가 null이므로 그대로 부르면 **항상 0건**이다
+    - 그래서 규칙(선점 UPDATE 조건·수신 설정·중복 방지)을 담은 **core 함수를 하나 두고**, 기존 RPC는 `auth.uid()`를 넘기는 얇은 래퍼로, 배치는 `p_user_id = null`(= 전체) 진입점으로 갈랐다. `..._core(p_user_id, p_group_id, ...)` → `woodong_process_due_reminders(...)` / `woodong_run_due_reminders()`, 투표도 같은 3단 구조다. **규칙을 두 벌로 복사하면 lazy와 배치의 판단이 갈라지고, 갈라지는 순간 "한쪽은 보냈는데 다른 쪽은 아직 안 보낸 것으로 아는" 중복 발송이 생긴다**
+    - ⚠️ **`in_app` 수신 설정 확인을 함수 앞머리에서 UPDATE 문장 **안으로** 옮겼다.** 원래는 "호출자 한 명"의 설정을 한 번 조회해 끄면 곧바로 return하는 구조였는데, 배치는 설정이 제각각인 여러 명을 한 번에 처리하므로 그 방식이 성립하지 않는다. 판정 결과는 동일하다 — 끈 사람은 0행이 되어 알림도, `last_reminded_at` 갱신도 일어나지 않는다(E2E에서 실측)
+    - **중복 발송 방지 전략**: 두 core 모두 **선점(UPDATE)과 알림 INSERT가 한 문장**이다(회비는 `last_reminded_at`, 투표는 `status`). 동시에 두 경로가 같은 행을 노리면 뒤에 온 UPDATE가 행 잠금에서 기다렸다가 **갱신된 행으로 조건을 재평가**해(READ COMMITTED의 EvalPlanQual) 0행이 된다. 즉 **lazy와 배치를 동시에 켜 두어도 중복이 구조적으로 불가능**하고, 이것이 전환을 한 번에 해도 되는 근거이자 롤백이 안전한 근거다
+    - **`*_core`와 `woodong_run_*`은 `public`/`anon`/`authenticated`에서 EXECUTE를 회수했다.** core는 `p_user_id`를 인자로 받으므로 앱 롤이 직접 부를 수 있으면 **남의 uuid를 넣어 다른 사람 이름으로 알림을 만들 수 있다**. Task 036에서 배운 대로 `from public, anon, authenticated`로 회수해야 실제로 닫힌다(`anon`은 PUBLIC을 상속한다). cron은 소유자(postgres)로 실행되므로 영향이 없다
+    - **기존 lazy RPC 2개는 DROP하지 않고 남겼다.** 시그니처·반환값·에러 코드를 그대로 유지한 얇은 래퍼다 — 앱 코드는 `git revert`로 되돌릴 수 있어도 **DROP한 함수는 되돌릴 수 없다**. 롤백을 "잡 끄기 + 앱 커밋 revert"만으로 끝내기 위한 의도적 잔존이고, 함수 코멘트에 그렇게 적어 뒀다
+  - **## 마이그레이션 2 (`schedule_woodong_cron_jobs`)**
+    - `woodong_due_reminders` — `0 0 * * *` UTC = **매일 09:00 KST**. 주기는 회비 항목의 `reminder_interval_days`가 정하고 잡은 "그 주기가 지났는지 하루 한 번 확인"만 한다. 더 자주 돌려도 보내는 건수는 같고(주기 조건이 막는다) 밤중에 알림이 생길 뿐이다
+    - `woodong_vote_closing` — `*/5 * * * *`. 1분 주기로 좁힐 수도 있지만 공유 Free 플랜에서 하루 1,440번 도는 잡을 굳이 만들지 않았다
+    - 잡 이름에 `woodong_` 접두어를 붙였다(공유 프로젝트의 격리 규칙, `docs/ops/SUPABASE_SHARED_PROJECT.md`). `cron.schedule(name, ...)`은 같은 이름을 덮어쓰므로 재실행해도 중복 등록되지 않는다
+  - **## 앱 전환 — 렌더 도중 쓰기를 걷어냈다**
+    - lazy 호출부 5곳(회비 대시보드, 알림센터, 모임 홈, 투표 목록, 투표 상세)을 제거하고 `lib/woodong/due-reminders.ts`·`vote-closing.ts`를 삭제했다. 이 모듈들은 "이름은 조회인데 렌더 중 쓰기를 하는" 예외였고, 그 예외가 존재한 이유(스케줄러 부재)가 사라졌다
+    - ⚠️ **`dues.reminderNotificationTitleSuffix`/`Body` 사전 키를 types + 4개 언어에서 지웠다.** 배치에는 사용자 로케일이 없어 호출부가 문구를 넘길 수 없고, 문구의 주인이 SQL 기본값으로 넘어갔다. 아무도 읽지 않는 키를 남기면 이후 번역 작업(Task 040)에서 "화면 어디에 나오는지 찾을 수 없는 문자열"이 된다. `votes.closeNotification*`은 **수동 마감 버튼이 계속 쓰므로 그대로 뒀다**
+  - **## 발견해서 함께 고친 것**
+    - ⚠️ **lazy 마감을 걷어내자 투표 화면 안에서 말이 어긋났다.** 배지는 `status`(아직 `open`)를 보고 "진행중", 본문은 `isClosed`(`closes_at` 기준)를 보고 "마감된 투표라 더 이상 참여할 수 없어요"를 동시에 표시한다. 전에는 lazy 마감이 렌더 시점에 `status`를 맞춰 줘서 이 구간이 거의 없었지만, 배치는 최대 5분 늦는다. **화면이 쓰는 마감 판정을 `isVoteClosed()` 한 곳으로 모으고** 투표 상세 배지·목록 배지·목록 진행중/마감 분류·모임 홈 "진행 중인 투표" 카드(`listOpenVotes`에 `closes_at` 조건 추가)를 전부 그것으로 바꿨다. 참여 차단은 원래부터 `closes_at` 기준이라(쿼리 계층 + `woodong_prevent_closed_vote_response` 트리거) 배치 지연이 참여 가능 여부에 영향을 준 적은 없다
+  - **## E2E 검증 (Playwright MCP + SQL)**
+    - 테스트 계정 2개(총무/일반회원)를 UI 회원가입으로 만들고 모임·초대 링크·회비 항목 2종·투표 1건을 UI로 생성한 뒤, 시각 조건(`created_at`, `closes_at`)만 SQL로 되돌려 배치를 돌렸다
+    - ✅ **주기 전에는 아무것도 만들지 않는다**: 방금 만든 회비 항목 상태에서 `woodong_run_due_reminders()` → **0건**
+    - ✅ **주기가 지나면 전체 멤버에게 만든다**: 10월 항목만 8일 전으로 되돌리니 → **2건**(총무 + 일반회원). **일반회원은 회비 화면을 한 번도 연 적이 없다** — lazy 시절에는 영원히 못 받았을 알림이고, 이 Task의 목적 그 자체다. 같은 시점의 9월 항목(주기 미도달)은 대상에서 빠졌다
+    - ✅ **중복 0건**: 즉시 재실행 → **0건**
+    - ✅ **수신 거부 존중**: 일반회원의 `in_app`을 끄고 주기를 다시 넘기니 → **1건**(총무만). 일반회원의 `last_reminded_at`은 **8일 전 그대로**(알리지 않았으므로 "알린 시각"을 갱신하지 않는다)
+    - ✅ **lazy 경로가 실제로 사라졌다**: 마감 시각을 10분 전으로 되돌린 뒤 투표 목록·상세를 열어도 DB `status`는 `open` 그대로(전에는 이 순간 닫혔다). 화면은 배지·본문 모두 "마감"으로 일관되게 표시되고 "지금 마감" 버튼도 감춰진다
+    - ✅ **실제 cron 잡이 프로덕션에서 돌았다**: 수동 실행이 0을 반환하길래 `cron.job_run_details`를 보니 **06:25:00·06:30:00 두 번 `succeeded`**였고, 06:30 실행이 그 투표를 이미 닫아 둔 것이었다. 등록·스케줄·실행·중복 방지가 한 번에 확인된 셈이다
+    - ✅ **마감 팬아웃**: 수신 설정 복구 후 재마감 → 투표 1건 마감 + 결과 알림 **2건**(활성 멤버 전원, 참여 여부 무관). 재실행 → **0건**
+    - ✅ **수신자 화면**: 일반회원으로 로그인해 알림센터에서 리마인드·마감 알림 2건을 확인(한국어 문구, 각각 회비 대시보드·투표 상세로 이동)
+    - ✅ **advisor**: 신규 `*_core`/`woodong_run_*` 4개에 대한 security 경고 **0건**(회수가 실제로 먹혔다는 뜻 — Task 036에서 이 항목이 잡혔던 것과 대비된다). 나머지 WARN은 전부 기존 항목
+    - ✅ **정리**: 테스트 모임·계정 2개 삭제 후 `woodong_*` 전 테이블 0행 확인
+  - **## 관찰(수정 안 함)**
+    - ⚠️ **배치가 만드는 알림은 한국어 고정이다.** 알림 제목·본문은 생성 시점에 문자열로 저장되는데 pg_cron에는 사용자 로케일이 없다. lazy 시절에는 화면의 로케일을 넘겨 en/ja/zh 사용자가 번역된 리마인드를 받았으므로 **이 부분은 전환의 대가**다. 고치려면 사용자별 로케일을 저장하거나(`woodong_profiles.locale`) 알림을 키+파라미터로 저장해 **읽는 시점에 조립**해야 한다 — 후자는 공지·투표 알림(Task 025/030)에 이미 기록된 같은 한계라 Task 040에서 함께 다룬다
+    - ⚠️ **투표 결과 알림은 최대 5분 늦는다.** 참여는 그동안에도 막히므로(`closes_at` 기준 + 트리거) 영향은 "알림이 언제 오느냐"뿐이다
+    - ⚠️ **`cron.job_run_details`는 처리 건수를 남기지 않는다**(`return_message`가 "1 row"). 건수는 `raise log`로 Postgres 로그에 `[woodong-cron] ... =N` 형태로 남긴다 — 집계 테이블을 하나 더 만들면 공유 Free 플랜 용량을 먹기 때문이다(`docs/ops/FREE_PLAN_MONITORING.md`)
+  - **완료 조건**: ✅ `woodong_process_due_reminders_core`/`woodong_close_expired_votes_core` + 배치 진입점 2종 생성(앱 롤 EXECUTE 회수), ✅ pg_cron 잡 2종 등록(`woodong_due_reminders` 매일 09:00 KST, `woodong_vote_closing` 5분마다) + 실제 실행 성공 확인, ✅ 중복 발송 방지 전략(한 문장 선점 UPDATE) 수립·실측, ✅ 앱의 렌더 도중 쓰기(lazy 호출부 5곳 + 모듈 2개) 제거, ✅ 전환·롤백 절차와 점검 쿼리를 `docs/ops/CRON_JOBS.md`에 문서화, ✅ `npm run check-all` + `npm run build` 통과, ✅ 프로덕션 데이터 원복
 
 - **Task 038: 웹 푸시(Web Push) 알림 연동** (v1.6 — 카카오톡 알림톡/Slack/이메일 대체)
   - ~~**선행 작업**: `channel` CHECK 제약을 `('web_push','in_app')`로 마이그레이션~~ → **Task 027에서 완료**(`update_woodong_notification_channel_check`, 두 테이블 모두 0행인 상태로 적용해 백필 불필요). 마이페이지가 `web_push` 설정을 저장하려면 이 제약이 먼저 필요해 앞당겼다
@@ -867,5 +903,5 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 
 ---
 
-**📅 최종 업데이트**: 2026-08-24
-**📊 진행 상황**: Phase 0·1·2 완료, Phase 3 대기 중 (14/44 Tasks 완료)
+**📅 최종 업데이트**: 2026-08-26
+**📊 진행 상황**: Phase 0~7 완료(1차 MVP 출시 준비 완료), Phase 8 진행 중 — 잔여 Task 038·039·040 (41/44 Tasks 완료)
