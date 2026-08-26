@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-26
-**📊 진행 상황**: Phase 0~7 완료(1차 MVP 범위 전량) + Phase 8 진행 중 — **40/44 Tasks 완료**. 프로덕션 배포됨: https://woodong-01.vercel.app
+**📊 진행 상황**: Phase 0~7 완료(1차 MVP 범위 전량) + Phase 8 진행 중 — **42/44 Tasks 완료**. 프로덕션 배포됨: https://woodong-01.vercel.app
 
 ---
 
@@ -832,13 +832,53 @@
     - ⚠️ **`cron.job_run_details`는 처리 건수를 남기지 않는다**(`return_message`가 "1 row"). 건수는 `raise log`로 Postgres 로그에 `[woodong-cron] ... =N` 형태로 남긴다 — 집계 테이블을 하나 더 만들면 공유 Free 플랜 용량을 먹기 때문이다(`docs/ops/FREE_PLAN_MONITORING.md`)
   - **완료 조건**: ✅ `woodong_process_due_reminders_core`/`woodong_close_expired_votes_core` + 배치 진입점 2종 생성(앱 롤 EXECUTE 회수), ✅ pg_cron 잡 2종 등록(`woodong_due_reminders` 매일 09:00 KST, `woodong_vote_closing` 5분마다) + 실제 실행 성공 확인, ✅ 중복 발송 방지 전략(한 문장 선점 UPDATE) 수립·실측, ✅ 앱의 렌더 도중 쓰기(lazy 호출부 5곳 + 모듈 2개) 제거, ✅ 전환·롤백 절차와 점검 쿼리를 `docs/ops/CRON_JOBS.md`에 문서화, ✅ `npm run check-all` + `npm run build` 통과, ✅ 프로덕션 데이터 원복
 
-- **Task 038: 웹 푸시(Web Push) 알림 연동** (v1.6 — 카카오톡 알림톡/Slack/이메일 대체)
+- **Task 038: 웹 푸시(Web Push) 알림 연동** (v1.6 — 카카오톡 알림톡/Slack/이메일 대체) ✅ - 완료
   - ~~**선행 작업**: `channel` CHECK 제약을 `('web_push','in_app')`로 마이그레이션~~ → **Task 027에서 완료**(`update_woodong_notification_channel_check`, 두 테이블 모두 0행인 상태로 적용해 백필 불필요). 마이페이지가 `web_push` 설정을 저장하려면 이 제약이 먼저 필요해 앞당겼다
   - VAPID 키 발급, Service Worker 등록, `web-push` 라이브러리로 서버 발송 로직 구현
   - 브라우저 알림 권한 요청 UX 설계 — 사용자가 허용하면 Push 구독 정보를 `woodong_notification_preferences.destination`에 JSON으로 저장
   - iOS Safari는 홈 화면에 추가(PWA 설치)한 경우에만 웹 푸시가 동작하므로, iOS 사용자에게 "홈 화면에 추가" 온보딩 안내 UI 제공
   - **재시도/폴백 정책**(PRD 4.4): 최대 3회, 지수 백오프(1분 → 5분 → 15분), 최종 실패 시 앱 내 알림으로 폴백하고 `woodong_notifications.status`에 `pending`/`sent`/`failed`/`fallback_sent` 기록
   - 만료·무효화된 Push 구독 정리 로직 구현(웹 푸시는 발송 건당 과금이 없어 별도 비용 시뮬레이션은 불필요)
+  - **## 결정 사항 — 디스패처를 어디에 둘 것인가**
+    - 알림 행은 전부 Postgres RPC 안에서 만들어지는데 웹 푸시 발송은 VAPID 비공개 키를 쥔 서버 런타임이 해야 한다. 이 둘을 잇는 디스패처의 위치가 이번 Task의 갈림길이었고, **Supabase Edge Function**을 택했다(사용자 결정). 근거: 큐·스케줄·키가 전부 Supabase 안에 모이고 Vercel 배포와 무관하게 동작하며, PRD 2장이 "정기 발송은 pg_cron, Edge Function 자체에는 스케줄러가 없음"으로 이 조합을 이미 상정했다
+    - **착수 전에 스파이크로 불확실성부터 걷어냈다.** `npm:web-push`가 Deno에서 도는지가 이 선택의 유일한 리스크였다 — 임시 함수를 배포해 `generateRequestDetails()`로 확인했고(Deno 2.1.4에서 `vapid t=eyJ0…` JWT 서명 + `aes128gcm` 156바이트 암호화 성공), 그 뒤에 본 구현을 시작했다. 스파이크 함수는 키 없는 410 스텁으로 덮어 뒀다(MCP에 Edge Function 삭제 도구가 없다 — 남은 정리는 `supabase functions delete woodong-push-spike`)
+  - **## 마이그레이션 1 (`add_woodong_push_delivery_queue`)**
+    - 발송 큐를 **별도 테이블로 만들지 않고** `woodong_notifications`를 그대로 썼다(`channel='web_push'` + `status='pending'`이 곧 대기열). PRD 4.4가 "모든 발송 시도를 이 테이블에 상태로 기록한다"고 정했기 때문이다. 재시도 부기 컬럼 3개(`attempt_count`/`next_attempt_at`/`last_error`)와 **부분 인덱스**를 추가했다 — `in_app` 행(대다수)은 인덱스에 들어가지 않는다
+    - ⚠️ **Task 003의 컬럼 보호 트리거가 디스패처까지 막았다.** 그 트리거는 `read_at`/`clicked_at` 외의 변경을 **누구에게나**(postgres 포함) 거부한다. 트리거를 무르는 대신 **트랜잭션 로컬 플래그**(`app.woodong_notification_dispatch`)로 문을 열고, 그 플래그가 켜진 경로에서도 수신자·본문·유형은 여전히 못 바꾸게 했다. 플래그를 켜는 것은 DEFINER RPC 3개뿐이고 `set_config(..., true)`라 트랜잭션이 끝나면 사라진다. 클라이언트는 켤 방법이 없다 — `set_config`는 `pg_catalog`에 있어 PostgREST에 노출되지 않는다(REST로 실측: 404)
+    - **"누가 어느 채널로 받는가"를 `woodong_notification_channels(user_id)` 한 곳에 모았다.** 팬아웃 지점이 5곳인데 채널 판정을 5벌로 복사하면 규칙이 갈라진다(Task 037에서 core 함수를 뽑은 것과 같은 이유). 한 사용자에 대해 0~2행을 돌려준다 — `in_app`(기본 ON) / `web_push`(기본 OFF + **구독 정보가 있어야** 대상)
+  - **## 마이그레이션 2 (`route_woodong_fanouts_through_notification_channels`)**
+    - 팬아웃 5곳(공지·투표 시작·투표 마감·회비 리마인드·정산 발행)을 전부 `cross join lateral woodong_notification_channels(...)`로 바꿨다. 두 채널을 켠 사람은 한 사건에 행이 **둘** 생기고, 알림센터는 `channel='in_app'`으로 걸러 읽는다(안 그러면 목록에 같은 알림이 두 번 뜬다)
+    - ⚠️ **`notified_count`를 행 수가 아니라 수신자 수로 세도록 고쳤다.** 채널별로 펼치면서 `count(*)`가 되면 두 채널을 켠 사람 하나가 2로 세어져 "3명에게 보냈어요"가 "5명"이 된다. 투표 마감은 여러 투표를 한 번에 닫을 수 있어 `(수신자 × 투표)` 기준이다(후속 마이그레이션 `fix_woodong_notify_vote_close_recipient_count`에서 교정)
+    - ⚠️ **회비 리마인드의 선점 UPDATE에서 수신 대상 판정이 빠졌다.** 예전에는 `in_app`을 끈 사람을 선점 단계에서 걸렀지만 이제 채널이 둘이라 "어떤 채널이든 하나라도 켜져 있으면 대상"이 맞다. 두 채널을 모두 끈 사람은 알림이 안 만들어지지만 `last_reminded_at`은 갱신된다 — 주기가 밀려 쌓이지 않게 하려는 의도된 동작이고 주석에 남겼다
+  - **## 마이그레이션 3·4 (디스패처 RPC 4종 + 잡 등록)**
+    - Edge Function은 큐를 직접 만지지 않고 `woodong_get_push_config` / `woodong_claim_push_batch` / `woodong_mark_push_sent` / `woodong_mark_push_failed`만 부른다. **재시도·폴백 정책이 Deno 코드가 아니라 DB에 있어야** SQL Editor에서 수동으로 돌릴 때도 규칙이 갈라지지 않는다. 4종 전부 `public/anon/authenticated`에서 EXECUTE 회수(실측: anon REST 호출 401/404)
+    - 선점은 `for update skip locked` + `attempt_count++` + `next_attempt_at`을 1분 뒤로 미는 방식이다. 디스패처가 겹쳐 돌아도 같은 알림을 두 번 보내지 않고, Edge Function이 응답 없이 죽어도 1분 뒤 자동으로 재시도된다
+    - **VAPID 비공개 키는 Supabase Vault에 넣었다.** Edge Function 시크릿(`supabase secrets set`)은 CLI/대시보드 수동 조작을 요구해서 배포 자동화 밖의 단계가 하나 더 생긴다. Vault는 SQL로 다룰 수 있고 저장 시 암호화된다. **키 값은 마이그레이션이 아니라 `execute_sql`로 넣었다** — 마이그레이션 본문은 `supabase_migrations` 테이블에 평문으로 남기 때문이다
+    - **`sub` 클레임에 개인 이메일 대신 서비스 URL을 넣었다.** `sub`는 FCM/Apple에 그대로 전달되는 값이라 운영자 이메일을 외부 사업자에게 넘길 이유가 없다(RFC 8292는 `https:`도 허용한다)
+    - **디스패치 토큰을 따로 발급했다.** `verify_jwt = true`로 두면 pg_cron이 `service_role` 키를 들고 있어야 하는데, 운영 만능키를 이 용도 하나 때문에 한 곳 더 늘리는 대신 이 엔드포인트 전용 토큰을 만들고 함수가 직접 검사한다(타이밍 세이프 비교). 유출되어도 할 수 있는 일은 "대기 중인 푸시를 지금 보내라"뿐이고 회수는 Vault 값 교체로 끝난다
+  - **## 앱 (PWA 인프라를 처음부터)**
+    - `public/` 디렉토리 자체가 없던 저장소라 **매니페스트·Service Worker·512px 아이콘을 새로 만들었다**. `/sw.js`는 proxy 매처에서 제외했고(브라우저가 세션과 무관하게 주기적으로 가져가는 파일이라 로그인 리다이렉트가 걸리면 등록이 깨진다), `/manifest.webmanifest`·`/pwa-icon`은 `PUBLIC_PATH_PREFIXES`에 등록했다. 셋 다 비로그인 200 확인
+    - 아이콘을 `app/icon.tsx`(32px)와 별도로 만든 이유: Next.js가 그 파일들을 **해시 붙은 URL**로 서빙해서(`/icon?65f39837…`) 매니페스트처럼 URL을 문자열로 적어야 하는 곳에서 가리킬 수 없다
+    - 브라우저 환경 판별(지원 여부·iOS·standalone·권한)은 `useEffect` + `setState`가 아니라 **`useSyncExternalStore`**로 읽는다. 이 저장소의 react-hooks strict 규칙이 effect 안의 setState를 막고, 렌더 중 `navigator` 접근은 순수성 규칙에 걸린다
+    - 웹 푸시 토글은 다른 채널과 경로가 다르다 — **켜는 것과 목적지를 확보하는 것이 같은 동작**이라 권한 요청 → 구독 → 서버 저장이 한 묶음이고, 서버 저장이 실패하면 브라우저 구독도 되돌린다(안 그러면 브라우저는 구독 중인데 서버는 모르는 상태가 된다)
+    - 켤 수 없는 환경에서는 스위치를 잠그되 **끄는 것은 허용한다** — 나중에 브라우저에서 알림을 차단한 사용자가 켜진 상태로 갇히면 안 된다
+  - **## E2E 검증 (Playwright MCP + SQL + 실제 FCM)**
+    - ✅ **실제 푸시가 브라우저에 도착했다.** 테스트 계정으로 마이페이지에서 웹 푸시를 켜자 Chromium이 **진짜 FCM endpoint**로 구독을 발급했고(`fcm.googleapis.com/fcm/send/f3UrM3MGU2U:…`, 365바이트 JSON 저장), 총무가 공지를 올린 뒤 디스패처를 돌리니 `{"claimed":1,"sent":1}` → **Service Worker의 `getNotifications()`에 제목·본문·`tag`(알림 id)·딥링크 URL이 그대로 들어 있었다**. DB→Edge Function→FCM→브라우저→SW 전 구간 실측
+    - ✅ **채널 팬아웃**: 공지 1건에 대해 멤버에게 `in_app`(sent) + `web_push`(pending) **2행**, 작성자에게는 0행. 알림센터에는 **1건만** 표시되고 뱃지도 1
+    - ✅ **영구 실패 + 폴백(PRD 4.4의 핵심)**: 앱 내 알림을 끈 사용자에게 죽은 endpoint를 심고 공지를 보내니 web_push 행 1개만 생성 → 디스패처가 FCM에서 **410 Gone**을 받아 재시도 없이 최종 실패 처리 → **`in_app` 행이 `fallback_sent` 상태로 새로 생성**(사용자가 in_app을 껐어도 만든다) → 죽은 구독의 `destination`이 비워지고 `web_push`가 꺼졌다
+    - ✅ **재시도 백오프**: 일시적 실패로 4회를 돌리니 `60초 → 300초 → 900초 → 최종 실패(fallback_sent)`. PRD 4.4의 "최대 3회, 1분 → 5분 → 15분"과 정확히 일치
+    - ✅ **컬럼 보호**: 일반회원 JWT로 위장해 `status`(값이 실제로 바뀌는 변경)·`attempt_count`·`next_attempt_at`·`last_error` 변경 시도 → 전부 `P0001` 거부, `read_at`은 정상 동작(회귀 없음). 디스패처 RPC 3종과 채널 판정 함수는 `permission denied`
+    - ✅ **iOS 안내**: iPhone UA + 390px 컨텍스트에서 웹 푸시 스위치가 잠기고 "iPhone·iPad는 홈 화면에 추가해야 받을 수 있어요" 안내가 노출, 앱 내 알림 스위치는 정상 동작, 가로 오버플로 0(`scrollWidth` 375)
+    - ✅ **cron 경로**: `woodong_push_dispatch` 잡이 매분 `200 {"ok":true,…}`를 기록. pg_net → Edge Function 왕복이 프로덕션에서 실제로 돈다
+    - ✅ **정리**: 테스트 모임·계정 2개 삭제 후 `woodong_*` 전 테이블 0행
+  - **## 발견해서 함께 고친 것**
+    - ⚠️ **pg_net을 켜자 `net.http_post`가 `anon`/`authenticated`에게 열렸다.** DB가 임의 주소로 HTTP 요청을 보내게 만드는 SSRF 도구이고, `net.http_request_queue`에는 **우리 cron이 넣는 디스패치 토큰이 헤더로 남는다**. 회수를 시도했지만 **효과가 없었다** — PUBLIC 권한을 `supabase_admin`이 부여했고 Postgres의 REVOKE는 "내가 준 권한"만 회수하므로 `postgres` 롤에서는 에러 없이 무시된다(실행 후 `has_function_privilege`가 여전히 true). 실효 방어선은 **`net` 스키마가 PostgREST에 노출되지 않는다** 하나뿐이고(실측: `Accept-Profile: net` → PGRST106), 이 프로젝트는 다른 앱과 공유하고 있어 설정이 우리 손 밖에서 바뀔 수 있다. 무효한 마이그레이션을 그대로 두면 "막았다"는 거짓 기록이 되므로 **후속 마이그레이션(`document_pg_net_grant_limitation`)으로 정정하고** 점검 항목을 `docs/ops/WEB_PUSH.md`에 남겼다
+  - **## 관찰(수정 안 함)**
+    - ⚠️ **사용자당 기기 1대만 등록된다.** 구독 정보를 `destination` 한 칸에 저장하는 PRD 5.13 스키마 때문이다. 다른 기기에서 켜면 이전 기기 구독이 덮어써진다 — 마이페이지에 그 사실을 안내 문구로 적었다. 여러 기기 지원은 구독 테이블 분리가 필요해 범위 밖
+    - ⚠️ **배치가 만드는 알림은 한국어 고정**(Task 037과 같은 한계). 웹 푸시는 그 문자열을 그대로 실어 나르므로 푸시도 한국어로 간다. 알림을 키+파라미터로 저장해 읽는 시점에 조립하도록 바꿔야 해결되고, Task 040에 모여 있다
+    - ⚠️ **신규 UI 문구를 en/ja/zh에 한국어 그대로 넣었다**(`TODO(i18n)` 마커). Task 012부터 지켜 온 방식이다
+  - **⚠️ 운영자 조치 필요 1건**: Vercel 환경변수 `NEXT_PUBLIC_VAPID_PUBLIC_KEY` 추가(공개 키라 비밀 아님). 없으면 프로덕션에서 스위치가 잠기고 안내 문구가 뜬다 — **다른 기능에는 영향 없음**. 값과 절차는 `docs/ops/WEB_PUSH.md` 최상단
+  - **완료 조건**: ✅ VAPID 키 발급 + Vault 보관, ✅ Service Worker 등록(`push`/`notificationclick`)과 PWA 매니페스트, ✅ Edge Function `woodong-push-dispatch` + pg_cron 잡(1분) 실동작, ✅ 권한 요청 UX와 구독 정보 `destination` 저장, ✅ iOS "홈 화면에 추가" 온보딩 안내, ✅ 재시도 3회(1/5/15분) + 최종 실패 시 앱 내 폴백 + 상태 4종 기록(실측), ✅ 만료·무효 구독 정리(410 → destination 비우고 채널 끄기), ✅ `npm run check-all` + `npm run build` 통과, ✅ 프로덕션 데이터 원복
 
 - **Task 039: Naver 스파이크 및 Apple 로그인 검토**
   - **Naver: 1~2일 스파이크(PoC)** — Custom OAuth 설정 또는 Route Handler + `auth.admin` API 자체 콜백 구현의 적합성 검증(네이버가 표준 OIDC discovery를 제공하지 않아 불확실). **스파이크 결과에 따라 구현 여부 결정**
@@ -877,7 +917,7 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 | Naver OAuth 네이티브 미지원                                                        | 1차 제외 확정, 2차 스파이크 후 결정                                                   | Task 016(제외 명시), Task 039(스파이크)              |
 | 계정 자동 연결(끌 수 없는 플랫폼 기본 동작)                                        | 결정 완료 — 자동 연결 수용 + 사후 고지                                                | Task 016 / 이메일 알림은 Task 040                    |
 | **Kakao Biz App 미등록 시 이메일 미제공**                                          | 착수 시점 결정 필요 — "Allow users without an email" 활성화 및 Biz App 등록 일정 확인 | Task 001(옵션 결정), Task 016(예외 플로우)           |
-| 웹 푸시 iOS 지원 제약(홈 화면 추가 필요) (v1.6, 카카오톡 알림톡/Slack/이메일 대체) | 1차 제외, 2차 도입 시 iOS 온보딩 UI로 대응                                            | Task 038                                             |
+| 웹 푸시 iOS 지원 제약(홈 화면 추가 필요) (v1.6, 카카오톡 알림톡/Slack/이메일 대체) | 해결 — iOS·미설치이면 스위치를 잠그고 "홈 화면에 추가" 안내를 노출(Task 038)          | Task 038                                             |
 | Storage 서버 사이드 변환 Pro 플랜 전용                                             | 1차는 클라이언트 리사이즈로 대체                                                      | Task 004 / 전환은 Task 040                           |
 | Free 플랜 7일 미사용 시 프로젝트 일시정지                                          | 운영 루틴으로 대응                                                                    | Task 001, Task 034                                   |
 | 개인정보보호법(PIPA) 대응                                                          | 출시 전 처리방침·동의 절차 결정 필요(법률 자문 권장)                                  | Task 034                                             |
@@ -904,4 +944,4 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 ---
 
 **📅 최종 업데이트**: 2026-08-26
-**📊 진행 상황**: Phase 0~7 완료(1차 MVP 출시 준비 완료), Phase 8 진행 중 — 잔여 Task 038·039·040 (41/44 Tasks 완료)
+**📊 진행 상황**: Phase 0~7 완료(1차 MVP 출시 준비 완료), Phase 8 진행 중 — 잔여 Task 039·040 (42/44 Tasks 완료)
