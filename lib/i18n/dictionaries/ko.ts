@@ -498,7 +498,7 @@ export const ko: Dictionary = {
     authInvalidCredentials: "이메일 또는 비밀번호가 올바르지 않아요.",
     authEmailTaken: "이미 가입된 이메일이에요. 로그인해 주세요.",
     authWeakPassword:
-      "비밀번호가 너무 짧거나 단순해요. 6자 이상으로 다시 설정해 주세요.",
+      "비밀번호가 너무 짧거나 단순해요. 8자 이상으로 다시 설정해 주세요.",
     authSamePassword:
       "지금 쓰고 있는 비밀번호와 같아요. 다른 비밀번호를 입력해 주세요.",
     authRateLimit: "요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.",

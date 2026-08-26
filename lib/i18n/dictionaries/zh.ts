@@ -511,8 +511,7 @@ export const zh: Dictionary = {
     // TODO(i18n): Task 018-1 新增键为韩语占位文案，待翻译
     authInvalidCredentials: "이메일 또는 비밀번호가 올바르지 않아요.",
     authEmailTaken: "이미 가입된 이메일이에요. 로그인해 주세요.",
-    authWeakPassword:
-      "비밀번호가 너무 짧거나 단순해요. 6자 이상으로 다시 설정해 주세요.",
+    authWeakPassword: "密码太短或太简单。请使用至少 8 个字符重新设置。",
     authSamePassword:
       "지금 쓰고 있는 비밀번호와 같아요. 다른 비밀번호를 입력해 주세요.",
     authRateLimit: "요청이 너무 잦아요. 잠시 후 다시 시도해 주세요.",

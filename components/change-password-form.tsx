@@ -41,8 +41,19 @@ export function ChangePasswordForm({
     setIsLoading(true);
 
     try {
-      // 세션이 이미 있어도 updateUser()는 현재 비밀번호를 요구하지 않으므로,
-      // 자리를 비운 기기에서의 오남용을 막기 위해 현재 비밀번호로 재인증한 뒤 변경한다.
+      // 현재 비밀번호 확인을 **두 겹**으로 건다 (Task 033 후속).
+      //
+      // ① 클라이언트 재인증: `updateUser()`는 기본 설정에서 현재 비밀번호를 요구하지 않으므로,
+      //    자리를 비운 기기에서의 오남용을 막기 위해 먼저 로그인을 시도한다.
+      //    다만 이건 **화면에서만 걸리는 방어**다 — 세션을 쥔 사람이 콘솔에서
+      //    `updateUser({ password })`를 직접 부르면 이 단계는 통째로 건너뛴다.
+      // ② `current_password` 전달: Supabase Auth의
+      //    "Require current password when updating"(대시보드 토글, Free 플랜 사용 가능)이
+      //    켜져 있으면 **서버가** 이 값을 검증한다. 꺼져 있으면 조용히 무시되므로,
+      //    토글을 켜기 전에 먼저 배포해도 안전하다(반대 순서는 비밀번호 변경이 전부 실패한다).
+      //
+      // 토글이 켜진 뒤에도 ①을 남겨 두는 이유: 서버가 거부하면 GoTrue의 일반 에러로
+      // 내려와 "현재 비밀번호가 틀렸다"는 구체적 안내를 주기 어렵다.
       const { error: reauthError } = await supabase.auth.signInWithPassword({
         email,
         password: currentPassword,
@@ -53,6 +64,7 @@ export function ChangePasswordForm({
       }
 
       const { error: updateError } = await supabase.auth.updateUser({
+        current_password: currentPassword,
         password: newPassword,
       });
       if (updateError) throw updateError;
