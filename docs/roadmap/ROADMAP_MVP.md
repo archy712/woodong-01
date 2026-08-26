@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-26
-**📊 진행 상황**: Phase 0·1·2·3·4·5·6 완료, Phase 7 진행 중 (36/44 Tasks 완료, Task 033은 E2E 회귀까지 완료·배포 대기)
+**📊 진행 상황**: Phase 0·1·2·3·4·5·6 완료, Phase 7 진행 중 (37/44 Tasks 완료) — 프로덕션 배포됨: https://woodong-01.vercel.app
 
 ---
 
@@ -590,7 +590,7 @@
   - ⚠️ **`.next` 캐시 때문에 typecheck가 한 번 실패했다** — `app/about/page.tsx`를 지운 뒤 `tsc`가 `.next/types/validator.ts`의 `Cannot find module '../../app/about/page.js'`로 죽었다. 코드 문제가 아니라 Next가 생성해 둔 라우트 타입이 stale한 것이라, **라우트를 삭제할 때는 `rm -rf .next` 후 재빌드**해야 한다
   - **완료 조건**: ✅ 존치 결정이 코드와 allow-list에 반영, ✅ 미사용 라우트 0건(`next build` 라우트 목록에서 `/about` 소멸, 나머지 31개 라우트 전부 도달 가능), ✅ `npm run check-all` 통과(0 errors — 남은 6건은 shadcn 벤더 컴포넌트의 기존 warning), ✅ `npm run build` 통과, ✅ `CLAUDE.md`의 `/about`·`components/tutorial/`·allow-list 서술 갱신
 
-- **Task 033: 전체 사용자 플로우 E2E 회귀 테스트 및 배포** 🔄 - 진행 중 (E2E 회귀 완료 / 배포 미착수)
+- **Task 033: 전체 사용자 플로우 E2E 회귀 테스트 및 배포** ✅ - 완료
   - **테스트 픽스처**: 실계정 2개(총무 1 + 일반회원 1)로 모임 1개·초대 코드·회비 항목 1건(청구 2건)·납부 1건·공지 1건·투표 1건을 UI로 직접 만들어 진행. 시간 경과가 필요한 두 곳(투표 마감 시각, 회비 리마인드 주기)만 SQL로 되돌렸다. 프로덕션 빌드(`npm run build` + `npm run start`) 대상
   - **## 테스트 체크리스트**
     - ✅ **전 구간 통합 시나리오 통과** — 가입 → 모임 생성 → 초대 발급(`UEDR-NUKF`, 만료·최대 20회 기본값 자동 세팅) → 비로그인 초대 미리보기 → 두 번째 계정 가입(`next` 보존) → 참여 → 회비 항목 생성(멤버 2명 청구 자동 생성, 60,000원) → 납부 처리(납부율 50% 반영) → 공지 발송 → 투표 생성/참여(중복 참여 차단) → 마감 → 모임 삭제 시 13개 테이블 CASCADE 0행
@@ -598,7 +598,7 @@
     - ✅ **(Task 030 → 030-1 이관분) 다중 세션 동시 투표 마감 — 드디어 재현·검증 완료.** 브라우저 컨텍스트로는 두 세션을 못 만들어 두 번 미뤄졌던 항목인데, **두 계정의 access token을 각각 받아 `woodong_close_expired_votes`를 동시 8요청**으로 때리는 방식으로 진짜 경쟁 상태를 만들었다. 결과: **정확히 1개 요청만 `1`을 반환하고 나머지 7개는 `0`**, `vote_close` 알림은 멤버 2명에게 **각 1건씩 중복 0건**. 한 문장 UPDATE 선점이 실제 동시성 아래서 의도대로 동작함
     - ✅ **오프라인·서버 에러 폴백** — 아래 "발견하고 고친 결함" 참고. 잘못된 자격증명은 그대로 "이메일 또는 비밀번호가 올바르지 않아요."로 구분됨(회귀 확인)
     - ✅ **360 / 768 / 1280 3개 뷰포트 회귀 — 12개 화면 × 3 = 36건 전부 가로 스크롤 0건**(`scrollWidth > clientWidth` 자동 측정)
-    - ⬜ **(Task 031에서 이관) 프로덕션 배포 후 LCP 실측 — 미수행.** 배포가 선행되어야 한다
+    - ⚠️ **(Task 031에서 이관) 프로덕션 배포 후 LCP 실측 — 절반만 통과.** 아래 "프로덕션 배포 및 실측" 참고
   - **## 발견하고 고친 결함 (코드 6건 + DB 2건)**
     - 🔒 **`woodong_increment_invite_used_count(uuid)` — 권한 검사가 없는 SECURITY DEFINER 함수가 살아 있었다.** Task 020에서 초대 로직을 `woodong_redeem_group_invite()`로 합치며 호출부가 사라졌는데 `authenticated` EXECUTE가 남아 있었고, 함수 본문에 **호출자 검증이 한 줄도 없다**. `woodong_group_invites`의 RLS는 SELECT/INSERT/UPDATE/DELETE를 전부 `woodong_is_group_admin()`으로 막아 두었는데 이 함수는 그 검사를 통째로 우회해, 초대 UUID를 아는 사람(현재/과거 총무)이 반복 호출하면 `used_count`를 `max_uses`까지 올려 **모임 초대 링크를 영구히 소진**시킬 수 있었다. 호출부가 없으므로 `drop function`이 곧 수정(마이그레이션 `drop_woodong_increment_invite_used_count`). 삭제 후 REST 호출이 `PGRST202` 404로 떨어지는 것과, 일반회원의 초대 행 조회가 여전히 0행인 것을 함께 확인
     - ⚡ **woodong RLS 정책 12개의 `auth.uid()` → `(select auth.uid())`** (마이그레이션 `optimize_woodong_rls_auth_uid_initplan`). performance advisor `auth_rls_initplan` 경고 12건이 **전부 해소**됐다. 판정 결과는 동일하고 플래너가 행마다 재평가하지 않고 InitPlan으로 한 번만 평가한다
@@ -608,10 +608,31 @@
     - 🐛 **`errors.networkError`가 4개 언어에 정의돼 있는데 쓰는 곳이 0건이었다** — 네트워크가 끊기면 `TypeError: Failed to fetch`가 오는데 코드 매핑에 걸리지 않아 "일시적인 오류"로 폴백됐다. 틀린 말은 아니지만 **사용자가 할 수 있는 일(연결 확인)을 알려주지 못한다.** `mapAuthErrorMessage()`에 네트워크 판별을 넣어 연결했고, Supabase 요청만 실패시킨 상태로 로그인해 **"네트워크 연결을 확인해주세요."**가 뜨는 것을 확인
     - 💄 **빈 상태에서 같은 문장이 두 번 나오는 곳 2군데** — 회비 대시보드는 "회비는 수입만 집계돼요…"를 빈 상태 설명과 하단 상시 카드에서 **각각** 그렸고, 투표 목록은 `votes.emptyState`와 `emptyStates.noVotes`가 **문장이 완전히 같아** 위아래로 겹쳤다. 투표 쪽은 게다가 `votes.emptyState`가 **en/ja/zh 사전에도 한국어가 그대로** 들어 있어, 번역된 `emptyStates.noVotes`만 남기는 것으로 두 문제를 함께 해결
     - 💄 **모임 목록 빈 상태의 설명이 페이지 제목이었다** — `EmptyDescription`에 `dict.groups.pageTitle`("모임 목록")이 들어가 있어 빈 화면에 아무 의미 없는 한 줄이 붙어 있었다. 제거(안내는 제목 문구가 하고, 바로 아래 CTA가 다음 행동을 가리킨다)
+  - **## 프로덕션 배포 및 실측**
+    - ✅ **Vercel 프로덕션 배포 완료** — `archy2/woodong-01` 신규 생성(기존 프로젝트가 없었다), GitHub 저장소 연결, **https://woodong-01.vercel.app**. 배포 리전은 `icn1`(서울)
+      - ⚠️ **`NEXT_PUBLIC_` 변수는 CLI 기본값(secret visibility)으로는 등록되지 않는다** — `invalid_visibility` 에러가 난다("public framework prefix cannot use secret visibility on Production or Preview"). `--visibility config --no-sensitive`로 3개 환경에 한 번에 넣어야 한다. `SUPABASE_SERVICE_ROLE_KEY`는 반대로 sensitive로 **production/preview에만** 넣었다(로컬 개발은 `.env.local`이 담당)
+      - ⚠️ `vercel env ls`가 보여주는 `eyJ2IjoidjIi…`는 값이 아니라 CLI의 표시 형식이다. 실제 값은 `vercel env pull`로 확인했다(`https://ybhluy…`, `sb_publishable_…`)
+      - ⚠️ `vercel link`가 `.gitignore`에 `.env*`를 추가하는데, 이 저장소는 이미 `.env*.local` + `.env`로 더 정확하게 무시하고 있어 되돌렸다(그대로 두면 나중에 `.env.example` 같은 문서용 파일까지 삼킨다)
+    - ✅ **배포 후 스모크 통과** — 비로그인 라우팅 11경로가 로컬과 동일(공개 6개 200, `/protected*` 307 + `next` 보존, 제거한 `/about`은 로그인 리다이렉트). 실계정으로 가입 → 모임 생성 → 5개 탭·알림센터·마이페이지 전 화면 정상 렌더링 확인 후 픽스처 전량 삭제
+    - ⚠️ **LCP 판정: 랜딩·모임 목록은 통과, 보호 페이지 2종은 미달** (Lighthouse 13.4.1, 모바일 시뮬레이션 4G — Task 031과 같은 기준)
+
+      | 화면            | perf |      LCP |      CLS | 판정         |
+      | --------------- | ---: | -------: | -------: | ------------ |
+      | 랜딩(데스크톱)  |  100 |     0.5s |        0 | —            |
+      | 랜딩(모바일 4G) |   96 | **2.3s** |    0.002 | ✅ 목표 2.5s |
+      | 모임 목록       |   96 | **2.3s** |     0.02 | ✅           |
+      | 회비 대시보드   |   86 |     3.3s | **0.14** | ❌ LCP·CLS   |
+      | 모임 홈         |   83 | **4.7s** |    0.013 | ❌ LCP       |
+      - ✅ **Task 031이 이월한 랜딩 LCP는 해결됐다** — 로컬 2.8s → 프로덕션 **2.3s**. "렌더 블로킹 CSS는 시뮬레이션 환산 탓"이라던 Task 031의 예측이 맞았다
+      - ❌ **하지만 보호 페이지는 시뮬레이션 탓이 아니었다.** Task 031은 로컬에서 관측 LCP 546~~867ms인데 시뮬레이션만 4.2~~5.9s로 나오는 것을 보고 "측정 환경 문제"로 판단했는데, 프로덕션에서는 **관측 LCP 자체가 3,986ms**(모임 홈)로 시뮬레이션(4,685ms)과 비슷하다. 즉 실제로 느리다
+      - **원인은 서버 → Supabase 왕복이 맞되, 리전 문제는 아니다.** Vercel `icn1`·Supabase 게이트웨이 `ICN` 둘 다 서울이고 `server-response-time`은 10~20ms다. 그런데 **TTFB 0.18~~0.29s / 스트리밍 완료 2.0~~2.7s**로, 셸은 즉시 오고 `<Suspense>` 안쪽(Supabase 쿼리)이 2초 이상을 쓴다. 랜딩은 같은 조건에서 총 0.6s다. 모임 홈 한 화면이 `getClaims` → `getGroupDetail`(모임 + 멤버십 + 인원 집계 + 서명 URL) → 공지 → 회비 요약 → 투표 → lazy 마감·리마인드까지 **순차 왕복을 여러 번** 한다
+      - ❌ **회비 대시보드 CLS 0.14(기준 0.1)** — 원인은 **푸터 밀림**(단일 shift 0.1396). `DuesDashboardSkeleton`은 Task 024/031에서 "실제 레이아웃과 같은 골격"으로 만들어 데이터가 있을 때는 0.003이지만, **항목이 0건이면 한 줄짜리 빈 상태로 확 줄어들며 푸터가 위로 튄다**. 새 모임을 만든 총무가 회비 탭에서 처음 보는 화면이 정확히 이 경우다
+      - **두 건 모두 Task 031 성격의 성능 최적화(쿼리 병렬화 + 스켈레톤/빈 상태 높이 정합)라 이번 Task에서 손대지 않았다.** 검증에도 배포·재측정 사이클이 한 번 더 필요하다. **아래 후속 과제로 분리**한다
+  - **## 후속 과제로 분리**
+    - ⬜ **보호 페이지 LCP 최적화** — 모임 홈 4.7s / 회비 3.3s(목표 2.5s). `<Suspense>` 안쪽의 Supabase 순차 왕복을 `Promise.all`로 병렬화하거나 화면당 왕복 수를 줄이는 작업. 프로덕션 실측 기준선은 위 표
+    - ⬜ **회비 대시보드 빈 상태 CLS 0.14** — 스켈레톤과 빈 상태의 높이를 맞추거나 콘텐츠 영역에 최소 높이를 줘 푸터가 움직이지 않게 한다
   - **## 남은 항목 (사용자 조치 필요)**
-    - ⬜ **Vercel 프로덕션 배포** — `.vercel/` 링크가 없고 Vercel CLI도 설치돼 있지 않다. 배포에는 사용자 계정 인증이 필요해 착수하지 못했다. 환경 변수 3종(`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, 서버 전용 `SUPABASE_SERVICE_ROLE_KEY`)은 `.env.local`에 갖춰져 있고 Vercel 쪽 등록만 남았다
-    - ⬜ **프로덕션 LCP 실측** — 위 배포 이후
-    - ⬜ **`auth_leaked_password_protection` 활성화** — Supabase Auth의 프로젝트 설정(HaveIBeenPwned 대조)이라 대시보드에서 켜야 한다. MCP 도구로는 토글할 수 없다
+    - ⬜ **`auth_leaked_password_protection` 활성화** — Supabase Auth의 프로젝트 설정(HaveIBeenPwned 대조)이라 대시보드에서 켜야 한다. MCP 도구로는 토글할 수 없다. **사용자가 직접 켜기로 함**
   - **## advisor 최종 상태**
     - performance: **woodong 관련 WARN 0건**(12건 전부 해소). 남은 항목은 전부 INFO이고 공유 프로젝트의 **다른 앱 테이블**(`departments`, `weekly_log_*`, `brands`, `org_*`)이다
     - security: **woodong 관련으로 새로 조치할 항목 0건.** 남은 woodong WARN 13건은 `authenticated`에게 의도적으로 연 RPC 표면으로, 각 함수가 내부에서 권한을 검사한다(오늘도 공지 RPC가 `42501`로 거부하는 것을 확인). `woodong_get_invite_preview`만 `anon`에 열려 있는데 이는 **비로그인 초대 미리보기(PRD 3.3)에 필요**하다. 그 외 WARN은 다른 앱 함수(`check_org_*`, `next_master_code`, `is_admin` 등)
@@ -619,7 +640,7 @@
   - **## 관찰(수정 안 함)**
     - ⚠️ **사전 163개 키가 en/ja/zh에서 한국어 그대로다** — 우동 도메인 UI(Phase 3~6에서 추가된 키) 대부분. `en.ts`에 `TODO(i18n): Task 018-1 new keys below are Korean placeholders` 마커가 있는 **알려진 한계**라 이번에 손대지 않았다. 1차 MVP가 한국어 우선인 것과는 별개로, 언어 전환 기능이 노출돼 있으므로 **범위 판단이 필요**하다
     - ⚠️ **삭제된 사용자의 세션이 로그인 상태로 렌더링된다** — 이전 Task의 테스트 계정을 DB에서 지웠는데도 브라우저에는 헤더가 로그인 상태로 떴다. `getClaims()`가 JWT를 로컬 검증만 하기 때문으로 토큰 만료 전까지 유지된다(JWT의 일반적 성질). 실사용에서 계정 삭제 기능이 없어 1차 MVP 영향은 없다
-  - **완료 조건**: ✅ 통합 시나리오 전부 통과, ✅ 권한 분기 회귀(UI + REST) 통과, ✅ 동시 마감 회귀 통과, ✅ 3개 뷰포트 36건 통과, ✅ 에러 폴백 3종(조회 실패/서버 에러/네트워크) 실패 주입으로 검증, ✅ 픽스처·테스트 계정 정리 완료(`woodong_*` 13개 테이블 0행, 테스트 계정 0개), ✅ DB 권한 원복 확인, ✅ `npm run check-all` + `npm run build` 통과, ⬜ **프로덕션 배포 및 배포 후 스모크/LCP 실측 — 미착수**, ⚠️ security advisor는 위 판정 기준으로 통과
+  - **완료 조건**: ✅ 통합 시나리오 전부 통과, ✅ 권한 분기 회귀(UI + REST) 통과, ✅ 동시 마감 회귀 통과, ✅ 3개 뷰포트 36건 통과, ✅ 에러 폴백 3종(조회 실패/서버 에러/네트워크) 실패 주입으로 검증, ✅ **프로덕션 배포 완료 + 배포 후 스모크 테스트 통과**, ⚠️ **LCP는 랜딩·모임 목록만 목표 달성 — 보호 페이지 2종과 회비 CLS는 후속 과제로 분리**, ✅ 픽스처·테스트 계정 정리 완료(로컬·프로덕션 양쪽, `woodong_*` 13개 테이블 0행, 테스트 계정 0개), ✅ DB 권한 원복 확인, ✅ 세션 토큰·쿠키 아티팩트 삭제, ✅ `npm run check-all` + `npm run build` 통과, ⚠️ security advisor는 위 판정 기준으로 통과
 
 - **Task 034: 출시 전 운영·법무 준비 및 KPI 계측 기반 구축**
   - **개인정보보호법(PIPA) 대응**: 회비 납부 이력(실명 + 금액) + 전화번호 조합에 대한 개인정보 처리방침 초안 작성 및 회원가입 동의 절차 추가 여부 결정(법률 자문 권장)
