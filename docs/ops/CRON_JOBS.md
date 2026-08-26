@@ -7,14 +7,19 @@
 
 ## 등록된 잡
 
-| 잡 이름                 | 스케줄(UTC)   | KST        | 실행 명령                                   | 하는 일                                                      |
-| ----------------------- | ------------- | ---------- | ------------------------------------------- | ------------------------------------------------------------ |
-| `woodong_due_reminders` | `0 0 * * *`   | 매일 09:00 | `select public.woodong_run_due_reminders()` | 주기가 지난 미납 청구에 `due_reminder` 알림 생성             |
-| `woodong_vote_closing`  | `*/5 * * * *` | 5분마다    | `select public.woodong_run_vote_closing()`  | `closes_at`이 지난 `open` 투표를 `closed`로 전환 + 결과 알림 |
+| 잡 이름                 | 스케줄(UTC)   | KST        | 실행 명령                                                       | 하는 일                                                      |
+| ----------------------- | ------------- | ---------- | --------------------------------------------------------------- | ------------------------------------------------------------ |
+| `woodong_due_reminders` | `0 0 * * *`   | 매일 09:00 | `select public.woodong_run_due_reminders()`                     | 주기가 지난 미납 청구에 `due_reminder` 알림 생성             |
+| `woodong_vote_closing`  | `*/5 * * * *` | 5분마다    | `select public.woodong_run_vote_closing()`                      | `closes_at`이 지난 `open` 투표를 `closed`로 전환 + 결과 알림 |
+| `woodong_push_dispatch` | `* * * * *`   | 1분마다    | `select net.http_post(... /functions/v1/woodong-push-dispatch)` | 발송 대기 중인 웹 푸시를 Edge Function으로 보내 실제 발송    |
 
 > ⏰ **pg_cron 스케줄 표현식은 UTC**다(Supabase 세션 기본 타임존이 UTC). KST를 노릴 때는 9시간을 빼서 적는다.
 >
 > 🔤 잡 이름은 반드시 `woodong_` 접두어를 붙인다. 이 Supabase 프로젝트는 다른 앱과 공유하고 있고(`docs/ops/SUPABASE_SHARED_PROJECT.md`), 남의 잡(`weekly_log_reminder`, `weekly_log_notification_cleanup`)과 섞이면 안 된다.
+
+### 웹 푸시 디스패처는 별도 문서에
+
+`woodong_push_dispatch` 잡이 하는 일(VAPID 키 보관, Edge Function 배포, 재시도·폴백 정책, 구독 정리)은 `docs/ops/WEB_PUSH.md`에 따로 정리했다. 이 문서는 **잡 등록과 스케줄**까지만 다룬다.
 
 ### 정산 발행 알림은 왜 잡이 없나
 
