@@ -102,6 +102,8 @@ export const ja: Dictionary = {
       iconGallery: "アイコンギャラリー",
       chartGallery: "チャートギャラリー",
       avatarGallery: "アバターギャラリー",
+      privacyPolicy: "プライバシーポリシー",
+      termsOfService: "利用規約",
     },
   },
   gallery: {
@@ -531,6 +533,28 @@ export const ja: Dictionary = {
     authLastIdentityGuard:
       "마지막 로그인 수단은 해제할 수 없어요. 다른 계정을 먼저 연동해 주세요.",
     authCurrentPasswordInvalid: "現在のパスワードが正しくありません。",
+  },
+  legal: {
+    effectiveDateLabel: "施行日",
+    canonicalNotice:
+      "以下の韓国語の本文が法的効力を持つ正本です。この翻訳は参考のために提供されます。",
+    privacy: {
+      heading: "プライバシーポリシー",
+      description:
+        "ウドンがどのような個人情報を収集し、何の目的で利用し、グループ内で誰まで見えるのかをまとめました。",
+    },
+    terms: {
+      heading: "利用規約",
+      description:
+        "ウドンをご利用いただく際に適用される、利用者と運営者の権利・義務をまとめました。",
+    },
+    consent: {
+      label: "{terms}および{privacy}に同意します。",
+      termsLinkText: "利用規約",
+      privacyLinkText: "プライバシーポリシー",
+      requiredError:
+        "利用規約とプライバシーポリシーに同意しないと登録できません。",
+    },
   },
   emptyStates: {
     noGroups: "まだ参加しているグループがありません。Woodongにお任せください！",

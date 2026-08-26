@@ -39,6 +39,7 @@ async function PageContent({
       auth={dict.auth}
       or={dict.common.or}
       errors={dict.errors}
+      legal={dict.legal}
       next={next}
     />
   );

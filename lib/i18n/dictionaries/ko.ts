@@ -101,6 +101,8 @@ export const ko: Dictionary = {
       iconGallery: "아이콘 갤러리",
       chartGallery: "차트 갤러리",
       avatarGallery: "아바타 갤러리",
+      privacyPolicy: "개인정보 처리방침",
+      termsOfService: "이용약관",
     },
   },
   gallery: {
@@ -507,6 +509,28 @@ export const ko: Dictionary = {
     authLastIdentityGuard:
       "마지막 로그인 수단은 해제할 수 없어요. 다른 계정을 먼저 연동해 주세요.",
     authCurrentPasswordInvalid: "현재 비밀번호가 올바르지 않아요.",
+  },
+  legal: {
+    effectiveDateLabel: "시행일",
+    // 한국어가 정본이라 ko 화면에서는 이 안내를 띄우지 않는다(페이지에서 null 전달).
+    canonicalNotice: "이 문서의 정본은 한국어입니다.",
+    privacy: {
+      heading: "개인정보 처리방침",
+      description:
+        "우동이 어떤 개인정보를 수집해 어떤 목적으로 쓰고, 모임 안에서 누구에게까지 보이는지 정리했습니다.",
+    },
+    terms: {
+      heading: "이용약관",
+      description:
+        "우동을 이용할 때 적용되는 이용자와 운영자의 권리·의무를 정리했습니다.",
+    },
+    consent: {
+      label: "{terms} 및 {privacy}에 동의합니다.",
+      termsLinkText: "이용약관",
+      privacyLinkText: "개인정보 처리방침",
+      requiredError:
+        "이용약관과 개인정보 처리방침에 동의해야 가입할 수 있어요.",
+    },
   },
   emptyStates: {
     noGroups: "아직 속한 모임이 없어요. 우동, 모임을 부탁해!",

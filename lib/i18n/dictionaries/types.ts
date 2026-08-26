@@ -67,6 +67,9 @@ export interface Dictionary {
       iconGallery: string;
       chartGallery: string;
       avatarGallery: string;
+      /** 법적 고지 링크(Task 034). 개발자 문서 링크와 다른 줄에 놓인다. */
+      privacyPolicy: string;
+      termsOfService: string;
     };
   };
   gallery: {
@@ -456,6 +459,31 @@ export interface Dictionary {
     authIdentityAlreadyLinked: string;
     authLastIdentityGuard: string;
     authCurrentPasswordInvalid: string;
+  };
+  /**
+   * 법적 고지 페이지(Task 034). **본문은 여기 없다** — 처리방침·약관 전문은
+   * `lib/legal/`의 한국어 정본 하나만 두고, 이 사전에는 페이지 제목·요약·
+   * "정본은 한국어" 안내 같은 UI 문구만 4개 언어로 유지한다(결정 D-3).
+   */
+  legal: {
+    effectiveDateLabel: string;
+    /** ko를 제외한 로케일에서 본문 위에 노출하는 정본 언어 안내. */
+    canonicalNotice: string;
+    privacy: {
+      heading: string;
+      description: string;
+    };
+    terms: {
+      heading: string;
+      description: string;
+    };
+    /** 회원가입 필수 동의 문구. `{terms}`/`{privacy}`가 링크로 치환된다. */
+    consent: {
+      label: string;
+      termsLinkText: string;
+      privacyLinkText: string;
+      requiredError: string;
+    };
   };
   emptyStates: {
     noGroups: string;

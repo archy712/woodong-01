@@ -102,6 +102,8 @@ export const en: Dictionary = {
       iconGallery: "Icon Gallery",
       chartGallery: "Chart Gallery",
       avatarGallery: "Avatar Gallery",
+      privacyPolicy: "Privacy Policy",
+      termsOfService: "Terms of Service",
     },
   },
   gallery: {
@@ -530,6 +532,28 @@ export const en: Dictionary = {
     authLastIdentityGuard:
       "마지막 로그인 수단은 해제할 수 없어요. 다른 계정을 먼저 연동해 주세요.",
     authCurrentPasswordInvalid: "That current password isn't correct.",
+  },
+  legal: {
+    effectiveDateLabel: "Effective date",
+    canonicalNotice:
+      "The Korean text below is the legally binding version. This translation of the page heading is provided for convenience only.",
+    privacy: {
+      heading: "Privacy Policy",
+      description:
+        "What personal data Woodong collects, why it is used, and who inside a group can see it.",
+    },
+    terms: {
+      heading: "Terms of Service",
+      description:
+        "The rights and obligations that apply to you and to the operator when you use Woodong.",
+    },
+    consent: {
+      label: "I agree to the {terms} and the {privacy}.",
+      termsLinkText: "Terms of Service",
+      privacyLinkText: "Privacy Policy",
+      requiredError:
+        "You must agree to the Terms of Service and the Privacy Policy to sign up.",
+    },
   },
   emptyStates: {
     noGroups: "You're not part of any group yet. Let Woodong help!",

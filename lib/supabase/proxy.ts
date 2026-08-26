@@ -59,6 +59,8 @@ export async function updateSession(request: NextRequest) {
     "/avatars",
     "/charts",
     "/tech-stack",
+    "/privacy", // 이하 법적 고지 (Task 034) — 가입 전에 읽을 수 있어야 하므로 공개
+    "/terms",
   ];
 
   if (

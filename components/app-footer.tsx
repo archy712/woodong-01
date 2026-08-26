@@ -17,6 +17,12 @@ export async function AppFooter() {
     { label: dict.home.footer.avatarGallery, href: "/avatars" },
   ];
 
+  // 법적 고지는 데모 페이지와 성격이 달라 같은 줄에 섞지 않고 별도 행에 둔다(Task 034).
+  const legalLinks = [
+    { label: dict.home.footer.termsOfService, href: "/terms" },
+    { label: dict.home.footer.privacyPolicy, href: "/privacy" },
+  ];
+
   return (
     <footer className="flex w-full flex-col items-center gap-6 border-t py-10 text-center text-sm text-muted-foreground">
       <nav className="flex flex-wrap items-center justify-center divide-x divide-muted-foreground/25">
@@ -25,6 +31,18 @@ export async function AppFooter() {
             key={link.href}
             href={link.href}
             className="inline-flex min-h-11 items-center px-4 underline-offset-4 first:pl-0 last:pr-0 hover:text-foreground hover:underline"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+
+      <nav className="flex flex-wrap items-center justify-center divide-x divide-muted-foreground/25">
+        {legalLinks.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="inline-flex min-h-11 items-center px-4 font-medium text-foreground/70 underline-offset-4 first:pl-0 last:pr-0 hover:text-foreground hover:underline"
           >
             {link.label}
           </Link>

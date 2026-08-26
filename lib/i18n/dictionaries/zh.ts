@@ -98,6 +98,8 @@ export const zh: Dictionary = {
       iconGallery: "图标展示馆",
       chartGallery: "图表展示馆",
       avatarGallery: "头像展示馆",
+      privacyPolicy: "隐私政策",
+      termsOfService: "服务条款",
     },
   },
   gallery: {
@@ -520,6 +522,25 @@ export const zh: Dictionary = {
     authLastIdentityGuard:
       "마지막 로그인 수단은 해제할 수 없어요. 다른 계정을 먼저 연동해 주세요.",
     authCurrentPasswordInvalid: "当前密码不正确。",
+  },
+  legal: {
+    effectiveDateLabel: "生效日期",
+    canonicalNotice: "以下韩文正文为具有法律效力的正本。此翻译仅供参考。",
+    privacy: {
+      heading: "隐私政策",
+      description:
+        "说明 Woodong 收集哪些个人信息、用于什么目的，以及在聚会内对谁可见。",
+    },
+    terms: {
+      heading: "服务条款",
+      description: "说明使用 Woodong 时适用于用户与运营者的权利与义务。",
+    },
+    consent: {
+      label: "我同意{terms}和{privacy}。",
+      termsLinkText: "服务条款",
+      privacyLinkText: "隐私政策",
+      requiredError: "必须同意服务条款和隐私政策才能注册。",
+    },
   },
   emptyStates: {
     noGroups: "你还没有加入任何小组，交给 Woodong 吧！",

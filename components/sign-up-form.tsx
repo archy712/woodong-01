@@ -10,9 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { ConsentLabel } from "@/components/legal/consent-label";
 import { SocialAuthButtons } from "@/components/social-auth-buttons";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { mapAuthErrorMessage } from "@/lib/auth/auth-error-message";
@@ -25,12 +27,14 @@ export function SignUpForm({
   auth,
   or,
   errors,
+  legal,
   next,
   ...props
 }: {
   auth: Dictionary["auth"];
   or: string;
   errors: Dictionary["errors"];
+  legal: Dictionary["legal"];
   /** 가입 성공 후 복귀할 내부 경로. 페이지에서 `resolveNextPath()`로 검증해 내려준다. */
   next: string;
 } & React.ComponentPropsWithoutRef<"div">) {
@@ -39,6 +43,9 @@ export function SignUpForm({
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // 이용약관·개인정보 처리방침 필수 동의(Task 034 결정 D-1). 이메일 가입과 소셜 가입은
+  // 같은 카드에 있고 둘 다 계정을 만들므로, 체크 전에는 **양쪽 다** 잠근다.
+  const [hasAgreed, setHasAgreed] = useState(false);
   const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -46,6 +53,12 @@ export function SignUpForm({
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
+
+    if (!hasAgreed) {
+      setError(legal.consent.requiredError);
+      setIsLoading(false);
+      return;
+    }
 
     if (password !== repeatPassword) {
       setError(auth.signUp.passwordMismatchError);
@@ -114,8 +127,33 @@ export function SignUpForm({
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
               </div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="legal-consent"
+                  checked={hasAgreed}
+                  onCheckedChange={(checked) => {
+                    setHasAgreed(checked === true);
+                    if (checked === true) setError(null);
+                  }}
+                  className="mt-0.5"
+                />
+                <Label
+                  htmlFor="legal-consent"
+                  // `Label` 프리미티브 기본값이 `flex items-center gap-2`라 문장을
+                  // 조각 단위로 flex 아이템 취급한다. 그대로 두면 조각 사이마다 0.5rem이
+                  // 벌어져 "…처리방침 에 동의합니다"처럼 보이고, 좁은 화면에서 줄바꿈도
+                  // 안 된다. 한 문장이므로 block으로 되돌려 정상적으로 흐르게 한다.
+                  className="block text-sm leading-relaxed font-normal text-muted-foreground"
+                >
+                  <ConsentLabel legal={legal} />
+                </Label>
+              </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || !hasAgreed}
+              >
                 {isLoading
                   ? auth.signUp.submittingButton
                   : auth.signUp.submitButton}
@@ -136,7 +174,12 @@ export function SignUpForm({
             <span className="text-xs text-muted-foreground">{or}</span>
             <Separator className="flex-1" />
           </div>
-          <SocialAuthButtons auth={auth} errors={errors} next={next} />
+          <SocialAuthButtons
+            auth={auth}
+            errors={errors}
+            next={next}
+            disabled={!hasAgreed}
+          />
         </CardContent>
       </Card>
     </div>

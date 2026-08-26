@@ -19,11 +19,17 @@ export function SocialAuthButtons({
   auth,
   errors,
   next,
+  disabled = false,
 }: {
   auth: Dictionary["auth"];
   errors: Dictionary["errors"];
   /** 소셜 로그인 성공 후 복귀할 내부 경로. 콜백 라우트에서 다시 검증한다(Task 017). */
   next: string;
+  /**
+   * 회원가입 화면에서 약관 동의 전까지 잠그기 위한 스위치(Task 034).
+   * 로그인 화면은 동의 대상이 아니므로 이 prop을 넘기지 않는다.
+   */
+  disabled?: boolean;
 }) {
   const [pendingProvider, setPendingProvider] = useState<SocialProvider | null>(
     null,
@@ -60,7 +66,7 @@ export function SocialAuthButtons({
         variant="outline"
         className="w-full"
         onClick={() => handleSignIn("google")}
-        disabled={pendingProvider !== null}
+        disabled={disabled || pendingProvider !== null}
       >
         <GoogleIcon />
         {pendingProvider === "google"
@@ -73,7 +79,7 @@ export function SocialAuthButtons({
         variant="outline"
         className="w-full border-[#FEE500] bg-[#FEE500] text-[#191600] hover:bg-[#F2DA00] hover:text-[#191600]"
         onClick={() => handleSignIn("kakao")}
-        disabled={pendingProvider !== null}
+        disabled={disabled || pendingProvider !== null}
       >
         <KakaoIcon />
         {pendingProvider === "kakao"
