@@ -42,6 +42,12 @@ export function mapAuthErrorMessage(
       return errors.authIdentityAlreadyLinked;
     case "single_identity_not_deletable":
       return errors.authLastIdentityGuard;
+    // "Require current password when updating"(대시보드 토글)이 켜진 뒤 서버가 새로 내려주는
+    // 두 코드. 앱은 변경 전에 클라이언트에서 먼저 재인증하므로 보통은 여기까지 오지 않지만,
+    // 매핑이 없으면 "일시적인 오류"라는 엉뚱한 안내가 나간다.
+    case "current_password_required":
+    case "current_password_invalid":
+      return errors.authCurrentPasswordInvalid;
   }
 
   // GoTrue 응답에 `code`가 없던 시절의 메시지도 폴백으로 받아준다.

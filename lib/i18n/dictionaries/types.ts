@@ -455,6 +455,7 @@ export interface Dictionary {
     authRateLimit: string;
     authIdentityAlreadyLinked: string;
     authLastIdentityGuard: string;
+    authCurrentPasswordInvalid: string;
   };
   emptyStates: {
     noGroups: string;

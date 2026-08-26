@@ -632,7 +632,13 @@
     - ⬜ **보호 페이지 LCP 최적화** — 모임 홈 4.7s / 회비 3.3s(목표 2.5s). `<Suspense>` 안쪽의 Supabase 순차 왕복을 `Promise.all`로 병렬화하거나 화면당 왕복 수를 줄이는 작업. 프로덕션 실측 기준선은 위 표
     - ⬜ **회비 대시보드 빈 상태 CLS 0.14** — 스켈레톤과 빈 상태의 높이를 맞추거나 콘텐츠 영역에 최소 높이를 줘 푸터가 움직이지 않게 한다
   - **## 남은 항목 (사용자 조치 필요)**
-    - ⬜ **`auth_leaked_password_protection` 활성화** — Supabase Auth의 프로젝트 설정(HaveIBeenPwned 대조)이라 대시보드에서 켜야 한다. MCP 도구로는 토글할 수 없다. **사용자가 직접 켜기로 함**
+    - ⛔ **`auth_leaked_password_protection` — Pro 플랜 전용이라 활성화 불가(경고 존치).** 대시보드에서 토글을 켜고 Save하면 서버가 거부한다. 설정 화면 설명줄과 Supabase 문서(`guides/auth/password-security`) 모두 "Only available on **Pro plan** and above"로 명시한다. 이 프로젝트는 Free이므로(같은 근거로 Task 031에서 Storage 서버 변환도 포기했다) **플랜을 올리기 전까지 이 advisor 경고는 남는다 — 미해결이 아니라 플랜 제약으로 판정**한다
+    - ✅ **대신 같은 Email 패널에서 Free로 가능한 두 가지를 적용했다** (advisor 항목은 아니지만 같은 화면에서 발견)
+      - **`Require current password when updating` ON + 앱 코드 대응.** 기존 `ChangePasswordForm`은 `signInWithPassword`로 재인증한 뒤 `updateUser({ password })`를 부르는 구조라, **현재 비밀번호 확인이 화면에서만 걸렸다** — 세션을 쥔 사람이 콘솔에서 `updateUser({ password })`를 직접 부르면 통째로 건너뛴다. `updateUser()`에 `current_password`를 함께 보내도록 고치고 토글을 켰다. **순서가 중요하다: 코드를 먼저 배포해야 한다**(토글을 먼저 켜면 앱이 `current_password`를 보내지 않는 동안 비밀번호 변경이 전부 실패한다). 클라이언트 재인증은 남겼다 — 서버가 거부하면 일반 에러로 내려와 "현재 비밀번호가 틀렸다"는 구체적 안내를 주기 어렵기 때문
+        - **REST로 우회 차단을 직접 확인**: `current_password` 없이 → `current_password_required`, 틀린 값 → `current_password_invalid`, 올바른 값 → 변경 성공. 수정 전이라면 첫 번째가 그대로 통했다
+        - ⚠️ 이 토글은 **비밀번호 재설정 플로우가 있으면 그것도 깨뜨린다.** 확인 결과 `updateUser` 호출부는 `ChangePasswordForm` 한 곳뿐이고 이 앱에는 재설정 플로우 자체가 없어(`app/auth/`는 login·sign-up·callback·error 4개뿐) 영향이 없었다. CLAUDE.md가 "비밀번호 재설정/이메일 확인(`confirm/route.ts`)"이 있다고 서술하고 있어 함께 정정했다
+        - 서버가 새로 내려주는 `current_password_required`/`current_password_invalid` 두 코드를 `mapAuthErrorMessage()`에 매핑했다(없으면 "일시적인 오류"라는 엉뚱한 안내가 나간다)
+      - **`Minimum password length` 6 → 8** (Supabase 권장). 앱에는 클라이언트 길이 검증이 없어 전적으로 Supabase 판정에 의존하므로 코드 변경은 불필요했지만, `errors.authWeakPassword`가 4개 언어 모두 "6자 이상"으로 안내하고 있어 **틀린 안내가 나갈 뻔했다** — 8자로 수정하면서 en/ja/zh에 한국어가 그대로 있던 것도 함께 번역. 프로덕션에서 7자 가입이 `weak_password "Password should be at least 8 characters."`로 거부되고, UI에도 "8자 이상"이 뜨는 것을 확인
   - **## advisor 최종 상태**
     - performance: **woodong 관련 WARN 0건**(12건 전부 해소). 남은 항목은 전부 INFO이고 공유 프로젝트의 **다른 앱 테이블**(`departments`, `weekly_log_*`, `brands`, `org_*`)이다
     - security: **woodong 관련으로 새로 조치할 항목 0건.** 남은 woodong WARN 13건은 `authenticated`에게 의도적으로 연 RPC 표면으로, 각 함수가 내부에서 권한을 검사한다(오늘도 공지 RPC가 `42501`로 거부하는 것을 확인). `woodong_get_invite_preview`만 `anon`에 열려 있는데 이는 **비로그인 초대 미리보기(PRD 3.3)에 필요**하다. 그 외 WARN은 다른 앱 함수(`check_org_*`, `next_master_code`, `is_admin` 등)

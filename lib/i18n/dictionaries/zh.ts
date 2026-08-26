@@ -519,6 +519,7 @@ export const zh: Dictionary = {
       "이미 다른 우동 계정에 연결된 소셜 계정이에요. 다른 계정으로 시도해 주세요.",
     authLastIdentityGuard:
       "마지막 로그인 수단은 해제할 수 없어요. 다른 계정을 먼저 연동해 주세요.",
+    authCurrentPasswordInvalid: "当前密码不正确。",
   },
   emptyStates: {
     noGroups: "你还没有加入任何小组，交给 Woodong 吧！",

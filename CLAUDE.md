@@ -46,7 +46,7 @@ npm run check-all     # typecheck + lint + format:check 순차 실행
 
 1. 루트의 `proxy.ts`가 모든 요청(정적 파일 제외)에서 `updateSession()`을 호출합니다.
 2. `updateSession()`(`lib/supabase/proxy.ts`)은 `/`와 `PUBLIC_PATH_PREFIXES` 상수에 나열된 공개 경로(`/auth`, `/invite`, `/gallery`, `/icons`, `/avatars`, `/charts`, `/tech-stack`)를 제외한 경로에서 세션이 없으면 `/auth/login`으로 리다이렉트합니다(원래 경로는 `next` 쿼리로 보존). 새 공개 페이지를 추가하면 이 배열에도 등록해야 합니다.
-3. `app/auth/*`에 로그인/회원가입/비밀번호 재설정/이메일 확인(`confirm/route.ts`) 페이지가 있고, `app/protected/*`가 인증이 필요한 영역입니다. 개별 서버 컴포넌트(`app/protected/page.tsx` 등)도 `getClaims()`로 재확인 후 `redirect("/auth/login")` 하는 이중 방어 패턴을 씁니다.
+3. `app/auth/*`에 로그인(`login`)/회원가입(`sign-up`)/OAuth 콜백(`callback/route.ts`)/에러(`error`) 4개만 있고, `app/protected/*`가 인증이 필요한 영역입니다. **비밀번호 재설정 플로우는 없습니다**(스타터킷의 `confirm/route.ts`·재설정 페이지는 제거됨) — 비밀번호 변경은 로그인 상태에서 `/protected/me`의 `ChangePasswordForm`으로만 하며, Supabase Auth의 "Require current password when updating"이 켜져 있어 `updateUser()`에 `current_password`를 반드시 함께 보내야 합니다. 개별 서버 컴포넌트(`app/protected/page.tsx` 등)도 `getClaims()`로 재확인 후 `redirect("/auth/login")` 하는 이중 방어 패턴을 씁니다.
 4. 로그인/회원가입 폼(`components/*-form.tsx`)은 Server Action이 아니라 **Client Component에서 `supabase.auth.*`를 직접 호출**하는 패턴입니다(`login-form.tsx`, `profile-form.tsx` 참고).
 
 ### DB 타입
