@@ -303,8 +303,6 @@ export const zh: Dictionary = {
         "회비 항목을 만들었어요. 활성 멤버 전원에게 청구가 생성됐어요.",
     },
     markPaidButton: "标记为已缴费",
-    reminderNotificationTitleSuffix: "缴费提醒",
-    reminderNotificationBody: "你还没有缴纳会费哦，Woodong 悄悄提醒你一下！",
     // TODO(i18n): Task 012 新增键为韩语占位文案，待翻译
     memberProgressTitle: "멤버별 납부 현황",
     unpaidHighlightTitle: "아직 납부하지 않은 멤버",

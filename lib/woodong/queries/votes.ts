@@ -28,6 +28,8 @@ export type VoteListItem = {
   vote: Vote;
   /** 이 투표에 들어온 전체 응답 수(선택지별 합계). 복수 선택이면 인원수보다 클 수 있다. */
   totalResponses: number;
+  /** 상세와 같은 기준의 "이미 마감됨" 판정. 아래 `isVoteClosed()` 주석 참고. */
+  isClosed: boolean;
 };
 
 export type VoteDetail = {
@@ -36,15 +38,29 @@ export type VoteDetail = {
   results: VoteResult[];
   /** 로그인 사용자가 이미 참여했는지. 본인 응답은 RLS로 직접 조회할 수 있다. */
   hasVoted: boolean;
-  /**
-   * 더 이상 참여할 수 없는 상태인지.
-   *
-   * `status`만 보면 안 된다 — 1차 MVP의 마감은 조회 시점 lazy 전환(Task 030)이라 마감 시각이
-   * 지났는데도 `status`가 아직 `open`인 구간이 반드시 존재한다. 계산을 컴포넌트가 아니라
-   * 여기서 하는 이유는 렌더 중 `Date.now()` 호출이 순수성 규칙에 걸리기 때문이다.
-   */
+  /** 더 이상 참여할 수 없는 상태인지. 아래 `isVoteClosed()` 주석 참고. */
   isClosed: boolean;
 };
+
+/**
+ * 화면이 쓰는 유일한 마감 판정.
+ *
+ * `status`만 보면 안 된다 — `closed` 전환은 pg_cron 잡 `woodong_vote_closing`이 5분마다
+ * 처리하므로(Task 037), 마감 시각이 지났는데도 `status`가 아직 `open`인 구간이 최대 5분
+ * 존재한다. 그 구간에 배지는 "진행중", 본문은 "마감된 투표"라고 말하는 어긋남이 생기지
+ * 않도록 목록·상세·홈 카드가 전부 이 함수를 거친다.
+ * (Task 037 전에는 lazy 마감이 렌더 시점에 `status`를 맞춰 줘서 어긋남이 짧았다.)
+ *
+ * 계산을 컴포넌트가 아니라 여기서 하는 이유는 렌더 중 `Date.now()` 호출이 순수성 규칙에
+ * 걸리기 때문이다.
+ */
+export function isVoteClosed(
+  vote: Pick<Vote, "status" | "closes_at">,
+): boolean {
+  return (
+    vote.status === "closed" || new Date(vote.closes_at).getTime() <= Date.now()
+  );
+}
 
 /** 선택지별 집계(익명이면 이름 없이 카운트만) — Task 003의 DEFINER RPC 경유. */
 async function getVoteResults(
@@ -96,12 +112,19 @@ export async function listVotes(
       return {
         vote,
         totalResponses: results.reduce((sum, r) => sum + r.response_count, 0),
+        isClosed: isVoteClosed(vote),
       };
     }),
   );
 }
 
-/** 모임 홈의 "진행 중인 투표" 카드용 — 아직 열려 있는 투표만 최신 N건. */
+/**
+ * 모임 홈의 "진행 중인 투표" 카드용 — 아직 열려 있는 투표만 최신 N건.
+ *
+ * `status = 'open'`만으로 거르면 배치가 아직 닫지 않은 투표(최대 5분, Task 037)가 진행 중인
+ * 것처럼 남는다. 마감 시각도 함께 걸러 `isVoteClosed()`와 같은 판정을 유지한다.
+ * ⚠️ `limit`은 두 조건을 모두 적용한 뒤 잘리므로, 여기서 거른다고 카드가 비어 보이지 않는다.
+ */
 export async function listOpenVotes(
   supabase: Client,
   groupId: string,
@@ -112,6 +135,7 @@ export async function listOpenVotes(
     .select(VOTE_COLUMNS)
     .eq("group_id", groupId)
     .eq("status", "open")
+    .gt("closes_at", new Date().toISOString())
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -174,8 +198,6 @@ export async function getVoteDetail(
     options: optionsResult.data ?? [],
     results,
     hasVoted: (ownResponses.count ?? 0) > 0,
-    isClosed:
-      typedVote.status === "closed" ||
-      new Date(typedVote.closes_at).getTime() <= Date.now(),
+    isClosed: isVoteClosed(typedVote),
   };
 }

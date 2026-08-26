@@ -17,7 +17,6 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getGroupDetail } from "@/lib/woodong/queries/groups";
 import { listVotes, type VoteListItem } from "@/lib/woodong/queries/votes";
-import { processExpiredVotes } from "@/lib/woodong/vote-closing";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { CardListSkeleton } from "@/components/page-skeletons";
 
@@ -30,7 +29,7 @@ function VoteCard({
   groupId: string;
   dict: Dictionary;
 }) {
-  const { vote, totalResponses } = item;
+  const { vote, totalResponses, isClosed } = item;
 
   return (
     <Link href={`/protected/groups/${groupId}/votes/${vote.id}`}>
@@ -38,10 +37,8 @@ function VoteCard({
         <CardHeader>
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-base">{vote.title}</CardTitle>
-            <Badge variant={vote.status === "open" ? "default" : "outline"}>
-              {vote.status === "open"
-                ? dict.votes.statusOpen
-                : dict.votes.statusClosed}
+            <Badge variant={isClosed ? "outline" : "default"}>
+              {isClosed ? dict.votes.statusClosed : dict.votes.statusOpen}
             </Badge>
           </div>
         </CardHeader>
@@ -97,19 +94,13 @@ async function VotesContent({
     );
   }
 
-  // 마감 lazy 처리 (Task 030): 스케줄러가 없는 1차 MVP에서는 목록에 들어온 이 순간이
-  // "마감 시각이 지난 투표가 있는지" 확인할 수 있는 시점이다. 조회보다 **먼저** 실행해야
-  // 방금 전환된 상태가 이번 렌더의 진행중/마감 분류에 반영된다. 실패해도 throw하지 않으므로
-  // 화면은 그대로 그려진다.
-  await processExpiredVotes(supabase, {
-    groupId,
-    title: dict.votes.closeNotificationTitle,
-    body: dict.votes.closeNotificationBody,
-  });
-
+  // 마감은 pg_cron 잡 `woodong_vote_closing`이 5분마다 처리한다(Task 037). 예전에는 이 자리에서
+  // lazy로 닫았다 — 목록을 여는 순간이 유일한 처리 시점이었기 때문이다.
   const items = await listVotes(supabase, groupId);
-  const openVotes = items.filter((item) => item.vote.status === "open");
-  const closedVotes = items.filter((item) => item.vote.status === "closed");
+  // 분류 기준은 `status`가 아니라 `isClosed`다 — 배치가 아직 닫지 않은 투표를 진행중 칸에
+  // 두면 "참여할 수 없는 진행중 투표"가 보인다(`isVoteClosed()` 주석 참고).
+  const openVotes = items.filter((item) => !item.isClosed);
+  const closedVotes = items.filter((item) => item.isClosed);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 sm:p-8">

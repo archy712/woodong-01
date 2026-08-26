@@ -310,9 +310,6 @@ export const ja: Dictionary = {
         "회비 항목을 만들었어요. 활성 멤버 전원에게 청구가 생성됐어요.",
     },
     markPaidButton: "納付済みにする",
-    reminderNotificationTitleSuffix: "納付リマインド",
-    reminderNotificationBody:
-      "まだ会費が未納のようです。Woodongがそっとお知らせします！",
     // TODO(i18n): Task 012の新規キーは韓国語の仮文言、翻訳が必要
     memberProgressTitle: "멤버별 납부 현황",
     unpaidHighlightTitle: "아직 납부하지 않은 멤버",

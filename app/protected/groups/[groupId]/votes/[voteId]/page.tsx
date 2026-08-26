@@ -10,7 +10,6 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getGroupDetail } from "@/lib/woodong/queries/groups";
 import { getVoteDetail } from "@/lib/woodong/queries/votes";
-import { processExpiredVotes } from "@/lib/woodong/vote-closing";
 import { VoteDetailSkeleton } from "@/components/page-skeletons";
 
 async function VoteDetailContent({
@@ -28,14 +27,6 @@ async function VoteDetailContent({
   const { groupId, voteId } = await params;
   const locale = await getLocale();
   const dict = getDictionary(locale);
-
-  // 마감 lazy 처리 (Task 030): 목록과 같은 이유로 조회보다 **먼저** 실행한다. 상세만 열고
-  // 목록을 거치지 않는 경로(알림 클릭)로 들어와도 여기서 마감이 처리돼야 한다.
-  await processExpiredVotes(supabase, {
-    groupId,
-    title: dict.votes.closeNotificationTitle,
-    body: dict.votes.closeNotificationBody,
-  });
 
   // "지금 마감" 버튼은 총무에게만 보여준다(쓰기는 RPC가 다시 막는다).
   const [group, detail] = await Promise.all([
@@ -60,10 +51,13 @@ async function VoteDetailContent({
         <CardHeader>
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-xl">{vote.title}</CardTitle>
-            <Badge variant={vote.status === "open" ? "default" : "outline"}>
-              {vote.status === "open"
-                ? dict.votes.statusOpen
-                : dict.votes.statusClosed}
+            {/*
+              배지도 `status`가 아니라 `isClosed`를 본다. 배치 마감은 최대 5분 늦으므로
+              (Task 037) `status`를 쓰면 그동안 배지는 "진행중", 본문은 "마감된 투표라 더
+              이상 참여할 수 없어요"가 되어 화면 안에서 말이 어긋난다.
+            */}
+            <Badge variant={isClosed ? "outline" : "default"}>
+              {isClosed ? dict.votes.statusClosed : dict.votes.statusOpen}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">

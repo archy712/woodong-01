@@ -297,9 +297,6 @@ export const ko: Dictionary = {
         "회비 항목을 만들었어요. 활성 멤버 전원에게 청구가 생성됐어요.",
     },
     markPaidButton: "납부완료로 변경",
-    reminderNotificationTitleSuffix: "납부 리마인드",
-    reminderNotificationBody:
-      "아직 회비 납부 전이시네요. 우동이 살짝 알려드릴게요!",
     memberProgressTitle: "멤버별 납부 현황",
     unpaidHighlightTitle: "아직 납부하지 않은 멤버",
     emptyState: "등록된 회비 항목이 없어요.",

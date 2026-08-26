@@ -21,7 +21,6 @@ import { listRecentAnnouncements } from "@/lib/woodong/queries/announcements";
 import { getLatestDueCycleSummary } from "@/lib/woodong/queries/dues";
 import { getGroupDetail } from "@/lib/woodong/queries/groups";
 import { listOpenVotes } from "@/lib/woodong/queries/votes";
-import { processExpiredVotes } from "@/lib/woodong/vote-closing";
 import { GroupDashboardSkeleton } from "@/components/page-skeletons";
 
 async function GroupDetailContent({
@@ -58,20 +57,15 @@ async function GroupDetailContent({
 
   const { group, memberCount, coverUrl } = detail;
 
-  // 마감 lazy 처리 (Task 030): "진행 중인 투표" 카드는 `status`로 거르므로, 마감 시각이 지난
-  // 투표를 먼저 닫지 않으면 여기에 계속 진행중으로 남는다.
-  //
-  // 다만 **`listOpenVotes`만** 이 결과에 의존한다. 예전에는 이걸 통째로 await한 뒤에야
-  // 회비·공지 조회를 시작해서, 상관없는 두 카드가 투표 마감 RPC를 기다리고 있었다.
-  // 마감 → 투표 조회를 한 체인으로 묶어 나머지와 나란히 돌린다(Task 033 후속 LCP 최적화).
+  // "진행 중인 투표" 카드는 `status`로 거른다. Task 037 전까지는 여기서 마감 시각이 지난
+  // 투표를 lazy로 닫아 준 뒤에야 목록을 읽었지만, 이제는 pg_cron 잡 `woodong_vote_closing`이
+  // 5분마다 닫는다(docs/ops/CRON_JOBS.md). 최대 5분 동안 마감된 투표가 이 카드에 남을 수
+  // 있는데, 참여는 `closes_at` 기준으로 이미 막혀 있어(쿼리 계층의 `isClosed` + 트리거)
+  // 표시가 한 박자 늦는 것 외의 영향은 없다.
   const [latestDues, recentAnnouncements, openVotes] = await Promise.all([
     getLatestDueCycleSummary(supabase, groupId),
     listRecentAnnouncements(supabase, groupId),
-    processExpiredVotes(supabase, {
-      groupId,
-      title: dict.votes.closeNotificationTitle,
-      body: dict.votes.closeNotificationBody,
-    }).then(() => listOpenVotes(supabase, groupId)),
+    listOpenVotes(supabase, groupId),
   ]);
 
   return (
