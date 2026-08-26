@@ -14,6 +14,15 @@ export function mapAuthErrorMessage(
   error: unknown,
   errors: Dictionary["errors"],
 ): string {
+  // 네트워크가 끊겼거나 GoTrue에 닿지 못한 경우가 먼저다. 이때 오는 것은 GoTrue의 에러가
+  // 아니라 `TypeError: Failed to fetch`(또는 supabase-js가 감싼 `AuthRetryableFetchError`)라
+  // 아래 코드 매핑에 하나도 걸리지 않고 "일시적인 오류"로 폴백됐다 — 틀린 말은 아니지만,
+  // 정작 사용자가 할 수 있는 일(연결 확인)을 알려주지 못한다. 사전에 `networkError` 문구가
+  // 4개 언어로 이미 있는데 쓰이는 곳이 없었다(Task 033).
+  if (isNetworkError(error)) {
+    return errors.networkError;
+  }
+
   const code = readErrorCode(error);
 
   switch (code) {
@@ -45,6 +54,23 @@ export function mapAuthErrorMessage(
     console.error("[auth] unmapped auth error:", code, message);
   }
   return errors.genericError;
+}
+
+/**
+ * 서버까지 닿지도 못한 실패인지 판별한다.
+ *
+ * `navigator.onLine`은 "랜선은 꽂혀 있지만 인터넷은 안 되는" 상태를 잡지 못하므로 단독으로
+ * 쓰지 않고, 실제로 던져진 에러 모양을 함께 본다.
+ */
+function isNetworkError(error: unknown): boolean {
+  if (error instanceof TypeError && /fetch/i.test(error.message)) return true;
+
+  // supabase-js는 재시도 가능한 네트워크 실패를 이 이름으로 감싸서 올려준다.
+  if (error instanceof Error && error.name === "AuthRetryableFetchError") {
+    return true;
+  }
+
+  return typeof navigator !== "undefined" && navigator.onLine === false;
 }
 
 function readErrorCode(error: unknown): string {

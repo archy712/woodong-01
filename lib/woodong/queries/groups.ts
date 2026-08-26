@@ -5,6 +5,7 @@ import {
   getSignedStorageUrl,
   WOODONG_COVERS_BUCKET,
 } from "@/lib/supabase/storage";
+import { isTransientJwtError } from "@/lib/woodong/errors";
 import type { Group, GroupMemberRole } from "@/lib/woodong/groups";
 
 /**
@@ -24,6 +25,16 @@ export type MyGroupSummary = {
   memberCount: number;
   role: GroupMemberRole;
 };
+
+/**
+ * `listMyGroups()`의 반환값.
+ *
+ * **"조회 실패"와 "결과 0건"을 반드시 구분해야 한다.** 예전에는 실패 시 빈 배열을 돌려줬는데,
+ * 화면에서는 그게 "아직 속한 모임이 없어요" 빈 상태와 완전히 같아 보였다. 모임이 있는
+ * 사용자에게 없다고 말하는 셈이라, 타입 차원에서 두 경우가 섞이지 않게 막는다.
+ */
+export type MyGroupsResult =
+  { ok: true; groups: MyGroupSummary[] } | { ok: false };
 
 export type GroupDetail = {
   group: Group;
@@ -77,25 +88,50 @@ async function countActiveMembers(
   return counts;
 }
 
+/**
+ * 로그인 직후의 시계 스큐(`PGRST303`)를 넘기기 위한 재시도 간격(ms).
+ *
+ * `iat`가 미래로 보이는 차이는 보통 1초 미만이라 두 번이면 충분하고, 지연은 **실패한
+ * 경우에만** 붙는다. 여기서 더 길게 기다리면 정상 경로가 아니라 장애 상황의 체감만 나빠진다.
+ */
+const TRANSIENT_RETRY_DELAYS_MS = [250, 600];
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /** 내가 활성 멤버로 속한 모임 목록. 최근 가입 순. */
 export async function listMyGroups(
   supabase: Client,
   userId: string,
-): Promise<MyGroupSummary[]> {
+): Promise<MyGroupsResult> {
   // 멤버십에서 출발해야 "내 모임"만 정확히 걸러진다(모임에서 출발하면 RLS가 걸러주긴 하지만
   // 내 역할을 함께 얻으려면 어차피 멤버십 행이 필요하다).
-  const { data, error } = await supabase
-    .from("woodong_group_members")
-    .select(
-      "role, joined_at, group:woodong_groups(id, name, description, type)",
-    )
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .order("joined_at", { ascending: false });
+  const runQuery = () =>
+    supabase
+      .from("woodong_group_members")
+      .select(
+        "role, joined_at, group:woodong_groups(id, name, description, type)",
+      )
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .order("joined_at", { ascending: false });
+
+  let { data, error } = await runQuery();
+
+  // 로그인 직후 첫 조회는 시계 스큐로 한 번 튕길 수 있다. 이 경우에만 짧게 재시도한다
+  // (RLS 위반이나 스키마 오류처럼 다시 해도 같은 결과인 실패까지 재시도하면 응답만 느려진다).
+  for (const delay of TRANSIENT_RETRY_DELAYS_MS) {
+    if (!error || !isTransientJwtError(error)) break;
+    console.warn(
+      `[queries/groups] listMyGroups transient failure, retrying in ${delay}ms:`,
+      error.code,
+    );
+    await sleep(delay);
+    ({ data, error } = await runQuery());
+  }
 
   if (error) {
     console.error("[queries/groups] listMyGroups failed:", error);
-    return [];
+    return { ok: false };
   }
 
   const rows = (data ?? []).filter(
@@ -107,17 +143,28 @@ export async function listMyGroups(
     rows.map((row) => row.group.id),
   );
 
-  return rows.map((row) => ({
-    id: row.group.id,
-    name: row.group.name,
-    description: row.group.description,
-    type: row.group.type,
-    memberCount: counts.get(row.group.id) ?? 0,
-    role: row.role as GroupMemberRole,
-  }));
+  return {
+    ok: true,
+    groups: rows.map((row) => ({
+      id: row.group.id,
+      name: row.group.name,
+      description: row.group.description,
+      type: row.group.type,
+      memberCount: counts.get(row.group.id) ?? 0,
+      role: row.role as GroupMemberRole,
+    })),
+  };
 }
 
-/** 모임 상세. 비멤버이거나 없는 모임이면 null. */
+/**
+ * 모임 상세. 비멤버이거나 없는 모임이면 null.
+ *
+ * ⚠️ **조회 실패는 null이 아니라 throw다**(Task 033). null은 "없음/비멤버"라는 뜻이고
+ * 화면은 그걸 "모임을 찾을 수 없거나 접근 권한이 없어요"로 그린다 — 두 경우를 같이 처리하는
+ * 건 존재 여부를 숨기려는 의도된 설계지만, **조회가 실패한 것까지 여기 섞으면 멀쩡한 멤버가
+ * 자기가 쫓겨난 줄 알게 된다**(같은 우려가 `app/invite/[code]/page.tsx`에도 적혀 있다).
+ * throw하면 `app/error.tsx`가 "일시적인 오류 + 다시 시도"로 받아 준다.
+ */
 export async function getGroupDetail(
   supabase: Client,
   groupId: string,
@@ -133,11 +180,13 @@ export async function getGroupDetail(
 
   if (error) {
     console.error("[queries/groups] getGroupDetail failed:", error);
-    return null;
+    throw error;
   }
   if (!group) return null;
 
-  const { data: membership } = await supabase
+  // 위와 같은 이유로 여기서도 실패를 삼키지 않는다 — 에러를 버리면 `membership`이 null이 되어
+  // "비멤버"와 구별되지 않는다.
+  const { data: membership, error: membershipError } = await supabase
     .from("woodong_group_members")
     .select("role")
     .eq("group_id", groupId)
@@ -145,6 +194,13 @@ export async function getGroupDetail(
     .eq("status", "active")
     .maybeSingle();
 
+  if (membershipError) {
+    console.error(
+      "[queries/groups] getGroupDetail membership lookup failed:",
+      membershipError,
+    );
+    throw membershipError;
+  }
   if (!membership) return null;
 
   const counts = await countActiveMembers(supabase, [groupId]);

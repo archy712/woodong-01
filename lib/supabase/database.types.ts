@@ -2654,27 +2654,6 @@ export type Database = {
           voter_names: string[];
         }[];
       };
-      woodong_increment_invite_used_count: {
-        Args: { p_invite_id: string };
-        Returns: {
-          code: string;
-          created_at: string;
-          created_by: string | null;
-          expires_at: string | null;
-          group_id: string;
-          id: string;
-          is_active: boolean;
-          max_uses: number | null;
-          revoked_at: string | null;
-          used_count: number;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "woodong_group_invites";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
-      };
       woodong_is_group_admin: {
         Args: { p_group_id: string };
         Returns: boolean;

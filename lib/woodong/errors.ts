@@ -22,6 +22,18 @@ const FOREIGN_KEY_VIOLATION_ERROR_CODE = "23503";
 const RAISE_EXCEPTION_ERROR_CODE = "P0001";
 
 /**
+ * PostgREST `PGRST303`("JWT claims validation or parsing failed", HTTP 401).
+ *
+ * Supabase 공식 문서 "PostgREST error codes"로 확인 — `mcp__supabase__search_docs`.
+ * 이 프로젝트에서 실제로 관측된 형태는 로그인 **직후** 첫 조회가
+ * `"JWT issued at future"`로 거절되는 것이다: 토큰을 서명하는 GoTrue와 검증하는 PostgREST가
+ * 서로 다른 노드에서 도는 탓에, `iat`가 검증 노드 기준으로 아주 잠깐 미래로 보인다.
+ * 초 단위로 저절로 해소되는 **일시적** 실패라 재시도가 맞는 처방이다
+ * (만료·서명 불일치 같은 진짜 인증 실패는 `PGRST301`로 따로 온다).
+ */
+const JWT_CLAIMS_VALIDATION_ERROR_CODE = "PGRST303";
+
+/**
  * 마지막 총무 보호 트리거(`woodong_prevent_last_admin_change`, Task 003)가 막았을 때의 문구.
  *
  * PRD 3.2 AC에 명시된 문장 그대로이며, DB 트리거가 올리는 메시지와 동일하다. DB가 내려준
@@ -72,6 +84,18 @@ export function isLastAdminError(error: unknown): boolean {
   const { message } = error as unknown as { message?: unknown };
 
   return typeof message === "string" && message.includes("마지막 총무");
+}
+
+/**
+ * 잠시 후 다시 시도하면 성공할 가능성이 높은 일시적 실패인지 판별한다.
+ *
+ * 현재는 시계 스큐로 인한 `PGRST303`만 해당한다. 이 판별을 "재시도해도 소용없는 실패"와
+ * 뭉뚱그리면 사용자에게 **틀린 화면**이 보인다 — 모임 목록 조회가 이 에러로 실패했는데
+ * 빈 배열로 폴백하면 "아직 속한 모임이 없어요"가 뜨고, 이는 실제로 모임이 있는 사용자에게
+ * 거짓말이다(Task 024-1에서 관측 → Task 033에서 수정).
+ */
+export function isTransientJwtError(error: unknown): boolean {
+  return hasErrorCode(error) && error.code === JWT_CLAIMS_VALIDATION_ERROR_CODE;
 }
 
 /**

@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Empty,
-  EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
@@ -133,8 +132,13 @@ async function VotesContent({
             <EmptyMedia variant="icon">
               <VoteIcon />
             </EmptyMedia>
-            <EmptyTitle>{dict.votes.emptyState}</EmptyTitle>
-            <EmptyDescription>{dict.emptyStates.noVotes}</EmptyDescription>
+            {/*
+              `votes.emptyState`와 `emptyStates.noVotes`는 한국어 문장이 완전히 같아서
+              둘 다 쓰면 같은 말이 위아래로 두 번 나온다. 게다가 `votes.emptyState`는
+              en/ja/zh 사전에도 한국어가 그대로 들어 있어, 번역된 `emptyStates.noVotes` 쪽만
+              남기는 것이 두 문제를 함께 해결한다(Task 033).
+            */}
+            <EmptyTitle>{dict.emptyStates.noVotes}</EmptyTitle>
           </EmptyHeader>
         </Empty>
       ) : (

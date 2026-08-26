@@ -9,7 +9,7 @@
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
 **📅 최종 업데이트**: 2026-08-26
-**📊 진행 상황**: Phase 0·1·2·3·4·5·6 완료, Phase 7 진행 중 (36/44 Tasks 완료)
+**📊 진행 상황**: Phase 0·1·2·3·4·5·6 완료, Phase 7 진행 중 (36/44 Tasks 완료, Task 033은 E2E 회귀까지 완료·배포 대기)
 
 ---
 
@@ -590,18 +590,36 @@
   - ⚠️ **`.next` 캐시 때문에 typecheck가 한 번 실패했다** — `app/about/page.tsx`를 지운 뒤 `tsc`가 `.next/types/validator.ts`의 `Cannot find module '../../app/about/page.js'`로 죽었다. 코드 문제가 아니라 Next가 생성해 둔 라우트 타입이 stale한 것이라, **라우트를 삭제할 때는 `rm -rf .next` 후 재빌드**해야 한다
   - **완료 조건**: ✅ 존치 결정이 코드와 allow-list에 반영, ✅ 미사용 라우트 0건(`next build` 라우트 목록에서 `/about` 소멸, 나머지 31개 라우트 전부 도달 가능), ✅ `npm run check-all` 통과(0 errors — 남은 6건은 shadcn 벤더 컴포넌트의 기존 warning), ✅ `npm run build` 통과, ✅ `CLAUDE.md`의 `/about`·`components/tutorial/`·allow-list 서술 갱신
 
-- **Task 033: 전체 사용자 플로우 E2E 회귀 테스트 및 배포**
+- **Task 033: 전체 사용자 플로우 E2E 회귀 테스트 및 배포** 🔄 - 진행 중 (E2E 회귀 완료 / 배포 미착수)
+  - **테스트 픽스처**: 실계정 2개(총무 1 + 일반회원 1)로 모임 1개·초대 코드·회비 항목 1건(청구 2건)·납부 1건·공지 1건·투표 1건을 UI로 직접 만들어 진행. 시간 경과가 필요한 두 곳(투표 마감 시각, 회비 리마인드 주기)만 SQL로 되돌렸다. 프로덕션 빌드(`npm run build` + `npm run start`) 대상
   - **## 테스트 체크리스트**
-    - 신규 가입 → 모임 생성 → 초대 링크 공유 → 두 번째 계정 참여 → 회비 항목 생성 → 납부 처리 → 공지 발송 → 투표 생성/참여/마감 전 구간 통합 시나리오
-    - 총무 시점 / 일반회원 시점 권한 분기 회귀
-    - ⚠️ **(Task 030 → 030-1에서 이관)** **다중 세션 동시 투표 마감** — 같은 순간 두 멤버가 같은 만료 투표를 열었을 때 마감 전환이 1회만 일어나고 `vote_close` 알림이 중복되지 않는지. 브라우저 컨텍스트 2개(또는 동시 요청)로 확인할 것. 선점 구조는 Task 028에서 동시 8요청으로 검증된 것과 같은 한 문장 UPDATE라 회귀 확인 성격이다
-    - 오프라인·네트워크 지연·서버 에러 시 에러 핸들링 및 폴백 UI
-      - ⚠️ **(Task 024-1에서 이관)** 로그인 직후 `listMyGroups`가 `PGRST303 "JWT issued at future"`(GoTrue↔PostgREST 순간 시계 스큐)로 실패하면 현재는 에러를 삼키고 빈 배열을 반환해 **모임이 있는데도 "아직 속한 모임이 없어요"가 잠깐 보인다**. 조회 실패와 "결과 0건"을 구분해 짧은 재시도 또는 별도 에러 상태를 노출할지 결정할 것(`lib/woodong/queries/groups.ts`)
-    - 360px / 768px / 1280px 3개 뷰포트 회귀
-    - ⚠️ **(Task 031에서 이관)** **프로덕션 배포 후 LCP 실측** — 로컬(`next start` + Lighthouse 시뮬레이션 4G)에서는 랜딩 2.8s / 보호 페이지 4.2~5.9s로 목표(4G 2.5s)에 못 미쳤다. 남은 임계 경로가 렌더 블로킹 CSS와 **서버 → Supabase 왕복 지연**이라 Vercel 엣지 + 같은 리전 Supabase 환경에서 다시 재야 판정할 수 있다
-  - Vercel 프로덕션 배포(기존 파이프라인 재사용), 환경 변수(`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, 서버 전용 `service_role`) 최종 확인
-  - `get_advisors`(security/performance) 최종 점검 및 경고 해소
-  - **완료 조건**: 통합 시나리오 전부 통과, 프로덕션 배포 후 스모크 테스트 통과, security advisor 경고 0건
+    - ✅ **전 구간 통합 시나리오 통과** — 가입 → 모임 생성 → 초대 발급(`UEDR-NUKF`, 만료·최대 20회 기본값 자동 세팅) → 비로그인 초대 미리보기 → 두 번째 계정 가입(`next` 보존) → 참여 → 회비 항목 생성(멤버 2명 청구 자동 생성, 60,000원) → 납부 처리(납부율 50% 반영) → 공지 발송 → 투표 생성/참여(중복 참여 차단) → 마감 → 모임 삭제 시 13개 테이블 CASCADE 0행
+    - ✅ **권한 분기 회귀 — UI와 REST 양쪽**. 일반회원 화면에는 "모임 정보 수정/역할 변경/초대 발급은 총무만" 안내만 뜨고 생성 버튼과 위험 구역이 아예 렌더링되지 않는다. **REST로 직접 8종을 시도해도 전부 막혔다**: INSERT 계열(회비 항목·납부·초대)은 `42501`, 공지 RPC는 `42501`("공지는 총무만 작성할 수 있습니다"), UPDATE/DELETE 계열(모임 수정·삭제·청구 상태 변경·**자기 자신 총무 승격**)은 RLS `USING`이 걸러 **HTTP 200 + 0행**. 시도 후 모임명·역할·청구 상태·각 테이블 건수가 하나도 변하지 않은 것을 SQL로 확인
+    - ✅ **(Task 030 → 030-1 이관분) 다중 세션 동시 투표 마감 — 드디어 재현·검증 완료.** 브라우저 컨텍스트로는 두 세션을 못 만들어 두 번 미뤄졌던 항목인데, **두 계정의 access token을 각각 받아 `woodong_close_expired_votes`를 동시 8요청**으로 때리는 방식으로 진짜 경쟁 상태를 만들었다. 결과: **정확히 1개 요청만 `1`을 반환하고 나머지 7개는 `0`**, `vote_close` 알림은 멤버 2명에게 **각 1건씩 중복 0건**. 한 문장 UPDATE 선점이 실제 동시성 아래서 의도대로 동작함
+    - ✅ **오프라인·서버 에러 폴백** — 아래 "발견하고 고친 결함" 참고. 잘못된 자격증명은 그대로 "이메일 또는 비밀번호가 올바르지 않아요."로 구분됨(회귀 확인)
+    - ✅ **360 / 768 / 1280 3개 뷰포트 회귀 — 12개 화면 × 3 = 36건 전부 가로 스크롤 0건**(`scrollWidth > clientWidth` 자동 측정)
+    - ⬜ **(Task 031에서 이관) 프로덕션 배포 후 LCP 실측 — 미수행.** 배포가 선행되어야 한다
+  - **## 발견하고 고친 결함 (코드 6건 + DB 2건)**
+    - 🔒 **`woodong_increment_invite_used_count(uuid)` — 권한 검사가 없는 SECURITY DEFINER 함수가 살아 있었다.** Task 020에서 초대 로직을 `woodong_redeem_group_invite()`로 합치며 호출부가 사라졌는데 `authenticated` EXECUTE가 남아 있었고, 함수 본문에 **호출자 검증이 한 줄도 없다**. `woodong_group_invites`의 RLS는 SELECT/INSERT/UPDATE/DELETE를 전부 `woodong_is_group_admin()`으로 막아 두었는데 이 함수는 그 검사를 통째로 우회해, 초대 UUID를 아는 사람(현재/과거 총무)이 반복 호출하면 `used_count`를 `max_uses`까지 올려 **모임 초대 링크를 영구히 소진**시킬 수 있었다. 호출부가 없으므로 `drop function`이 곧 수정(마이그레이션 `drop_woodong_increment_invite_used_count`). 삭제 후 REST 호출이 `PGRST202` 404로 떨어지는 것과, 일반회원의 초대 행 조회가 여전히 0행인 것을 함께 확인
+    - ⚡ **woodong RLS 정책 12개의 `auth.uid()` → `(select auth.uid())`** (마이그레이션 `optimize_woodong_rls_auth_uid_initplan`). performance advisor `auth_rls_initplan` 경고 12건이 **전부 해소**됐다. 판정 결과는 동일하고 플래너가 행마다 재평가하지 않고 InitPlan으로 한 번만 평가한다
+    - 🐛 **(이관분 수정) `listMyGroups`가 조회 실패와 "결과 0건"을 구분하지 못했다** — Task 024-1·030-1에서 두 번 관측된 `PGRST303`. 반환 타입을 `{ ok: true; groups } | { ok: false }`로 바꿔 **타입 차원에서 두 경우가 섞이지 않게** 막고, `PGRST303`(시계 스큐)일 때만 250ms·600ms로 짧게 두 번 재시도한다(RLS 위반처럼 다시 해도 같은 실패는 재시도하지 않는다). 화면은 빈 상태 대신 "일시적인 오류가 발생했어요 + 다시 시도"를 그린다. **`woodong_group_members`의 SELECT 권한을 잠깐 회수해 실제로 실패를 주입**해 확인했고 권한은 즉시 복구
+    - 🐛 **같은 결함이 `getGroupDetail`에도 있었다(더 넓은 영향)** — 조회 실패 시 `null`을 반환해 **모임 홈·회비·공지·투표·설정 5개 화면이 "모임을 찾을 수 없거나 접근 권한이 없어요"로 표시**됐다. 멀쩡한 멤버가 자기가 쫓겨난 줄 알게 되는 화면이다("없음"과 "비멤버"를 같이 처리하는 건 존재 여부를 숨기려는 의도된 설계지만 **조회 실패까지 여기 섞인 건 의도가 아니다**). 실패는 throw하도록 바꾸고, 에러를 통째로 버리던 멤버십 조회도 같이 고쳤다
+    - 🐛 **앱 전체에 `error.tsx`가 하나도 없었다** — 서버 컴포넌트가 throw하면 Next.js 기본 화면(`This page couldn't load` / `A server error occurred.` / `ERROR 2821105671@E394`)이 떴다. **영문이고, 헤더·푸터가 통째로 사라지고, 사용자에게 의미 없는 내부 식별자가 노출된다.** `app/error.tsx`(앱 셸 유지, 한국어, 다시 시도)와 레이아웃까지 터졌을 때를 위한 `app/global-error.tsx` 추가. 실패 주입으로 폴백이 헤더·푸터를 유지한 채 한국어로 뜨는 것을 확인
+    - 🐛 **`errors.networkError`가 4개 언어에 정의돼 있는데 쓰는 곳이 0건이었다** — 네트워크가 끊기면 `TypeError: Failed to fetch`가 오는데 코드 매핑에 걸리지 않아 "일시적인 오류"로 폴백됐다. 틀린 말은 아니지만 **사용자가 할 수 있는 일(연결 확인)을 알려주지 못한다.** `mapAuthErrorMessage()`에 네트워크 판별을 넣어 연결했고, Supabase 요청만 실패시킨 상태로 로그인해 **"네트워크 연결을 확인해주세요."**가 뜨는 것을 확인
+    - 💄 **빈 상태에서 같은 문장이 두 번 나오는 곳 2군데** — 회비 대시보드는 "회비는 수입만 집계돼요…"를 빈 상태 설명과 하단 상시 카드에서 **각각** 그렸고, 투표 목록은 `votes.emptyState`와 `emptyStates.noVotes`가 **문장이 완전히 같아** 위아래로 겹쳤다. 투표 쪽은 게다가 `votes.emptyState`가 **en/ja/zh 사전에도 한국어가 그대로** 들어 있어, 번역된 `emptyStates.noVotes`만 남기는 것으로 두 문제를 함께 해결
+    - 💄 **모임 목록 빈 상태의 설명이 페이지 제목이었다** — `EmptyDescription`에 `dict.groups.pageTitle`("모임 목록")이 들어가 있어 빈 화면에 아무 의미 없는 한 줄이 붙어 있었다. 제거(안내는 제목 문구가 하고, 바로 아래 CTA가 다음 행동을 가리킨다)
+  - **## 남은 항목 (사용자 조치 필요)**
+    - ⬜ **Vercel 프로덕션 배포** — `.vercel/` 링크가 없고 Vercel CLI도 설치돼 있지 않다. 배포에는 사용자 계정 인증이 필요해 착수하지 못했다. 환경 변수 3종(`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, 서버 전용 `SUPABASE_SERVICE_ROLE_KEY`)은 `.env.local`에 갖춰져 있고 Vercel 쪽 등록만 남았다
+    - ⬜ **프로덕션 LCP 실측** — 위 배포 이후
+    - ⬜ **`auth_leaked_password_protection` 활성화** — Supabase Auth의 프로젝트 설정(HaveIBeenPwned 대조)이라 대시보드에서 켜야 한다. MCP 도구로는 토글할 수 없다
+  - **## advisor 최종 상태**
+    - performance: **woodong 관련 WARN 0건**(12건 전부 해소). 남은 항목은 전부 INFO이고 공유 프로젝트의 **다른 앱 테이블**(`departments`, `weekly_log_*`, `brands`, `org_*`)이다
+    - security: **woodong 관련으로 새로 조치할 항목 0건.** 남은 woodong WARN 13건은 `authenticated`에게 의도적으로 연 RPC 표면으로, 각 함수가 내부에서 권한을 검사한다(오늘도 공지 RPC가 `42501`로 거부하는 것을 확인). `woodong_get_invite_preview`만 `anon`에 열려 있는데 이는 **비로그인 초대 미리보기(PRD 3.3)에 필요**하다. 그 외 WARN은 다른 앱 함수(`check_org_*`, `next_master_code`, `is_admin` 등)
+    - ⚠️ **완료 조건의 "security advisor 경고 0건"은 문자 그대로는 달성 불가**하다 — ① SECURITY DEFINER 린트는 RPC를 의도적으로 노출하는 앱에서는 정보성 경고이고, ② `auth_leaked_password_protection`은 대시보드 토글이며, ③ 나머지는 우리 소유가 아니다. **"woodong 소유 항목 중 조치 가능한 것 0건"으로 판정**한다
+  - **## 관찰(수정 안 함)**
+    - ⚠️ **사전 163개 키가 en/ja/zh에서 한국어 그대로다** — 우동 도메인 UI(Phase 3~6에서 추가된 키) 대부분. `en.ts`에 `TODO(i18n): Task 018-1 new keys below are Korean placeholders` 마커가 있는 **알려진 한계**라 이번에 손대지 않았다. 1차 MVP가 한국어 우선인 것과는 별개로, 언어 전환 기능이 노출돼 있으므로 **범위 판단이 필요**하다
+    - ⚠️ **삭제된 사용자의 세션이 로그인 상태로 렌더링된다** — 이전 Task의 테스트 계정을 DB에서 지웠는데도 브라우저에는 헤더가 로그인 상태로 떴다. `getClaims()`가 JWT를 로컬 검증만 하기 때문으로 토큰 만료 전까지 유지된다(JWT의 일반적 성질). 실사용에서 계정 삭제 기능이 없어 1차 MVP 영향은 없다
+  - **완료 조건**: ✅ 통합 시나리오 전부 통과, ✅ 권한 분기 회귀(UI + REST) 통과, ✅ 동시 마감 회귀 통과, ✅ 3개 뷰포트 36건 통과, ✅ 에러 폴백 3종(조회 실패/서버 에러/네트워크) 실패 주입으로 검증, ✅ 픽스처·테스트 계정 정리 완료(`woodong_*` 13개 테이블 0행, 테스트 계정 0개), ✅ DB 권한 원복 확인, ✅ `npm run check-all` + `npm run build` 통과, ⬜ **프로덕션 배포 및 배포 후 스모크/LCP 실측 — 미착수**, ⚠️ security advisor는 위 판정 기준으로 통과
 
 - **Task 034: 출시 전 운영·법무 준비 및 KPI 계측 기반 구축**
   - **개인정보보호법(PIPA) 대응**: 회비 납부 이력(실명 + 금액) + 전화번호 조합에 대한 개인정보 처리방침 초안 작성 및 회원가입 동의 절차 추가 여부 결정(법률 자문 권장)

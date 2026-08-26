@@ -30,7 +30,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Empty,
-  EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
@@ -221,8 +220,11 @@ export function DuesDashboard({
             <EmptyMedia variant="icon">
               <WalletIcon />
             </EmptyMedia>
+            {/*
+              "수입만 집계" 안내는 이 컴포넌트 하단에 항상 서 있는 카드가 이미 말하고 있다.
+              여기서 한 번 더 쓰면 항목이 0건일 때 같은 문장이 위아래로 두 번 붙는다(Task 033).
+            */}
             <EmptyTitle>{labels.emptyState}</EmptyTitle>
-            <EmptyDescription>{labels.incomeOnlyNotice}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
