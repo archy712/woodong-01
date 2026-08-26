@@ -8,6 +8,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { processDueReminders } from "@/lib/woodong/due-reminders";
 import { getDuesOverview } from "@/lib/woodong/queries/dues";
+import { listGroupExpenses } from "@/lib/woodong/queries/expenses";
 import { getGroupDetail, listGroupMembers } from "@/lib/woodong/queries/groups";
 
 async function DuesContent({
@@ -50,7 +51,7 @@ async function DuesContent({
   // 알림은 별도 화면(알림센터)과 헤더 배지(독립 Suspense)가 읽는다. 그래서 조회를 붙잡을
   // 이유가 없어 나란히 돌린다(Task 033 후속 LCP 최적화).
   // ⚠️ 나중에 이 화면에서 `last_reminded_at`을 표시하게 되면 다시 순서를 되돌려야 한다.
-  const [, overview, members] = await Promise.all([
+  const [, overview, members, expenses] = await Promise.all([
     processDueReminders(supabase, {
       groupId,
       titleSuffix: dict.dues.reminderNotificationTitleSuffix,
@@ -58,6 +59,9 @@ async function DuesContent({
     }),
     getDuesOverview(supabase, groupId),
     listGroupMembers(supabase, groupId, data.claims.sub),
+    // 지출도 같은 묶음에 넣는다(Task 035). 잔액 카드가 회비 수납액과 함께 그려지므로
+    // 순차로 붙이면 이 화면에 왕복 1회가 그대로 더해진다.
+    listGroupExpenses(supabase, groupId),
   ]);
 
   return (
@@ -71,7 +75,9 @@ async function DuesContent({
         paidAmounts={overview.paidAmounts}
         members={members}
         isAdmin={detail.role === "admin"}
+        expenses={expenses}
         labels={dict.dues}
+        expenseLabels={dict.expenses}
         commonLabels={dict.common}
         unnamedMemberLabel={dict.groups.members.unnamedMemberLabel}
       />

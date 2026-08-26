@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/empty";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import type { ExpenseRow } from "@/lib/woodong/expenses";
+import { ExpenseSection } from "@/components/dues/expense-section";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 const STATUS_BADGE_VARIANT: Record<
@@ -129,7 +131,9 @@ export function DuesDashboard({
   paidAmounts,
   members,
   isAdmin,
+  expenses,
   labels,
+  expenseLabels,
   commonLabels,
   unnamedMemberLabel,
 }: {
@@ -142,7 +146,10 @@ export function DuesDashboard({
   paidAmounts: Record<string, number>;
   members: GroupMemberRow[];
   isAdmin: boolean;
+  /** 모임 지출 목록 (Task 035). 잔액 카드의 "지출" 쪽 근거다. */
+  expenses: ExpenseRow[];
   labels: Dictionary["dues"];
+  expenseLabels: Dictionary["expenses"];
   commonLabels: Dictionary["common"];
   unnamedMemberLabel: string;
 }) {
@@ -459,11 +466,20 @@ export function DuesDashboard({
         </Tabs>
       )}
 
-      <Card className="border-dashed">
-        <CardContent className="py-4 text-sm text-muted-foreground">
-          {labels.incomeOnlyNotice}
-        </CardContent>
-      </Card>
+      {/*
+        1차 MVP에서는 이 자리에 "수입만 집계합니다"라는 안내 카드가 있었다. 지출 데이터가
+        생기면서(Task 035) 그 문장이 더 이상 사실이 아니게 되어 잔액 + 지출 내역으로 바꿨다.
+      */}
+      <ExpenseSection
+        groupId={groupId}
+        expenses={expenses}
+        paidAmounts={paidAmounts}
+        members={members}
+        isAdmin={isAdmin}
+        labels={expenseLabels}
+        commonLabels={commonLabels}
+        unnamedMemberLabel={unnamedMemberLabel}
+      />
     </div>
   );
 }

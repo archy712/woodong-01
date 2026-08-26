@@ -1970,6 +1970,53 @@ export type Database = {
           },
         ];
       };
+      woodong_expenses: {
+        Row: {
+          amount: number;
+          category: string;
+          created_at: string;
+          created_by: string | null;
+          group_id: string;
+          id: string;
+          memo: string | null;
+          paid_by: string | null;
+          receipt_object_path: string | null;
+          spent_at: string;
+        };
+        Insert: {
+          amount: number;
+          category: string;
+          created_at?: string;
+          created_by?: string | null;
+          group_id: string;
+          id?: string;
+          memo?: string | null;
+          paid_by?: string | null;
+          receipt_object_path?: string | null;
+          spent_at: string;
+        };
+        Update: {
+          amount?: number;
+          category?: string;
+          created_at?: string;
+          created_by?: string | null;
+          group_id?: string;
+          id?: string;
+          memo?: string | null;
+          paid_by?: string | null;
+          receipt_object_path?: string | null;
+          spent_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "woodong_expenses_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "woodong_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       woodong_group_invites: {
         Row: {
           code: string;

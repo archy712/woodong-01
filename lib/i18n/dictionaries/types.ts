@@ -245,7 +245,6 @@ export interface Dictionary {
     reminderNotificationTitleSuffix: string;
     /** 회비 리마인드 알림 본문(Task 028). */
     reminderNotificationBody: string;
-    incomeOnlyNotice: string;
     memberProgressTitle: string;
     unpaidHighlightTitle: string;
     emptyState: string;
@@ -277,6 +276,56 @@ export interface Dictionary {
       deleteConfirmMessage: string;
       deleteSuccessToast: string;
     };
+  };
+  /** 지출 내역·잔액 (PRD 3.4-b, Task 035). */
+  expenses: {
+    sectionTitle: string;
+    addButton: string;
+    emptyState: string;
+    adminOnlyNotice: string;
+    /** `woodong_expenses.category` CHECK 제약과 1:1로 대응한다. 값을 늘리면 여기도 함께 늘린다. */
+    category: {
+      meal: string;
+      event: string;
+      supplies: string;
+      venue: string;
+      transport: string;
+      other: string;
+    };
+    balance: {
+      title: string;
+      incomeLabel: string;
+      expenseLabel: string;
+      balanceLabel: string;
+      /** 수입이 "청구액"이 아니라 "실제 수납액"임을 알리는 각주. */
+      note: string;
+    };
+    form: {
+      createTitle: string;
+      editTitle: string;
+      categoryLabel: string;
+      categoryPlaceholder: string;
+      amountLabel: string;
+      spentAtLabel: string;
+      paidByLabel: string;
+      paidByNone: string;
+      memoLabel: string;
+      receiptLabel: string;
+      receiptHint: string;
+      receiptRemoveButton: string;
+      receiptUploadError: string;
+      submitButton: string;
+      submittingLabel: string;
+      createSuccessToast: string;
+      updateSuccessToast: string;
+    };
+    receiptViewLabel: string;
+    receiptNoneLabel: string;
+    editButton: string;
+    deleteButton: string;
+    deleteDialogTitle: string;
+    deleteConfirmMessage: string;
+    deleteSuccessToast: string;
   };
   votes: {
     pageTitle: string;

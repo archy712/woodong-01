@@ -2,13 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import {
-  BellIcon,
-  MegaphoneIcon,
-  UsersIcon,
-  VoteIcon,
-  WalletIcon,
-} from "lucide-react";
+import { MegaphoneIcon, UsersIcon, VoteIcon, WalletIcon } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -242,13 +236,6 @@ async function GroupDetailContent({
               {dict.groups.dashboard.noOpenVotes}
             </p>
           )}
-        </CardContent>
-      </Card>
-
-      <Card className="border-dashed">
-        <CardContent className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-          <BellIcon className="size-4 shrink-0" />
-          {dict.dues.incomeOnlyNotice}
         </CardContent>
       </Card>
     </div>
