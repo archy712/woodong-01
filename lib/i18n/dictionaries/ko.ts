@@ -518,12 +518,24 @@ export const ko: Dictionary = {
       webPush: "웹 푸시",
       inAppDescription: "알림센터와 종 아이콘으로 받아요.",
       webPushDescription:
-        "브라우저 알림으로 받아요. 2차 업데이트에서 지원할 예정이라 지금은 설정만 저장돼요.",
+        "브라우저 알림으로 받아요. 켜면 이 브라우저의 알림 권한을 요청해요.",
       comingSoonNotice:
-        "지금은 앱 내 알림만 실제로 전송돼요. 앱 내 알림을 끄면 새 공지가 와도 알림센터에 쌓이지 않아요.",
+        "앱 내 알림을 끄면 새 공지가 와도 알림센터에 쌓이지 않아요. 웹 푸시 발송이 끝내 실패하면 앱 내 알림으로 대신 남겨 드려요.",
       saveSuccessToast: "알림 설정을 저장했어요.",
       saveErrorToast:
         "알림 설정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.",
+      webPushUnsupported: "이 브라우저는 웹 푸시를 지원하지 않아요.",
+      webPushPermissionDenied:
+        "브라우저에서 알림이 차단돼 있어요. 주소창 옆 사이트 설정에서 알림을 허용한 뒤 다시 켜주세요.",
+      webPushSubscribeErrorToast:
+        "브라우저 알림을 켜지 못했어요. 잠시 후 다시 시도해주세요.",
+      webPushActiveNotice:
+        "지금 이 브라우저로 알림을 받고 있어요. 다른 기기에서 켜면 이 기기의 구독은 해제돼요.",
+      webPushMissingKeyNotice:
+        "이 환경에는 웹 푸시 키가 설정되지 않아 켤 수 없어요.",
+      webPushIosInstallTitle: "iPhone·iPad는 홈 화면에 추가해야 받을 수 있어요",
+      webPushIosInstallBody:
+        "Safari 아래쪽 공유 버튼 → '홈 화면에 추가'로 우동을 설치한 뒤, 설치된 우동에서 이 스위치를 켜주세요.",
     },
     types: {
       announcement: "공지",

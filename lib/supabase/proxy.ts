@@ -61,6 +61,12 @@ export async function updateSession(request: NextRequest) {
     "/tech-stack",
     "/privacy", // 이하 법적 고지 (Task 034) — 가입 전에 읽을 수 있어야 하므로 공개
     "/terms",
+    // 이하 PWA 자원 (Task 038). 모든 페이지가 참조하고 브라우저가 로그인 상태와 무관하게
+    // 가져간다 — 로그인 페이지로 리다이렉트되면 매니페스트/아이콘이 깨진다.
+    // (`/sw.js`는 아예 proxy 매처에서 빠져 있다. Service Worker 업데이트 확인은 세션과
+    //  무관해야 하고, 여기서 Supabase 왕복을 한 번 더 하게 만들 이유가 없다.)
+    "/manifest.webmanifest",
+    "/pwa-icon",
   ];
 
   if (

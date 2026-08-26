@@ -5,6 +5,11 @@ import eslintConfigPrettier from "eslint-config-prettier";
 // eslint-config-prettier는 반드시 배열 마지막에 위치해야 함
 // (포맷팅은 Prettier가 전담하도록 ESLint의 스타일 관련 규칙을 끔)
 const eslintConfig = [
+  {
+    // Supabase Edge Function(Deno 런타임)은 앱과 다른 전역·모듈 해석 규칙을 쓴다.
+    // public/sw.js도 마찬가지로 Service Worker 전역(self, clients)에서 동작한다.
+    ignores: ["supabase/functions/**", "public/sw.js"],
+  },
   ...nextCoreWebVitals,
   ...nextTypescript,
   eslintConfigPrettier,

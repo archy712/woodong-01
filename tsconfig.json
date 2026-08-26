@@ -30,5 +30,11 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    // Supabase Edge Function은 Deno 런타임 소스다. `npm:`/`jsr:` 스펙 지정자와 전역 `Deno`를
+    // 쓰기 때문에 Next.js 앱의 tsconfig로는 검사할 수 없다(타입이 아니라 런타임이 다르다).
+    // 이 코드의 검증은 배포 시 Supabase가 하고, 동작 검증은 실제 호출로 한다(Task 038).
+    "supabase/functions"
+  ]
 }

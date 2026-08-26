@@ -38,7 +38,16 @@ type NotificationRow = Notification & {
   woodong_groups: { name: string } | null;
 };
 
-/** 로그인 사용자의 알림 목록. 최신순. 실패해도 throw하지 않고 빈 배열로 폴백한다. */
+/**
+ * 로그인 사용자의 알림 목록. 최신순. 실패해도 throw하지 않고 빈 배열로 폴백한다.
+ *
+ * ⚠️ `channel = 'in_app'`으로 거른다(Task 038). 웹 푸시를 켠 사용자는 한 사건에 대해
+ * `in_app` 행과 `web_push` 행을 **둘 다** 갖게 되는데, 후자는 기기로 보낸 발송 기록이지
+ * 알림센터에 쌓일 항목이 아니다. 거르지 않으면 같은 알림이 목록에 두 번 뜬다.
+ *
+ * 웹 푸시가 끝내 실패한 경우는 `woodong_mark_push_failed`가 `in_app` 행을
+ * `fallback_sent`로 새로 만들어 주므로(PRD 4.4), 이 필터로도 정보를 놓치지 않는다.
+ */
 export async function listMyNotifications(
   supabase: Client,
   limit = NOTIFICATIONS_PAGE_SIZE,
@@ -46,6 +55,7 @@ export async function listMyNotifications(
   const { data, error } = await supabase
     .from("woodong_notifications")
     .select(`${NOTIFICATION_COLUMNS}, woodong_groups(name)`)
+    .eq("channel", "in_app")
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -75,6 +85,7 @@ export async function countUnreadNotifications(
   const { count, error } = await supabase
     .from("woodong_notifications")
     .select("id", { count: "exact", head: true })
+    .eq("channel", "in_app")
     .is("read_at", null);
 
   if (error) {
@@ -92,11 +103,17 @@ export async function countUnreadNotifications(
 export type ChannelPreference = {
   channel: NotificationChannel;
   enabled: boolean;
-  /** `web_push`의 Push 구독 정보(JSON) 유무. 실제 구독 등록은 Task 038 몫이라 1차에서는 항상 `false`. */
+  /**
+   * `web_push`의 Push 구독 정보(JSON)가 저장돼 있는지.
+   *
+   * 켜져 있어도 이 값이 `false`면 보낼 곳이 없다는 뜻이라 팬아웃 대상에서 빠진다
+   * (`woodong_notification_channels`). 화면은 이 값으로 "지금 이 브라우저로 받는 중"
+   * 안내를 그린다.
+   */
   hasDestination: boolean;
 };
 
-/** 화면에 그리는 순서. `in_app`이 1차에서 유일하게 실제 발송되는 채널이라 위에 둔다. */
+/** 화면에 그리는 순서. `in_app`이 항상 받을 수 있는 기본 채널이라 위에 둔다. */
 export const CHANNEL_ORDER: NotificationChannel[] = ["in_app", "web_push"];
 
 /**

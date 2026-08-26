@@ -479,12 +479,25 @@ export interface Dictionary {
       webPush: string;
       /** `in_app` 채널의 보조 설명. */
       inAppDescription: string;
-      /** `web_push` 채널의 보조 설명 — 1차에서는 설정만 저장된다는 안내. */
+      /** `web_push` 채널의 보조 설명. */
       webPushDescription: string;
       comingSoonNotice: string;
       saveSuccessToast: string;
       /** 저장 실패 토스트. */
       saveErrorToast: string;
+      /** 이하 웹 푸시 구독 UX (Task 038). */
+      webPushUnsupported: string;
+      /** 브라우저가 알림을 차단한 상태 — 사이트 설정에서 직접 풀어야 한다. */
+      webPushPermissionDenied: string;
+      /** 구독/해지 중 예기치 못한 실패. */
+      webPushSubscribeErrorToast: string;
+      /** 구독이 저장된 상태에서 보여 주는 안내(기기 하나만 등록된다는 제약 포함). */
+      webPushActiveNotice: string;
+      /** VAPID 공개 키가 주입되지 않은 배포에서 보여 주는 안내. */
+      webPushMissingKeyNotice: string;
+      /** iOS는 홈 화면에 추가해야 푸시가 동작한다(PRD 9장). */
+      webPushIosInstallTitle: string;
+      webPushIosInstallBody: string;
     };
     types: {
       announcement: string;

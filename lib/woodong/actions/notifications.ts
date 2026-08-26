@@ -7,7 +7,9 @@ import { isRlsError, mapSupabaseError } from "@/lib/woodong/errors";
 import type { ActionResult } from "@/lib/woodong/common";
 import {
   updateChannelPreferenceSchema,
+  updateWebPushSubscriptionSchema,
   type UpdateChannelPreferenceInput,
+  type UpdateWebPushSubscriptionInput,
 } from "@/lib/woodong/notifications";
 
 /**
@@ -203,4 +205,67 @@ export async function updateChannelPreferenceAction(
   revalidatePath("/protected/me");
 
   return { success: true, data: { channel, enabled } };
+}
+
+/**
+ * 웹 푸시 구독 저장/해지 (Task 038).
+ *
+ * 채널 on/off만 다루는 `updateChannelPreferenceAction`과 나누어 둔 이유는, 웹 푸시는
+ * **켜는 것과 목적지를 확보하는 것이 같은 동작**이기 때문이다. 브라우저 권한 허용 →
+ * `PushManager.subscribe()` → 그 결과를 `destination`에 저장까지가 한 묶음이고, 중간에
+ * 끊기면 "켜져 있는데 못 보내는" 상태가 된다.
+ *
+ * 끌 때는 `enabled = false`와 함께 **`destination`도 비운다.** 남겨 두면 죽은 구독이 계속
+ * 쌓이고(로드맵의 "만료·무효화된 Push 구독 정리"), 다시 켤 때 예전 구독이 되살아난 것처럼
+ * 보이지만 실제로는 브라우저 쪽에서 이미 해지된 값이라 첫 발송이 404로 실패한다.
+ *
+ * `destination`은 텍스트 컬럼이라 JSON을 문자열로 넣는다(PRD 5.13이 정한 형태).
+ */
+export async function updateWebPushSubscriptionAction(
+  input: UpdateWebPushSubscriptionInput,
+): Promise<ActionResult<{ enabled: boolean }>> {
+  const parsed = updateWebPushSubscriptionSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClient();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
+
+  const userId = claimsData?.claims?.sub;
+  if (claimsError || !userId) {
+    return { success: false, formError: "로그인이 필요합니다." };
+  }
+
+  const { enabled, subscription } = parsed.data;
+
+  const { error } = await supabase
+    .from("woodong_notification_preferences")
+    .upsert(
+      {
+        user_id: userId,
+        channel: "web_push",
+        enabled,
+        destination:
+          enabled && subscription ? JSON.stringify(subscription) : null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,channel" },
+    );
+
+  if (error) {
+    console.error("[updateWebPushSubscriptionAction] upsert failed:", error);
+    if (isRlsError(error)) {
+      return {
+        success: false,
+        formError: "본인의 알림 설정만 변경할 수 있어요.",
+      };
+    }
+    return { success: false, formError: mapSupabaseError(error) };
+  }
+
+  revalidatePath("/protected/me");
+
+  return { success: true, data: { enabled } };
 }
