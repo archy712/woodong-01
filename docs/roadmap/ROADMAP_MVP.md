@@ -8,8 +8,8 @@
 - **사용자 노출명**: 우동 (Woodong)
 - **1차 MVP 목표 기간**: 4주 (약 160h, 1인 개발 기준)
 
-**📅 최종 업데이트**: 2026-08-26
-**📊 진행 상황**: Phase 0~7 완료(1차 MVP 범위 전량) + Phase 8 진행 중 — **42/44 Tasks 완료**. 프로덕션 배포됨: https://woodong-01.vercel.app
+**📅 최종 업데이트**: 2026-08-30
+**📊 진행 상황**: Phase 0~7 완료(1차 MVP 범위 전량) + Phase 8 진행 중 — **43/44 Tasks 완료**. 프로덕션 배포됨: https://woodong-01.vercel.app
 
 ---
 
@@ -880,12 +880,29 @@
   - **⚠️ 운영자 조치 필요 1건**: Vercel 환경변수 `NEXT_PUBLIC_VAPID_PUBLIC_KEY` 추가(공개 키라 비밀 아님). 없으면 프로덕션에서 스위치가 잠기고 안내 문구가 뜬다 — **다른 기능에는 영향 없음**. 값과 절차는 `docs/ops/WEB_PUSH.md` 최상단
   - **완료 조건**: ✅ VAPID 키 발급 + Vault 보관, ✅ Service Worker 등록(`push`/`notificationclick`)과 PWA 매니페스트, ✅ Edge Function `woodong-push-dispatch` + pg_cron 잡(1분) 실동작, ✅ 권한 요청 UX와 구독 정보 `destination` 저장, ✅ iOS "홈 화면에 추가" 온보딩 안내, ✅ 재시도 3회(1/5/15분) + 최종 실패 시 앱 내 폴백 + 상태 4종 기록(실측), ✅ 만료·무효 구독 정리(410 → destination 비우고 채널 끄기), ✅ `npm run check-all` + `npm run build` 통과, ✅ 프로덕션 데이터 원복
 
-- **Task 039: Naver 스파이크 및 Apple 로그인 검토**
-  - **Naver: 1~2일 스파이크(PoC)** — Custom OAuth 설정 또는 Route Handler + `auth.admin` API 자체 콜백 구현의 적합성 검증(네이버가 표준 OIDC discovery를 제공하지 않아 불확실). **스파이크 결과에 따라 구현 여부 결정**
-  - Apple: iOS 앱 래핑 계획이 구체화되는 시점에 재검토(App Store 심사 정책상 타 소셜 로그인 제공 시 Apple 로그인 필수, 이메일 릴레이(Hide My Email) 대응 필요)
-  - Facebook: 국내 타겟 사용률 낮아 보류 유지
+- **Task 039: Naver 스파이크 및 Apple 로그인 검토** ✅ - 완료 (스파이크 종료, 실구현은 조건부 GO)
+  - **## 로드맵이 깔고 있던 전제 2개가 모두 뒤집혔다**
+    - ✅ **네이버는 표준 OIDC discovery를 제공한다** — `https://nid.naver.com/.well-known/openid-configuration`이 200으로 응답(issuer `https://nid.naver.com`, PKCE S256, RS256, pairwise sub). "제공하지 않아 불확실"하다는 Task 039의 전제는 더 이상 사실이 아니다
+    - ✅ **Supabase Auth가 Custom OAuth/OIDC provider를 정식 지원하고, 우동 프로젝트에 이미 들어와 있다** — `auth.custom_oauth_providers` 테이블이 최신 스펙 컬럼(`attribute_mapping`·`email_optional`·`skip_nonce_check` 등)째로 존재하고 등록된 provider는 0건. 무료 플랜 3개 쿼터라 **플랜 업그레이드도 마이그레이션도 불필요**. 설치된 `@supabase/supabase-js` 2.112.3의 `Provider` 타입도 이미 `custom:${string}`을 포함해 **패키지 업그레이드 없이** `signInWithOAuth({ provider: "custom:naver" })`가 타입을 통과한다
+    - → **결정 N-1: 로드맵 대안 2(Route Handler + `auth.admin` 자체 콜백)는 채택하지 않는다.** secret key를 Next 앱에 들이고 세션 발급·identity 연결·자동 연결 판정을 재구현해야 하는데 Custom Provider가 같은 일을 한다
+  - **## 그래도 바로 구현하지 않은 이유 — 이메일 클레임 1건이 계정 정책을 가른다**
+    - 네이버 discovery의 `scopes_supported`는 **`["openid","profile"]`뿐이고 `email`이 없다.** 이메일은 scope가 아니라 네이버 개발자센터의 "제공 정보" 설정으로 결정돼 `/v1/nid/me` 응답에 실린다
+    - GoTrue 소스(`internal/api/provider/custom_oauth.go`) 확인 결과 **`oidc` 타입은 `id_token`이 있으면 userinfo 엔드포인트를 아예 호출하지 않는다.** 네이버는 항상 `id_token`을 주므로, **`id_token`에 `email`이 없으면 네이버 사용자는 전원 이메일 없는 별도 계정**이 되어 자동 계정 연결(PRD 3.6.2)이 무력화된다 — Task 016에서 `custom:kakao`를 버렸던 것과 정확히 같은 함정
+    - 우회 수단도 막혀 있다. `attribute_mapping`은 `applyAttributeMapping()`이 클레임을 평면 맵으로 펴 놓고 대입할 뿐이라 **중첩 경로(`response.email`)를 못 쓴다.** 네이버 프로필 API는 `{resultcode, message, response:{id, email, …}}` 로 한 겹 감싸서 준다 → **`oauth2` 타입으로 `/v1/nid/me`를 직결하는 안(옵션 B)은 불가**
+    - → **결정 N-2/N-3**: 1단계는 Custom OIDC로 붙여 `auth.identities.identity_data`에서 `email`/`email_verified`/`sub`를 실측하고, 없으면 **Custom OAuth2 + userinfo 프록시 Edge Function**(`/v1/nid/me`를 `{sub, email, email_verified, …}`로 평탄화, `verify_jwt: false`)으로 전환한다. GoTrue가 userinfo를 `Authorization: Bearer`로 GET한다는 것까지 소스로 확인했다
+    - ⚠️ 옵션 C를 택하면 **프록시가 `email_verified`를 선언하는 순간 기존 Google/Kakao 계정과 자동 연결된다.** 편의와 계정 탈취 리스크가 맞바뀌는 보안 결정이라 착수 시 명시적으로 정하고 PRD 3.6.2에 반영해야 한다
+  - **## 남은 미확인 4건은 라이브 로그인 1회로 전부 결판난다** — `id_token`의 `email`(U-1)·`email_verified`(U-2) 유무, 네이버가 "필수"라고 명시한 **토큰 교환 시 `state`를 GoTrue가 보내지 않는데도 교환이 통과하는지**(U-3), pairwise `sub`의 안정성(U-4). U-3은 더미 자격증명으로 `state` 유무를 바꿔 호출해 봤으나 둘 다 `invalid_client`(401)로 같아 **client 검증이 먼저 걸린다는 것만 확인**했다
+  - **⚠️ 운영자 조치 필요 2건 (이것이 실구현의 착수 조건 = 결정 N-4)**: (1) 네이버 개발자센터 앱 등록 — Callback URL은 Google/Kakao와 동일한 `https://ybhluyzkmpjmrxyhkolt.supabase.co/auth/v1/callback`, 제공 정보에서 **이메일·이름을 "필수 제공"으로 신청**(추가 제공은 사용자가 거부 가능), (2) 사전 검수 요청 — 승인 전에는 등록된 아이디로만 로그인된다. 절차·등록 명령·30분 검증 시나리오는 `docs/ops/NAVER_LOGIN_SPIKE.md`
+  - **자격증명 없이는 라이브 검증이 불가능하므로 앱 코드에는 아무것도 넣지 않았다** — 테스트 못 하는 인증 경로를 늘리지 않는다는 판단(로드맵 품질 기준: 인증 Task는 E2E 통과 후 완료). 실구현은 Task 040 항목으로 이관
+  - **## Apple — 계속 보류, 트리거를 "iOS 앱 스토어 등록 결정"으로 구체화**
+    - Supabase 네이티브 지원이라 기술 리스크는 없다. 걸리는 건 **Apple Developer Program 연 $99**와 **최대 6개월마다 갱신해야 하는 client secret JWT(ES256)** 운영 부담
+    - App Store 심사 지침 4.8은 **앱을 스토어에 낼 때** 적용된다. 우동은 현재 **PWA**(Task 038의 "홈 화면에 추가")라 심사 대상이 아니므로 **지금 붙일 이유가 없다**
+    - ⚠️ 붙일 때는 Hide My Email 릴레이 주소(`@privaterelay.appleid.com`) 때문에 **이메일 기반 자동 계정 연결이 사실상 무력화**되고 Task 040의 "자동 연결 이메일 알림"과도 충돌한다는 점을 함께 설계해야 한다
+  - **## Facebook — 보류 유지**, 재평가 트리거만 명시: Task 034 KPI(K1/K2) 가입 이탈 분석에서 "지원 소셜 없음"이 유의미하게 잡힐 때. 네이티브 지원이라 필요해지면 즉시 추가 가능
+  - **완료 조건**: ✅ 네이버 OIDC discovery 실측, ✅ Supabase Custom Provider 지원 여부를 **프로젝트 DB에서 직접 확인**, ✅ 클라이언트 타입·콜백 라우트 영향 범위 확인(변경 0줄), ✅ 옵션 4개(A/B/C/D) 비교 후 권장안 확정 + 결정 4건(N-1~~N-4) 기록, ✅ Apple·Facebook 재검토 트리거 갱신, ✅ 스파이크 문서 `docs/ops/NAVER_LOGIN_SPIKE.md` 작성, ✅ 프로덕션 데이터·설정 무변경(읽기 전용 조회만, provider 등록 0건), ⚠️ **실구현은 운영자 조치 2건 완료 후 착수**(Task 040으로 이관), ⚠️ 미확인 4건(U-1~~U-4)은 자격증명 확보 후 라이브 1회로 해소
 
 - **Task 040: 운영 고도화 및 잔여 확장 항목**
+  - **네이버 로그인 실구현**(Task 039 스파이크 결과 조건부 GO) — 운영자 조치 2건(네이버 앱 등록 + 검수) 선행 필수. 착수 시 `docs/ops/NAVER_LOGIN_SPIKE.md`의 라이브 검증(U-1~U-4) → 옵션 A(Custom OIDC) 또는 옵션 C(Custom OAuth2 + userinfo 프록시 Edge Function) 확정 → 버튼·아이콘·4개 언어 사전 추가 순서로 진행
   - 계정 자동 연결 발생 시 **이메일 알림 발송**(PRD 3.6.2 정책 5번, 1차는 인앱 토스트만)
   - Supabase Storage **Pro 플랜 업그레이드 시 서버 사이드 이미지 변환으로 전환**(1차 클라이언트 리사이즈 대체)
   - 모임 유형 다양화(스터디, 취미모임 템플릿)에 따른 UI 커스터마이징
@@ -911,24 +928,24 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 
 ## 리스크 및 결정 필요 사항 (PRD 9장 연계)
 
-| 리스크                                                                             | 상태                                                                                  | 로드맵 반영 위치                                     |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Supabase 프로젝트 공유(무료 슬롯 부족)                                             | 해결 — `woodong_` 접두어 격리 + 기존 테이블 무변경                                    | Task 001, 002 / 잔여: 용량·커넥션 모니터링(Task 034) |
-| Naver OAuth 네이티브 미지원                                                        | 1차 제외 확정, 2차 스파이크 후 결정                                                   | Task 016(제외 명시), Task 039(스파이크)              |
-| 계정 자동 연결(끌 수 없는 플랫폼 기본 동작)                                        | 결정 완료 — 자동 연결 수용 + 사후 고지                                                | Task 016 / 이메일 알림은 Task 040                    |
-| **Kakao Biz App 미등록 시 이메일 미제공**                                          | 착수 시점 결정 필요 — "Allow users without an email" 활성화 및 Biz App 등록 일정 확인 | Task 001(옵션 결정), Task 016(예외 플로우)           |
-| 웹 푸시 iOS 지원 제약(홈 화면 추가 필요) (v1.6, 카카오톡 알림톡/Slack/이메일 대체) | 해결 — iOS·미설치이면 스위치를 잠그고 "홈 화면에 추가" 안내를 노출(Task 038)          | Task 038                                             |
-| Storage 서버 사이드 변환 Pro 플랜 전용                                             | 1차는 클라이언트 리사이즈로 대체                                                      | Task 004 / 전환은 Task 040                           |
-| Free 플랜 7일 미사용 시 프로젝트 일시정지                                          | 운영 루틴으로 대응                                                                    | Task 001, Task 034                                   |
-| 개인정보보호법(PIPA) 대응                                                          | 출시 전 처리방침·동의 절차 결정 필요(법률 자문 권장)                                  | Task 034                                             |
-| 금융 정보 취급 법적 고지                                                           | 이용약관 문구 결정 필요, PG 연동은 MVP 명시적 제외                                    | Task 034                                             |
-| **총무 단일 실패점**                                                               | 결정 완료 — 마지막 총무 역할 변경/탈퇴 차단을 1차에 포함                              | Task 003(트리거), Task 021(UI 이중 방어)             |
-| 초대 코드 유출                                                                     | 설계 완료 — 만료·최대 사용 횟수 필수화 + 재발급 시 기존 코드 무효화                   | Task 020                                             |
-| 정산 데이터 정확성(수동 입력 의존)                                                 | 해결 — 검토 단계(초안 → 발행) 도입 확정, 발행분은 트리거로 불변 처리                  | Task 036                                             |
-| 정산 데이터 이관 부재(총무 교체)                                                   | 1차 제외, 2차 CSV 내보내기                                                            | Task 040                                             |
-| 알림 발송 비용 (v1.6 갱신 — 웹 푸시는 무료)                                        | 리스크 해소, 별도 비용 시뮬레이션 불필요                                              | Task 038                                             |
-| 스타터킷 데모 페이지(`/avatars`, `/charts`, `/about`, `/tech-stack`) 존치 여부     | 결정 완료 — `/about`만 제거, 나머지 3개는 유지(`/tech-stack` 문구는 우동 기준 교정)   | Task 032                                             |
-| 1차 MVP 공수 초과(163~212h vs 4주 160h)                                            | 해결 — 3.4-b·스케줄러·Naver/Apple을 2차로 이동해 범위 축소                            | Phase 8 격리                                         |
+| 리스크                                                                             | 상태                                                                                     | 로드맵 반영 위치                                            |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Supabase 프로젝트 공유(무료 슬롯 부족)                                             | 해결 — `woodong_` 접두어 격리 + 기존 테이블 무변경                                       | Task 001, 002 / 잔여: 용량·커넥션 모니터링(Task 034)        |
+| Naver OAuth 네이티브 미지원                                                        | 해소 — 네이버가 표준 OIDC discovery 제공 + Supabase Custom Provider 지원 확인(조건부 GO) | Task 016(제외 명시), Task 039(스파이크) / 실구현은 Task 040 |
+| 계정 자동 연결(끌 수 없는 플랫폼 기본 동작)                                        | 결정 완료 — 자동 연결 수용 + 사후 고지                                                   | Task 016 / 이메일 알림은 Task 040                           |
+| **Kakao Biz App 미등록 시 이메일 미제공**                                          | 착수 시점 결정 필요 — "Allow users without an email" 활성화 및 Biz App 등록 일정 확인    | Task 001(옵션 결정), Task 016(예외 플로우)                  |
+| 웹 푸시 iOS 지원 제약(홈 화면 추가 필요) (v1.6, 카카오톡 알림톡/Slack/이메일 대체) | 해결 — iOS·미설치이면 스위치를 잠그고 "홈 화면에 추가" 안내를 노출(Task 038)             | Task 038                                                    |
+| Storage 서버 사이드 변환 Pro 플랜 전용                                             | 1차는 클라이언트 리사이즈로 대체                                                         | Task 004 / 전환은 Task 040                                  |
+| Free 플랜 7일 미사용 시 프로젝트 일시정지                                          | 운영 루틴으로 대응                                                                       | Task 001, Task 034                                          |
+| 개인정보보호법(PIPA) 대응                                                          | 출시 전 처리방침·동의 절차 결정 필요(법률 자문 권장)                                     | Task 034                                                    |
+| 금융 정보 취급 법적 고지                                                           | 이용약관 문구 결정 필요, PG 연동은 MVP 명시적 제외                                       | Task 034                                                    |
+| **총무 단일 실패점**                                                               | 결정 완료 — 마지막 총무 역할 변경/탈퇴 차단을 1차에 포함                                 | Task 003(트리거), Task 021(UI 이중 방어)                    |
+| 초대 코드 유출                                                                     | 설계 완료 — 만료·최대 사용 횟수 필수화 + 재발급 시 기존 코드 무효화                      | Task 020                                                    |
+| 정산 데이터 정확성(수동 입력 의존)                                                 | 해결 — 검토 단계(초안 → 발행) 도입 확정, 발행분은 트리거로 불변 처리                     | Task 036                                                    |
+| 정산 데이터 이관 부재(총무 교체)                                                   | 1차 제외, 2차 CSV 내보내기                                                               | Task 040                                                    |
+| 알림 발송 비용 (v1.6 갱신 — 웹 푸시는 무료)                                        | 리스크 해소, 별도 비용 시뮬레이션 불필요                                                 | Task 038                                                    |
+| 스타터킷 데모 페이지(`/avatars`, `/charts`, `/about`, `/tech-stack`) 존치 여부     | 결정 완료 — `/about`만 제거, 나머지 3개는 유지(`/tech-stack` 문구는 우동 기준 교정)      | Task 032                                                    |
+| 1차 MVP 공수 초과(163~212h vs 4주 160h)                                            | 해결 — 3.4-b·스케줄러·Naver/Apple을 2차로 이동해 범위 축소                               | Phase 8 격리                                                |
 
 ---
 
@@ -943,5 +960,5 @@ Phase 1 (006~009) ──┴──> Phase 2 (010~014) ─────────
 
 ---
 
-**📅 최종 업데이트**: 2026-08-26
-**📊 진행 상황**: Phase 0~7 완료(1차 MVP 출시 준비 완료), Phase 8 진행 중 — 잔여 Task 039·040 (42/44 Tasks 완료)
+**📅 최종 업데이트**: 2026-08-30
+**📊 진행 상황**: Phase 0~7 완료(1차 MVP 출시 준비 완료), Phase 8 진행 중 — 잔여 Task 040 (43/44 Tasks 완료)
