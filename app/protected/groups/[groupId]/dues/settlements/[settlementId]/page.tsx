@@ -86,6 +86,7 @@ async function SettlementDetailContent({
         isAdmin={detail.role === "admin"}
         labels={dict.settlements}
         commonLabels={dict.common}
+        exportLabels={dict.exports}
         // 항목 카테고리 문구는 회비·지출 화면과 같은 사전을 쓴다. 정산에만 따로 두면
         // 같은 카테고리가 화면마다 다른 이름으로 보인다.
         categoryLabels={{

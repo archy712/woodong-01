@@ -2,7 +2,13 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2Icon, PrinterIcon, SendIcon, Trash2Icon } from "lucide-react";
+import {
+  DownloadIcon,
+  Loader2Icon,
+  PrinterIcon,
+  SendIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -235,6 +241,7 @@ export function SettlementDetailView({
   isAdmin,
   labels,
   commonLabels,
+  exportLabels,
   categoryLabels,
   unnamedMemberLabel,
   groupName,
@@ -249,6 +256,8 @@ export function SettlementDetailView({
   isAdmin: boolean;
   labels: Dictionary["settlements"];
   commonLabels: Dictionary["common"];
+  /** CSV 내보내기 문구 (Task 040). 이 리포트 하나만 받는 버튼에 쓴다. */
+  exportLabels: Dictionary["exports"];
   categoryLabels: {
     dueType: Record<string, string>;
     expense: Record<string, string>;
@@ -290,6 +299,21 @@ export function SettlementDetailView({
             <PrinterIcon />
             {labels.detail.printButton}
           </Button>
+          {/*
+            이 리포트 하나만 CSV로 받는다(Task 040). 인쇄본은 사람이 읽는 결과물이고 CSV는
+            다음 총무가 시트에서 이어 쓰는 결과물이라 둘 다 필요하다. 총무 전용인 이유는
+            Route Handler 주석 참고 — 링크를 직접 열어도 403이다.
+          */}
+          {isAdmin && (
+            <Button asChild variant="outline" size="sm">
+              <a
+                href={`/protected/groups/${groupId}/dues/export?dataset=settlements&settlementId=${settlement.id}`}
+              >
+                <DownloadIcon />
+                {exportLabels.settlementCsvButton}
+              </a>
+            </Button>
+          )}
           {isAdmin && !isPublished && (
             <>
               <RecalculateSettlementDialog

@@ -24,6 +24,7 @@ import {
 } from "@/lib/woodong/member-display";
 import type { GroupMemberRow } from "@/lib/woodong/queries/groups";
 import { CreateDueCycleDialog } from "@/components/dues/create-due-cycle-dialog";
+import { ExportMenu } from "@/components/dues/export-menu";
 import {
   DuesMemberProgressBar,
   DuesOverallRateGauge,
@@ -141,6 +142,7 @@ export function DuesDashboard({
   labels,
   expenseLabels,
   commonLabels,
+  exportLabels,
   settlementsLinkLabel,
   unnamedMemberLabel,
 }: {
@@ -158,6 +160,8 @@ export function DuesDashboard({
   labels: Dictionary["dues"];
   expenseLabels: Dictionary["expenses"];
   commonLabels: Dictionary["common"];
+  /** CSV 내보내기 메뉴 문구 (Task 040). 총무에게만 렌더링된다. */
+  exportLabels: Dictionary["exports"];
   /** 정산 리포트 화면으로 가는 링크 문구 (Task 036, `dict.settlements.entryLinkLabel`). */
   settlementsLinkLabel: string;
   unnamedMemberLabel: string;
@@ -221,12 +225,19 @@ export function DuesDashboard({
         <h1 className="text-2xl font-bold">{labels.pageTitle}</h1>
         {/* 쓰기는 RLS가 막지만, 총무가 아닌 사람에게 반드시 실패할 버튼을 보여주지 않는다(이중 방어). */}
         {isAdmin && (
-          <CreateDueCycleDialog
-            groupId={groupId}
-            defaultDueAmount={defaultDueAmount}
-            labels={labels}
-            onCreated={handleCycleCreated}
-          />
+          <div className="flex items-center gap-2">
+            {/*
+              내보내기도 총무 전용이다(Route Handler가 역할을 다시 확인한다, Task 040).
+              멤버별 납부 상태와 사용자 id가 한 파일로 나가는 경로라 화면에서도 감춘다.
+            */}
+            <ExportMenu groupId={groupId} labels={exportLabels} />
+            <CreateDueCycleDialog
+              groupId={groupId}
+              defaultDueAmount={defaultDueAmount}
+              labels={labels}
+              onCreated={handleCycleCreated}
+            />
+          </div>
         )}
       </div>
 

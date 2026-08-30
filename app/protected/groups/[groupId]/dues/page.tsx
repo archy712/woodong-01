@@ -67,6 +67,7 @@ async function DuesContent({
         labels={dict.dues}
         expenseLabels={dict.expenses}
         commonLabels={dict.common}
+        exportLabels={dict.exports}
         settlementsLinkLabel={dict.settlements.entryLinkLabel}
         unnamedMemberLabel={dict.groups.members.unnamedMemberLabel}
       />

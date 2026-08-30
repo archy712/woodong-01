@@ -392,6 +392,88 @@ export interface Dictionary {
       printHint: string;
     };
   };
+  /**
+   * CSV 내보내기 (Task 040, PRD 9장 "정산 데이터 이관 부재").
+   *
+   * 열 이름은 화면 문구가 아니라 **파일을 여는 사람이 읽는 헤더**다. 화면 라벨을 재사용하지 않고
+   * 따로 두는 이유가 여기 있다 — 화면에서는 맥락이 있어 "금액"으로 충분하지만, 표로 떨어져 나온
+   * 파일에서는 "청구액"과 "납부액"이 구분돼야 한다.
+   */
+  exports: {
+    menuLabel: string;
+    /** 총무 전용 기능이라는 사실과 무엇이 담기는지 알리는 한 줄. */
+    menuDescription: string;
+    /** 내보내기 메뉴에 뜨는 데이터셋 이름. */
+    datasetLabel: {
+      dues: string;
+      payments: string;
+      expenses: string;
+      settlements: string;
+    };
+    /** 파일명 뒷부분(`모임이름_회비청구현황.csv`의 밑줄 뒤). 공백은 밑줄로 치환된다. */
+    filename: {
+      dues: string;
+      payments: string;
+      expenses: string;
+      settlements: string;
+    };
+    /** 정산 상세 화면에서 그 리포트 하나만 받는 버튼. */
+    settlementCsvButton: string;
+    itemTypeIncome: string;
+    itemTypeExpense: string;
+    /** 탈퇴해서 멤버 목록에 없는 사용자 자리에 넣는 문구. 식별은 함께 실리는 id 열로 한다. */
+    formerMemberLabel: string;
+    columns: {
+      dues: {
+        cycleTitle: string;
+        period: string;
+        dueType: string;
+        dueDate: string;
+        memberName: string;
+        chargedAmount: string;
+        paidAmount: string;
+        remainingAmount: string;
+        status: string;
+        userId: string;
+        dueId: string;
+      };
+      payments: {
+        paidAt: string;
+        cycleTitle: string;
+        memberName: string;
+        amount: string;
+        memo: string;
+        recordedBy: string;
+        dueId: string;
+        paymentId: string;
+      };
+      expenses: {
+        spentAt: string;
+        category: string;
+        amount: string;
+        paidBy: string;
+        memo: string;
+        receiptPath: string;
+        createdAt: string;
+        expenseId: string;
+      };
+      settlements: {
+        periodStart: string;
+        periodEnd: string;
+        status: string;
+        publishedAt: string;
+        totalIncome: string;
+        totalExpense: string;
+        balance: string;
+        itemType: string;
+        category: string;
+        description: string;
+        amount: string;
+        entryCount: string;
+        settlementId: string;
+      };
+    };
+  };
   votes: {
     pageTitle: string;
     detailTitle: string;

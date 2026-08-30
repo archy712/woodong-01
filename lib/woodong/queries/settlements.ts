@@ -106,3 +106,60 @@ export async function getSettlementDetail(
     })),
   };
 }
+
+/**
+ * CSV 내보내기용 — 리포트 헤더 + 항목을 **한 번에** 읽는다 (Task 040).
+ *
+ * `getSettlementDetail()`을 리포트 수만큼 반복 호출하면 왕복이 그대로 늘어난다. 임베딩으로
+ * 한 번에 받고 정렬 규칙은 목록·상세와 동일하게 맞춘다(기간 역순 → 항목은 `sort_order` 순).
+ *
+ * `settlementId`를 주면 그 리포트 하나만 담는다(정산 상세 화면의 "CSV" 버튼용). 초안이
+ * 섞여 나오는 것은 의도한 동작이다 — 이 함수를 부르는 경로는 총무 전용이고, 초안도 인수인계
+ * 대상이다. 일반회원에게는 RLS가 애초에 초안을 주지 않는다.
+ */
+export async function listSettlementsWithItems(
+  supabase: Client,
+  groupId: string,
+  settlementId?: string,
+): Promise<SettlementDetail[]> {
+  let query = supabase
+    .from("woodong_settlements")
+    .select(
+      `${SETTLEMENT_COLUMNS}, woodong_settlement_items(${SETTLEMENT_ITEM_COLUMNS})`,
+    )
+    .eq("group_id", groupId);
+
+  if (settlementId) {
+    query = query.eq("id", settlementId);
+  }
+
+  const { data, error } = await query
+    .order("period_start", { ascending: false })
+    .order("period_end", { ascending: false })
+    .order("sort_order", {
+      referencedTable: "woodong_settlement_items",
+      ascending: true,
+    });
+
+  if (error) {
+    console.error(
+      "[queries/settlements] listSettlementsWithItems failed:",
+      error,
+    );
+    return [];
+  }
+
+  return (data ?? []).map((row) => {
+    const { woodong_settlement_items: itemRows, ...settlementColumns } = row;
+    return {
+      settlement: {
+        ...settlementColumns,
+        status: settlementColumns.status as SettlementStatus,
+      },
+      items: (itemRows ?? []).map((item) => ({
+        ...item,
+        item_type: item.item_type as SettlementItemType,
+      })),
+    };
+  });
+}
