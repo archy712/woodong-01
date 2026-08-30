@@ -6,6 +6,7 @@ import {
   type Notification,
   type NotificationChannel,
   type NotificationPreference,
+  type NotificationType,
 } from "@/lib/woodong/notifications";
 
 /**
@@ -39,6 +40,21 @@ type NotificationRow = Notification & {
 };
 
 /**
+ * 알림센터 필터 (Task 040).
+ *
+ * **필터는 클라이언트가 아니라 여기서 건다.** 목록은 최신 `NOTIFICATIONS_PAGE_SIZE`건으로
+ * 잘리는데, 받아 온 50건을 화면에서 거르면 "회비 알림만" 골랐을 때 그 50건 안에 회비 알림이
+ * 3건뿐이면 3건만 보인다 — 더 오래된 회비 알림은 애초에 오지도 않았다. 조건을 쿼리에 실으면
+ * 잘림이 필터 **뒤에** 적용돼 "회비 알림 최신 50건"이 된다.
+ */
+export type NotificationFilters = {
+  /** 알림 유형. 없으면 전체. */
+  type?: NotificationType;
+  /** 미읽음만 보기. */
+  unreadOnly?: boolean;
+};
+
+/**
  * 로그인 사용자의 알림 목록. 최신순. 실패해도 throw하지 않고 빈 배열로 폴백한다.
  *
  * ⚠️ `channel = 'in_app'`으로 거른다(Task 038). 웹 푸시를 켠 사용자는 한 사건에 대해
@@ -47,15 +63,28 @@ type NotificationRow = Notification & {
  *
  * 웹 푸시가 끝내 실패한 경우는 `woodong_mark_push_failed`가 `in_app` 행을
  * `fallback_sent`로 새로 만들어 주므로(PRD 4.4), 이 필터로도 정보를 놓치지 않는다.
+ *
+ * 같은 이유로 **채널 필터는 제공하지 않는다**(Task 040). 알림센터에 들어올 수 있는 채널은
+ * `in_app` 하나뿐이라 선택지가 하나인 필터가 되고, `web_push`를 고르면 항상 0건이다.
  */
 export async function listMyNotifications(
   supabase: Client,
+  filters: NotificationFilters = {},
   limit = NOTIFICATIONS_PAGE_SIZE,
 ): Promise<NotificationListItem[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("woodong_notifications")
     .select(`${NOTIFICATION_COLUMNS}, woodong_groups(name)`)
-    .eq("channel", "in_app")
+    .eq("channel", "in_app");
+
+  if (filters.type) {
+    query = query.eq("type", filters.type);
+  }
+  if (filters.unreadOnly) {
+    query = query.is("read_at", null);
+  }
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .limit(limit);
 

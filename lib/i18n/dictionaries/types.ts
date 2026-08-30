@@ -588,6 +588,22 @@ export interface Dictionary {
       voteClose: string;
       settlementReport: string;
     };
+    /**
+     * 알림센터 필터 (Task 040).
+     *
+     * 로드맵의 "채널별/유형별" 중 **채널별은 제공하지 않는다** — 알림센터에 들어오는 채널은
+     * `in_app` 하나뿐이라 선택지가 하나인 필터가 된다(`queries/notifications.ts` 참고).
+     * 대신 실제로 쓸모가 있는 미읽음 필터를 함께 둔다.
+     */
+    filters: {
+      /** 유형 칩 줄의 스크린리더 라벨. */
+      typeGroupLabel: string;
+      allTypes: string;
+      unreadOnly: string;
+      /** 필터를 걸었는데 결과가 0건일 때. "알림이 없다"와 구분해야 한다. */
+      emptyFiltered: string;
+      resetButton: string;
+    };
   };
   me: {
     pageTitle: string;

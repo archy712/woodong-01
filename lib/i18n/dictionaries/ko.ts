@@ -615,6 +615,13 @@ export const ko: Dictionary = {
       voteClose: "투표 마감 결과",
       settlementReport: "정산 리포트 발행",
     },
+    filters: {
+      typeGroupLabel: "알림 유형 필터",
+      allTypes: "전체",
+      unreadOnly: "미읽음만",
+      emptyFiltered: "조건에 맞는 알림이 없어요.",
+      resetButton: "필터 해제",
+    },
   },
   me: {
     pageTitle: "마이페이지",

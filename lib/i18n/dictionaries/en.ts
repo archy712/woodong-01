@@ -638,6 +638,13 @@ export const en: Dictionary = {
       voteClose: "Vote Results",
       settlementReport: "Settlement Report Published",
     },
+    filters: {
+      typeGroupLabel: "Filter by notification type",
+      allTypes: "All",
+      unreadOnly: "Unread only",
+      emptyFiltered: "No notifications match this filter.",
+      resetButton: "Clear filter",
+    },
   },
   me: {
     pageTitle: "My Page",

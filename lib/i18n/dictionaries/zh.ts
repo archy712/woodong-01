@@ -629,6 +629,13 @@ export const zh: Dictionary = {
       voteClose: "投票截止结果",
       settlementReport: "结算报告发布",
     },
+    filters: {
+      typeGroupLabel: "按通知类型筛选",
+      allTypes: "全部",
+      unreadOnly: "仅未读",
+      emptyFiltered: "没有符合条件的通知。",
+      resetButton: "清除筛选",
+    },
   },
   me: {
     pageTitle: "我的页面",

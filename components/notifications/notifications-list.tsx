@@ -92,9 +92,17 @@ function isPlainLeftClick(event: React.MouseEvent): boolean {
  */
 export function NotificationsList({
   notifications,
+  isFiltered = false,
   labels,
 }: {
   notifications: NotificationListItem[];
+  /**
+   * 필터가 걸린 상태인지 (Task 040).
+   *
+   * 빈 목록의 의미가 달라진다 — "받은 알림이 없다"와 "조건에 맞는 알림이 없다"를 같은 문구로
+   * 보여주면, 필터를 켜 둔 걸 잊은 사용자가 알림이 사라졌다고 생각한다.
+   */
+  isFiltered?: boolean;
   labels: Dictionary["notifications"];
 }) {
   const router = useRouter();
@@ -150,8 +158,21 @@ export function NotificationsList({
           <EmptyMedia variant="icon">
             <BellIcon />
           </EmptyMedia>
-          <EmptyTitle>{labels.emptyState}</EmptyTitle>
-          <EmptyDescription>{labels.allReadMessage}</EmptyDescription>
+          <EmptyTitle>
+            {isFiltered ? labels.filters.emptyFiltered : labels.emptyState}
+          </EmptyTitle>
+          {isFiltered ? (
+            <EmptyDescription>
+              <Link
+                href="/protected/notifications"
+                className="underline underline-offset-4"
+              >
+                {labels.filters.resetButton}
+              </Link>
+            </EmptyDescription>
+          ) : (
+            <EmptyDescription>{labels.allReadMessage}</EmptyDescription>
+          )}
         </EmptyHeader>
       </Empty>
     );

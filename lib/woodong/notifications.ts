@@ -6,12 +6,25 @@ import type { Tables } from "@/lib/supabase/database.types";
  * `settlement_published`는 정산 발행(3.4-b, Phase 8 2차 확장) 기능 자체는 아직 구현되지 않았지만,
  * 알림 타입 값으로는 PRD 스키마에 이미 정의되어 있어 함께 반영한다.
  */
-export type NotificationType =
-  | "notice"
-  | "due_reminder"
-  | "vote_start"
-  | "vote_close"
-  | "settlement_published";
+export const NOTIFICATION_TYPES = [
+  "notice",
+  "due_reminder",
+  "vote_start",
+  "vote_close",
+  "settlement_published",
+] as const;
+
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+/** 알림센터 필터가 받은 쿼리스트링 값을 유형으로 좁힌다. 모르는 값은 "전체"(undefined)로 떨어진다. */
+export function parseNotificationType(
+  value: string | undefined,
+): NotificationType | undefined {
+  if (!value) return undefined;
+  return (NOTIFICATION_TYPES as readonly string[]).includes(value)
+    ? (value as NotificationType)
+    : undefined;
+}
 
 /** 알림이 가리키는 리소스 종류(다형 참조) — `woodong_notifications.related_type`(nullable, PRD 5.13) */
 export type NotificationRelatedType =

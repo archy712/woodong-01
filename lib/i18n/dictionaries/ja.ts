@@ -638,6 +638,13 @@ export const ja: Dictionary = {
       voteClose: "投票締切結果",
       settlementReport: "精算レポート発行",
     },
+    filters: {
+      typeGroupLabel: "お知らせの種類で絞り込む",
+      allTypes: "すべて",
+      unreadOnly: "未読のみ",
+      emptyFiltered: "条件に合うお知らせはありません。",
+      resetButton: "絞り込みを解除",
+    },
   },
   me: {
     pageTitle: "マイページ",
