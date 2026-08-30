@@ -60,6 +60,26 @@ export const CHANNEL_DEFAULT_ENABLED: Record<NotificationChannel, boolean> = {
 export type NotificationStatus =
   "pending" | "sent" | "failed" | "fallback_sent";
 
+/**
+ * 문구 템플릿 키 — `woodong_notifications.template_key` CHECK 제약 (Task 040).
+ *
+ * 알림 제목·본문은 **생성 시점에 문자열로** 굳는다. 앱이 만드는 알림은 만든 사람의 로케일이
+ * 그대로 전 멤버에게 가고, pg_cron 배치(Task 037)에는 로케일이 아예 없어 항상 한국어였다.
+ * 키와 파라미터를 함께 저장해 **읽는 시점에 읽는 사람의 언어로 조립**하는 것이 그 답이다.
+ *
+ * 공지(`notice`)에는 키가 없다 — 제목·본문이 총무가 쓴 사용자 콘텐츠라 번역 대상이 아니다.
+ * 값을 늘리려면 DB CHECK 제약, 이 배열, `notification-text.ts`, 4개 언어 사전을 함께 고친다.
+ */
+export const NOTIFICATION_TEMPLATE_KEYS = [
+  "due_reminder",
+  "vote_start",
+  "vote_close",
+  "settlement_published",
+] as const;
+
+export type NotificationTemplateKey =
+  (typeof NOTIFICATION_TEMPLATE_KEYS)[number];
+
 export type Notification = Omit<
   Pick<
     Tables<"woodong_notifications">,
@@ -73,6 +93,8 @@ export type Notification = Omit<
     | "status"
     | "title"
     | "body"
+    | "template_key"
+    | "params"
     | "read_at"
     | "clicked_at"
     | "created_at"

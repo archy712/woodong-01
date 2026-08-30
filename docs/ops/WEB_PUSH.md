@@ -151,7 +151,7 @@ supabase functions deploy woodong-push-dispatch --no-verify-jwt
 
 - **사용자당 기기 1대만 등록된다.** 구독 정보를 `woodong_notification_preferences.destination` 한 칸에 저장하는 PRD 5.13 스키마 때문이다. 다른 기기에서 켜면 이전 기기의 구독은 덮어써지고 조용히 알림이 끊긴다(마이페이지에 그 사실을 안내 문구로 적어 뒀다). 여러 기기를 지원하려면 구독 테이블을 따로 만들어야 한다.
 - **iOS는 홈 화면에 추가(PWA 설치)해야만 동작한다.** iOS 16.4+ Safari의 제약이다. 마이페이지에서 iOS이면서 standalone이 아니면 스위치를 잠그고 설치 안내를 띄운다.
-- **알림 문구는 발신 시점 로케일로 굳는다.** 배치(pg_cron)가 만드는 알림은 사용자 로케일을 알 수 없어 한국어 기본 문구가 저장된다(Task 037의 같은 한계). 웹 푸시는 그 문자열을 그대로 실어 나른다.
+- **푸시로 나가는 문구는 발신 시점 로케일로 굳는다.** 배치(pg_cron)가 만드는 알림은 사용자 로케일을 알 수 없어 한국어 기본 문구가 저장되고, 웹 푸시는 그 문자열을 그대로 실어 나른다. Task 040에서 `template_key` + `params`를 함께 저장하도록 바꿔 **앱 내 알림센터는 읽는 사람의 언어로 조립**되지만, 푸시 페이로드는 Edge Function이 만들기 때문에 여전히 저장된 문자열을 쓴다. 푸시까지 번역하려면 사용자별 로케일 저장과 Edge Function 템플릿이 필요하다.
 - **pg_net의 `net.*` 실행 권한을 `anon`/`authenticated`에서 회수할 수 없다.** PUBLIC 권한을 `supabase_admin`이 부여했고, 우리가 쓰는 `postgres` 롤은 소유자도 부여자도 아니라 REVOKE가 조용히 무시된다(실측 확인). **실효 방어선은 "`net` 스키마가 PostgREST에 노출되지 않는다" 하나뿐**이다. 아래 쿼리가 `public, graphql_public`만 돌려주는지 정기 점검한다 — 이 프로젝트는 다른 앱과 공유하고 있어 설정이 우리 손 밖에서 바뀔 수 있다.
 
   ```bash

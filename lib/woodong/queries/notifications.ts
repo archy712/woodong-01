@@ -25,7 +25,7 @@ type Client = SupabaseClient<Database>;
 export const NOTIFICATIONS_PAGE_SIZE = 50;
 
 const NOTIFICATION_COLUMNS =
-  "id, group_id, user_id, type, related_type, related_id, channel, status, title, body, read_at, clicked_at, created_at";
+  "id, group_id, user_id, type, related_type, related_id, channel, status, title, body, template_key, params, read_at, clicked_at, created_at";
 
 /**
  * 알림센터 목록 항목 — 알림 레코드에 모임 이름을 얹은 것.

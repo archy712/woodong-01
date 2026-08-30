@@ -589,6 +589,24 @@ export interface Dictionary {
       settlementReport: string;
     };
     /**
+     * 알림 문구 템플릿 (Task 040).
+     *
+     * 자리표시자는 `{cycleTitle}`처럼 중괄호로 감싼다. DB의 `params` jsonb 키는 snake_case
+     * (`cycle_title`)지만 자리표시자 이름은 **jsonb 키와 그대로 일치해야 한다** —
+     * `notification-text.ts`가 키를 변환하지 않고 그대로 찾는다.
+     *
+     * 공지(`notice`)는 여기 없다. 제목·본문이 총무가 쓴 사용자 콘텐츠라 번역 대상이 아니다.
+     */
+    templates: {
+      /** `{cycle_title}` = 회비 항목명. */
+      dueReminder: { title: string; body: string };
+      /** `{vote_title}` = 투표 제목. */
+      voteStart: { title: string; body: string };
+      voteClose: { title: string; body: string };
+      /** `{period_start}`, `{period_end}` = 정산 기간. */
+      settlementPublished: { title: string; body: string };
+    };
+    /**
      * 알림센터 필터 (Task 040).
      *
      * 로드맵의 "채널별/유형별" 중 **채널별은 제공하지 않는다** — 알림센터에 들어오는 채널은

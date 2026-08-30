@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import type { NotificationType } from "@/lib/woodong/notifications";
+import { renderNotificationText } from "@/lib/woodong/notification-text";
 import type { NotificationListItem } from "@/lib/woodong/queries/notifications";
 import {
   markAllNotificationsReadAction,
@@ -203,6 +204,9 @@ export function NotificationsList({
           const Icon = TYPE_ICON[notification.type];
           const isUnread = !notification.read_at;
           const isOpening = openingId === notification.id;
+          // 저장된 문자열이 아니라 **읽는 사람의 사전**으로 조립한다(Task 040).
+          // 배치가 만든 알림도 이 시점에 번역된다.
+          const text = renderNotificationText(notification, labels);
           return (
             <Item key={notification.id} asChild variant="outline" size="sm">
               <Link
@@ -220,7 +224,7 @@ export function NotificationsList({
                 </ItemMedia>
                 <ItemContent>
                   <ItemTitle>
-                    {notification.title}
+                    {text.title}
                     {isUnread && (
                       <Badge
                         variant="default"
@@ -229,7 +233,7 @@ export function NotificationsList({
                       />
                     )}
                   </ItemTitle>
-                  <ItemDescription>{notification.body}</ItemDescription>
+                  <ItemDescription>{text.body}</ItemDescription>
                   {notification.group_name && (
                     <ItemDescription className="text-xs">
                       {notification.group_name}

@@ -615,6 +615,24 @@ export const ko: Dictionary = {
       voteClose: "투표 마감 결과",
       settlementReport: "정산 리포트 발행",
     },
+    templates: {
+      dueReminder: {
+        title: "{cycle_title} 납부 리마인드",
+        body: "아직 회비 납부 전이시네요. 우동이 살짝 알려드릴게요!",
+      },
+      voteStart: {
+        title: "새 투표가 시작됐어요: {vote_title}",
+        body: "마감 전에 투표에 참여해주세요.",
+      },
+      voteClose: {
+        title: "투표가 마감됐어요: {vote_title}",
+        body: "투표 결과를 확인해보세요.",
+      },
+      settlementPublished: {
+        title: "정산 리포트가 발행되었어요",
+        body: "{period_start} ~ {period_end} 수입·지출 정산 결과를 확인해보세요.",
+      },
+    },
     filters: {
       typeGroupLabel: "알림 유형 필터",
       allTypes: "전체",

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17";
+    PostgrestVersion: "14.5";
   };
   public: {
     Tables: {
@@ -2161,46 +2161,61 @@ export type Database = {
       };
       woodong_notifications: {
         Row: {
+          attempt_count: number;
           body: string;
           channel: string;
           clicked_at: string | null;
           created_at: string;
           group_id: string | null;
           id: string;
+          last_error: string | null;
+          next_attempt_at: string | null;
+          params: Json;
           read_at: string | null;
           related_id: string | null;
           related_type: string | null;
           status: string;
+          template_key: string | null;
           title: string;
           type: string;
           user_id: string;
         };
         Insert: {
+          attempt_count?: number;
           body: string;
           channel: string;
           clicked_at?: string | null;
           created_at?: string;
           group_id?: string | null;
           id?: string;
+          last_error?: string | null;
+          next_attempt_at?: string | null;
+          params?: Json;
           read_at?: string | null;
           related_id?: string | null;
           related_type?: string | null;
           status?: string;
+          template_key?: string | null;
           title: string;
           type: string;
           user_id: string;
         };
         Update: {
+          attempt_count?: number;
           body?: string;
           channel?: string;
           clicked_at?: string | null;
           created_at?: string;
           group_id?: string | null;
           id?: string;
+          last_error?: string | null;
+          next_attempt_at?: string | null;
+          params?: Json;
           read_at?: string | null;
           related_id?: string | null;
           related_type?: string | null;
           status?: string;
+          template_key?: string | null;
           title?: string;
           type?: string;
           user_id?: string;
@@ -2750,8 +2765,32 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      woodong_claim_push_batch: {
+        Args: { p_limit?: number };
+        Returns: {
+          attempt_count: number;
+          body: string;
+          destination: string;
+          group_id: string;
+          id: string;
+          related_id: string;
+          related_type: string;
+          title: string;
+          type: string;
+          user_id: string;
+        }[];
+      };
       woodong_close_expired_votes: {
         Args: { p_body?: string; p_group_id?: string; p_title?: string };
+        Returns: number;
+      };
+      woodong_close_expired_votes_core: {
+        Args: {
+          p_body?: string;
+          p_group_id?: string;
+          p_title?: string;
+          p_user_id?: string;
+        };
         Returns: number;
       };
       woodong_close_vote_now: {
@@ -2853,6 +2892,15 @@ export type Database = {
           status: string;
         }[];
       };
+      woodong_get_push_config: {
+        Args: never;
+        Returns: {
+          dispatch_token: string;
+          vapid_private: string;
+          vapid_public: string;
+          vapid_subject: string;
+        }[];
+      };
       woodong_get_vote_results: {
         Args: { p_vote_id: string };
         Returns: {
@@ -2885,6 +2933,18 @@ export type Database = {
           membership_id: string;
         }[];
       };
+      woodong_mark_push_failed: {
+        Args: { p_error?: string; p_id: string; p_permanent?: boolean };
+        Returns: string;
+      };
+      woodong_mark_push_sent: { Args: { p_ids: string[] }; Returns: number };
+      woodong_notification_channels: {
+        Args: { p_user_id: string };
+        Returns: {
+          channel: string;
+          status: string;
+        }[];
+      };
       woodong_notify_vote_close: {
         Args: {
           p_body: string;
@@ -2896,6 +2956,15 @@ export type Database = {
       };
       woodong_process_due_reminders: {
         Args: { p_body?: string; p_group_id?: string; p_title_suffix?: string };
+        Returns: number;
+      };
+      woodong_process_due_reminders_core: {
+        Args: {
+          p_body?: string;
+          p_group_id?: string;
+          p_title_suffix?: string;
+          p_user_id?: string;
+        };
         Returns: number;
       };
       woodong_publish_settlement: {
@@ -2940,6 +3009,8 @@ export type Database = {
           status: string;
         }[];
       };
+      woodong_run_due_reminders: { Args: never; Returns: number };
+      woodong_run_vote_closing: { Args: never; Returns: number };
     };
     Enums: {
       [_ in never]: never;

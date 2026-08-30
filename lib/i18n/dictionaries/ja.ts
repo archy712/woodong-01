@@ -638,6 +638,24 @@ export const ja: Dictionary = {
       voteClose: "投票締切結果",
       settlementReport: "精算レポート発行",
     },
+    templates: {
+      dueReminder: {
+        title: "{cycle_title} の納付リマインド",
+        body: "まだ会費が未納です。Woodongからそっとお知らせします！",
+      },
+      voteStart: {
+        title: "新しい投票が始まりました: {vote_title}",
+        body: "締め切り前に投票してください。",
+      },
+      voteClose: {
+        title: "投票が締め切られました: {vote_title}",
+        body: "投票結果を確認してみましょう。",
+      },
+      settlementPublished: {
+        title: "精算レポートが発行されました",
+        body: "{period_start} ~ {period_end} の収支の精算結果を確認してください。",
+      },
+    },
     filters: {
       typeGroupLabel: "お知らせの種類で絞り込む",
       allTypes: "すべて",

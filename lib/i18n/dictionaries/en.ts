@@ -638,6 +638,24 @@ export const en: Dictionary = {
       voteClose: "Vote Results",
       settlementReport: "Settlement Report Published",
     },
+    templates: {
+      dueReminder: {
+        title: "Reminder: {cycle_title}",
+        body: "Your dues are still unpaid. Here is a friendly nudge!",
+      },
+      voteStart: {
+        title: "A new vote has started: {vote_title}",
+        body: "Cast your vote before it closes.",
+      },
+      voteClose: {
+        title: "Voting has closed: {vote_title}",
+        body: "Check the results.",
+      },
+      settlementPublished: {
+        title: "A settlement report was published",
+        body: "See the income and expense summary for {period_start} - {period_end}.",
+      },
+    },
     filters: {
       typeGroupLabel: "Filter by notification type",
       allTypes: "All",

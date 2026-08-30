@@ -629,6 +629,24 @@ export const zh: Dictionary = {
       voteClose: "投票截止结果",
       settlementReport: "结算报告发布",
     },
+    templates: {
+      dueReminder: {
+        title: "{cycle_title} 缴费提醒",
+        body: "会费尚未缴纳，Woodong 温馨提醒您！",
+      },
+      voteStart: {
+        title: "新投票已开始：{vote_title}",
+        body: "请在截止前参与投票。",
+      },
+      voteClose: {
+        title: "投票已截止：{vote_title}",
+        body: "来看看投票结果吧。",
+      },
+      settlementPublished: {
+        title: "结算报告已发布",
+        body: "查看 {period_start} ~ {period_end} 的收支结算结果。",
+      },
+    },
     filters: {
       typeGroupLabel: "按通知类型筛选",
       allTypes: "全部",
